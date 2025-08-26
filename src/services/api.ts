@@ -1,0 +1,428 @@
+import axios from 'axios';
+
+// Base API configuration - use proxy in development
+const API_BASE_URL = import.meta.env.DEV 
+  ? '/api'  // Use Vite proxy in development
+  : (import.meta.env.VITE_API_URL || 'http://localhost:8080/api');
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  // Add CORS configuration
+  withCredentials: true,
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const hadToken = !!localStorage.getItem('authToken');
+      // Clear any stale token
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userType');
+      
+      // Only redirect if user was authenticated and is on protected routes
+      if (hadToken) {
+        const path = window.location.pathname;
+        const isAdminArea = path.startsWith('/admin');
+        const isDriverArea = path.startsWith('/driver');
+        if (isAdminArea) window.location.href = '/login-admin';
+        else if (isDriverArea) window.location.href = '/login-driver';
+        // if on public pages, do NOT redirect (avoid reload loop)
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authAPI = {
+  login: async (credentials: { username: string; password: string }) => {
+    const response = await api.post('/auth/login', credentials);
+    return response.data;
+  },
+  
+  register: async (userData: any) => {
+    const response = await api.post('/auth/register', userData);
+    return response.data;
+  },
+  
+  getProfile: async () => {
+    const response = await api.get('/profile');
+    return response.data;
+  },
+};
+
+// Orders API
+export const ordersAPI = {
+  createOrder: async (orderData: any) => {
+    const response = await api.post('/orders/public', orderData);
+    return response.data;
+  },
+  
+  getOrders: async (params?: any) => {
+    const response = await api.get('/orders', { params });
+    return response.data;
+  },
+  
+  getOrder: async (id: string) => {
+    const response = await api.get(`/orders/${id}`);
+    return response.data;
+  },
+  
+  updateOrder: async (id: string, orderData: any) => {
+    const response = await api.put(`/orders/${id}`, orderData);
+    return response.data;
+  },
+  
+  deleteOrder: async (id: string) => {
+    const response = await api.delete(`/orders/${id}`);
+    return response.data;
+  },
+};
+
+// Tariffs API
+export const tariffsAPI = {
+  getTariffs: async (params?: any) => {
+    const response = await api.get('/tariffs', { params });
+    return response.data;
+  },
+  
+  getTariff: async (id: string) => {
+    const response = await api.get(`/tariffs/${id}`);
+    return response.data;
+  },
+  
+  // Public endpoints (no auth required)
+  getTariffsPublic: async (params?: any) => {
+    const response = await api.get('/tariffs/public', { params });
+    return response.data;
+  },
+  
+  getTariffPublic: async (id: string) => {
+    const response = await api.get(`/tariffs/public/${id}`);
+    return response.data;
+  },
+  
+  createTariff: async (tariffData: any) => {
+    const response = await api.post('/admin/tariffs', tariffData);
+    return response.data;
+  },
+  
+  updateTariff: async (id: string, tariffData: any) => {
+    const response = await api.put(`/admin/tariffs/${id}`, tariffData);
+    return response.data;
+  },
+  
+  deleteTariff: async (id: string) => {
+    const response = await api.delete(`/admin/tariffs/${id}`);
+    return response.data;
+  },
+  
+  toggleTariffStatus: async (id: string, isActive: boolean) => {
+    const response = await api.put(`/admin/tariffs/${id}/active`, { IsActive: isActive });
+    return response.data;
+  },
+};
+
+// Payments API
+export const paymentsAPI = {
+  createPayment: async (paymentData: any) => {
+    const response = await api.post('/payments', paymentData);
+    return response.data;
+  },
+  
+  getPayments: async (params?: any) => {
+    const response = await api.get('/payments', { params });
+    return response.data;
+  },
+  
+  getPayment: async (id: string) => {
+    const response = await api.get(`/payments/${id}`);
+    return response.data;
+  },
+  
+  updatePaymentStatus: async (id: string, status: string) => {
+    const response = await api.put(`/payments/${id}/status`, { status });
+    return response.data;
+  },
+  
+  processPayment: async (id: string) => {
+    const response = await api.post(`/payments/${id}/process`);
+    return response.data;
+  },
+  
+  getPaymentStats: async () => {
+    const response = await api.get('/payments/stats');
+    return response.data;
+  },
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getNotifications: async (params?: any) => {
+    const response = await api.get('/notifications', { params });
+    return response.data;
+  },
+  
+  getNotification: async (id: string) => {
+    const response = await api.get(`/notifications/${id}`);
+    return response.data;
+  },
+  
+  markAsRead: async (id: string) => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
+  },
+  
+  markAllAsRead: async () => {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
+  },
+  
+  deleteNotification: async (id: string) => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  },
+  
+  getNotificationStats: async () => {
+    const response = await api.get('/notifications/stats');
+    return response.data;
+  },
+};
+
+// Admin API
+export const adminAPI = {
+  // Users
+  createUser: async (userData: any) => {
+    const response = await api.post('/admin/users', userData);
+    return response.data;
+  },
+  getUsers: async (params?: any) => {
+    const response = await api.get('/admin/users', { params });
+    return response.data;
+  },
+  
+  getUser: async (id: string) => {
+    const response = await api.get(`/admin/users/${id}`);
+    return response.data;
+  },
+  
+  updateUser: async (id: string, userData: any) => {
+    const response = await api.put(`/admin/users/${id}`, userData);
+    return response.data;
+  },
+  
+  deleteUser: async (id: string) => {
+    const response = await api.delete(`/admin/users/${id}`);
+    return response.data;
+  },
+  
+  resetUserPassword: async (id: string) => {
+    const response = await api.post(`/admin/users/${id}/reset-password`, {}, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  },
+  
+  // Drivers
+  createDriver: async (driverData: any) => {
+    const response = await api.post('/admin/drivers', driverData);
+    return response.data;
+  },
+  
+  getDrivers: async (params?: any) => {
+    const response = await api.get('/admin/drivers', { params });
+    return response.data;
+  },
+  
+  getDriver: async (id: string) => {
+    const response = await api.get(`/admin/drivers/${id}`);
+    return response.data;
+  },
+  
+  updateDriver: async (id: string, driverData: any) => {
+    const response = await api.put(`/admin/drivers/${id}`, driverData);
+    return response.data;
+  },
+  
+  deleteDriver: async (id: string) => {
+    const response = await api.delete(`/admin/drivers/${id}`);
+    return response.data;
+  },
+  
+  getDriverPerformance: async (id: string) => {
+    const response = await api.get(`/admin/drivers/${id}/performance`);
+    return response.data;
+  },
+  
+  // Driver Financial Data
+  getDriverFinancialData: async (params?: any) => {
+    const response = await api.get('/admin/drivers/financial-data', { params });
+    return response.data;
+  },
+  
+  // Tariffs
+  createTariff: async (tariffData: any) => {
+    const response = await api.post('/admin/tariffs', tariffData);
+    return response.data;
+  },
+  
+  updateTariff: async (id: string, tariffData: any) => {
+    const response = await api.put(`/admin/tariffs/${id}`, tariffData);
+    return response.data;
+  },
+  
+  deleteTariff: async (id: string) => {
+    const response = await api.delete(`/admin/tariffs/${id}`);
+    return response.data;
+  },
+  
+  // Analytics
+  getAnalytics: async () => {
+    const response = await api.get('/admin/analytics');
+    return response.data;
+  },
+  
+  // Withdrawals
+  getWithdrawals: async (params?: any) => {
+    const response = await api.get('/admin/withdrawals', { params });
+    return response.data;
+  },
+  
+  getWithdrawal: async (id: string) => {
+    const response = await api.get(`/admin/withdrawals/${id}`);
+    return response.data;
+  },
+  
+  updateWithdrawal: async (id: string, withdrawalData: any) => {
+    const response = await api.put(`/admin/withdrawals/${id}`, withdrawalData);
+    return response.data;
+  },
+  
+  deleteWithdrawal: async (id: string) => {
+    const response = await api.delete(`/admin/withdrawals/${id}`);
+    return response.data;
+  },
+  
+  getRevenueAnalytics: async () => {
+    const response = await api.get('/admin/analytics/revenue');
+    return response.data;
+  },
+  
+  getOrderAnalytics: async () => {
+    const response = await api.get('/admin/analytics/orders');
+    return response.data;
+  },
+};
+
+// Driver API
+export const driverAPI = {
+  // Orders
+  getDriverOrders: async (params?: any) => {
+    const response = await api.get('/driver/orders', { params });
+    return response.data;
+  },
+  
+  // Get orders by driver ID (for testing)
+  getOrdersByDriverID: async (driverId: string, params?: any) => {
+    console.log('API call: getOrdersByDriverID with driverId:', driverId);
+    const response = await api.get(`/driver/${driverId}/orders`, { params });
+    console.log('API response:', response);
+    return response.data;
+  },
+  
+  acceptOrder: async (id: string) => {
+    const response = await api.put(`/driver/orders/${id}/accept`);
+    return response.data;
+  },
+  
+  completeOrder: async (id: string) => {
+    const response = await api.put(`/driver/orders/${id}/complete`);
+    return response.data;
+  },
+  
+  // Earnings
+  getDriverEarnings: async (params?: any) => {
+    const response = await api.get('/driver/earnings', { params });
+    return response.data;
+  },
+  
+  // Withdrawals
+  createWithdrawal: async (withdrawalData: any) => {
+    const response = await api.post('/driver/withdrawals', withdrawalData);
+    return response.data;
+  },
+  
+  getDriverWithdrawals: async (params?: any) => {
+    const response = await api.get('/driver/withdrawals', { params });
+    return response.data;
+  },
+  
+  // Location
+  updateLocation: async (locationData: any) => {
+    const response = await api.post('/driver/location', locationData);
+    return response.data;
+  },
+  
+  getLocation: async () => {
+    const response = await api.get('/driver/location');
+    return response.data;
+  },
+  
+  setOnlineStatus: async (status: boolean) => {
+    const response = await api.put('/driver/online-status', { is_online: status });
+    return response.data;
+  },
+  
+  getOnlineStatus: async () => {
+    const response = await api.get('/driver/location');
+    return response.data;
+  },
+  
+  getLocationHistory: async (params?: any) => {
+    const response = await api.get('/driver/location/history', { params });
+    return response.data;
+  },
+};
+
+// Location API (public)
+export const locationAPI = {
+  getNearbyDrivers: async (params: any) => {
+    const response = await api.get('/location/drivers/nearby', { params });
+    return response.data;
+  },
+  
+  getDriverLocation: async (id: string) => {
+    const response = await api.get(`/location/drivers/${id}`);
+    return response.data;
+  },
+  
+  getDriverRoute: async (orderId: string) => {
+    const response = await api.get(`/location/routes/${orderId}`);
+    return response.data;
+  },
+};
+
+export default api;
