@@ -11,9 +11,10 @@ const api = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
-  // Add CORS configuration
-  withCredentials: true,
+  // CORS configuration - disable credentials for now to avoid CORS issues
+  withCredentials: false,
 });
 
 // Request interceptor to add auth token
