@@ -37,20 +37,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const token = localStorage.getItem('authToken');
         const storedUserType = localStorage.getItem('userType') as UserType;
         
+        console.log('Restoring auth - Token exists:', !!token, 'UserType:', storedUserType);
+        
         if (token && storedUserType) {
           // Verify token with backend
-          const profileResponse = await authAPI.getProfile();
-          
-          // Restore state
-          setIsAuthenticated(true);
-          setUserType(storedUserType);
-          setUser(profileResponse.user);
+          try {
+            const profileResponse = await authAPI.getProfile();
+            
+            // Restore state
+            setIsAuthenticated(true);
+            setUserType(storedUserType);
+            setUser(profileResponse.user);
+            console.log('Auth restored successfully');
+          } catch (profileError) {
+            console.error('Profile fetch failed:', profileError);
+            // Token is invalid, clear it
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userType');
+            setIsAuthenticated(false);
+            setUserType(null);
+            setUser(null);
+          }
+        } else {
+          console.log('No token or userType found, user not authenticated');
+          setIsAuthenticated(false);
+          setUserType(null);
+          setUser(null);
         }
       } catch (error) {
         console.error('Failed to restore auth:', error);
-        // Clear invalid token
+        // Clear any invalid data
         localStorage.removeItem('authToken');
         localStorage.removeItem('userType');
+        setIsAuthenticated(false);
+        setUserType(null);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -63,17 +84,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const response = await authAPI.login(credentials);
       
-      // Store token
-      localStorage.setItem('authToken', response.token);
-      localStorage.setItem('userType', type);
+      console.log('Login response:', response);
       
-      // Update state
-      setIsAuthenticated(true);
-      setUserType(type);
-      setUser(response.user);
+      // Store token securely
+      if (response.token) {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('userType', type);
+        
+        // Verify token was stored
+        const storedToken = localStorage.getItem('authToken');
+        console.log('Token stored successfully:', !!storedToken);
+        
+        // Update state
+        setIsAuthenticated(true);
+        setUserType(type);
+        setUser(response.user);
+      } else {
+        throw new Error('No token received from server');
+      }
       
     } catch (error) {
       console.error('Login failed:', error);
+      // Clear any partial data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userType');
       throw error;
     }
   };

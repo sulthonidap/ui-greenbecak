@@ -36,11 +36,10 @@ api.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request with auth token to:', config.url);
+    } else {
+      console.log('Request without auth token to:', config.url);
     }
-    
-    // Debug CORS issues
-    console.log('Making request to:', config.url);
-    console.log('Headers:', config.headers);
     
     return config;
   },
@@ -76,6 +75,8 @@ api.interceptors.response.use(
     
     if (error.response?.status === 401) {
       const hadToken = !!localStorage.getItem('authToken');
+      console.log('401 Unauthorized - Had token:', hadToken);
+      
       // Clear any stale token
       localStorage.removeItem('authToken');
       localStorage.removeItem('userType');
@@ -85,8 +86,14 @@ api.interceptors.response.use(
         const path = window.location.pathname;
         const isAdminArea = path.startsWith('/admin');
         const isDriverArea = path.startsWith('/driver');
-        if (isAdminArea) window.location.href = '/login-admin';
-        else if (isDriverArea) window.location.href = '/login-driver';
+        
+        console.log('Redirecting due to 401 - Path:', path, 'IsAdmin:', isAdminArea, 'IsDriver:', isDriverArea);
+        
+        if (isAdminArea) {
+          window.location.href = '/login-admin';
+        } else if (isDriverArea) {
+          window.location.href = '/login-driver';
+        }
         // if on public pages, do NOT redirect (avoid reload loop)
       }
     }
