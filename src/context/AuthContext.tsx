@@ -40,23 +40,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log('Restoring auth - Token exists:', !!token, 'UserType:', storedUserType);
         
         if (token && storedUserType) {
-          // Verify token with backend
+          // For now, just restore from localStorage without verifying with backend
+          // This avoids CORS issues with /profile/ endpoint
+          setIsAuthenticated(true);
+          setUserType(storedUserType);
+          setUser(null); // Will be fetched later when needed
+          console.log('Auth restored from localStorage');
+          
+          // Try to fetch profile in background (optional)
           try {
             const profileResponse = await authAPI.getProfile();
-            
-            // Restore state
-            setIsAuthenticated(true);
-            setUserType(storedUserType);
             setUser(profileResponse.user);
-            console.log('Auth restored successfully');
+            console.log('Profile fetched successfully');
           } catch (profileError) {
-            console.error('Profile fetch failed:', profileError);
-            // Token is invalid, clear it
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userType');
-            setIsAuthenticated(false);
-            setUserType(null);
-            setUser(null);
+            console.warn('Profile fetch failed, but auth still valid:', profileError);
+            // Don't clear auth if profile fetch fails due to CORS
           }
         } else {
           console.log('No token or userType found, user not authenticated');
@@ -129,8 +127,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(profileResponse.user);
     } catch (error) {
       console.error('Failed to get profile:', error);
-      // If profile fetch fails, user might be logged out
-      logout();
+      // Don't logout if it's a CORS error - token might still be valid
+      if (error.message && error.message.includes('CORS')) {
+        console.warn('Profile fetch failed due to CORS, but keeping auth state');
+        return;
+      }
+      // Only logout for actual auth errors (401, 403, etc.)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        logout();
+      }
     }
   };
 

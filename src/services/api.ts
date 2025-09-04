@@ -66,11 +66,12 @@ api.interceptors.response.use(
     });
     
     // Handle CORS errors specifically
-    if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
+    if (error.code === 'ERR_NETWORK' || error.message.includes('CORS') || error.message.includes('Access-Control-Allow-Origin')) {
       console.error('CORS Error detected. This might be due to:');
       console.error(`1. Backend not running at ${API_HOST}`);
       console.error('2. CORS preflight request not handled properly');
       console.error('3. Missing CORS headers in backend response');
+      console.error('4. Backend CORS policy not allowing requests from frontend domain');
     }
     
     if (error.response?.status === 401) {
