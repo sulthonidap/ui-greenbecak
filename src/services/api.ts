@@ -5,6 +5,9 @@ const API_BASE_URL = import.meta.env.DEV
   ? '/api'  // Use Vite proxy in development
   : (import.meta.env.VITE_API_URL || 'http://localhost:8080/api');
 
+// Check if we're in development mode
+const isDev = import.meta.env.DEV;
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -12,9 +15,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
   // CORS configuration - enable credentials since backend supports it
-  withCredentials: true,
+  withCredentials: !isDev, // Disable credentials in dev to avoid CORS issues with proxy
+  // Ensure preflight requests are handled properly
+  validateStatus: function (status) {
+    return status >= 200 && status < 300; // default
+  },
 });
 
 // Request interceptor to add auth token
@@ -24,17 +32,43 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Debug CORS issues
+    console.log('Making request to:', config.url);
+    console.log('Headers:', config.headers);
+    
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response received:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.error('Response error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      url: error.config?.url,
+      headers: error.response?.headers
+    });
+    
+    // Handle CORS errors specifically
+    if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
+      console.error('CORS Error detected. This might be due to:');
+      console.error('1. Backend not running on port 8080');
+      console.error('2. CORS preflight request not handled properly');
+      console.error('3. Missing CORS headers in backend response');
+    }
+    
     if (error.response?.status === 401) {
       const hadToken = !!localStorage.getItem('authToken');
       // Clear any stale token
