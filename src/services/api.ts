@@ -172,7 +172,7 @@ export const tariffsAPI = {
   },
   
   createTariff: async (tariffData: any) => {
-    const response = await api.post('/admin/tariffs', tariffData);
+    const response = await api.post('/admin/tariffs/', tariffData);
     return response.data;
   },
   
@@ -195,7 +195,7 @@ export const tariffsAPI = {
 // Payments API
 export const paymentsAPI = {
   createPayment: async (paymentData: any) => {
-    const response = await api.post('/payments', paymentData);
+    const response = await api.post('/payments/', paymentData);
     return response.data;
   },
   
@@ -262,7 +262,7 @@ export const notificationsAPI = {
 export const adminAPI = {
   // Users
   createUser: async (userData: any) => {
-    const response = await api.post('/admin/users', userData);
+    const response = await api.post('/admin/users/', userData);
     return response.data;
   },
   getUsers: async (params?: any) => {
@@ -296,7 +296,7 @@ export const adminAPI = {
   
   // Drivers
   createDriver: async (driverData: any) => {
-    const response = await api.post('/admin/drivers', driverData);
+    const response = await api.post('/admin/drivers/', driverData);
     return response.data;
   },
   
@@ -425,7 +425,7 @@ export const driverAPI = {
   
   // Withdrawals
   createWithdrawal: async (withdrawalData: any) => {
-    const response = await api.post('/driver/withdrawals', withdrawalData);
+    const response = await api.post('/driver/withdrawals/', withdrawalData);
     return response.data;
   },
   
@@ -436,7 +436,7 @@ export const driverAPI = {
   
   // Location
   updateLocation: async (locationData: any) => {
-    const response = await api.post('/driver/location', locationData);
+    const response = await api.post('/driver/location/', locationData);
     return response.data;
   },
   
@@ -446,7 +446,7 @@ export const driverAPI = {
   },
   
   setOnlineStatus: async (status: boolean) => {
-    const response = await api.put('/driver/online-status', { is_online: status });
+    const response = await api.put('/driver/online-status/', { is_online: status });
     return response.data;
   },
   
