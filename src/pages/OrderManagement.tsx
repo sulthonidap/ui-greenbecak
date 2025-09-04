@@ -93,7 +93,7 @@ const OrderManagement: React.FC = () => {
       } else if (error.response?.status === 404) {
         setError('Endpoint admin orders belum tersedia di backend');
       } else if (error.code === 'ERR_NETWORK') {
-        setError('Tidak dapat terhubung ke server. Pastikan backend sudah running di port 8080');
+        setError('Tidak dapat terhubung ke server. Pastikan backend sudah running dan dapat diakses.');
       } else {
         setError(error.response?.data?.message || 'Gagal mengambil data order');
       }

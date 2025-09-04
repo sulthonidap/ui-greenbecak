@@ -3,7 +3,12 @@ import axios from 'axios';
 // Base API configuration - use proxy in development
 const API_BASE_URL = import.meta.env.DEV 
   ? '/api'  // Use Vite proxy in development
-  : (import.meta.env.VITE_API_URL || 'http://localhost:8080/api');
+  : (import.meta.env.VITE_API_URL || 'https://api.becakjogja.id/api');
+
+// Get API host for error messages
+const API_HOST = import.meta.env.VITE_API_URL 
+  ? new URL(import.meta.env.VITE_API_URL).origin
+  : 'https://api.becakjogja.id';
 
 // Check if we're in development mode
 const isDev = import.meta.env.DEV;
@@ -64,7 +69,7 @@ api.interceptors.response.use(
     // Handle CORS errors specifically
     if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
       console.error('CORS Error detected. This might be due to:');
-      console.error('1. Backend not running on port 8080');
+      console.error(`1. Backend not running at ${API_HOST}`);
       console.error('2. CORS preflight request not handled properly');
       console.error('3. Missing CORS headers in backend response');
     }

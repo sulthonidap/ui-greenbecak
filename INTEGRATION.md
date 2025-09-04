@@ -27,7 +27,7 @@ cp env.example .env
 ### 4. Run Backend
 ```bash
 go run main.go
-# Server akan berjalan di http://localhost:8080
+# Server akan berjalan di https://api.becakjogja.id
 ```
 
 ## 🔧 Setup Frontend
@@ -199,7 +199,7 @@ try {
 ### 1. Environment Variables
 ```bash
 # .env.local
-VITE_API_URL=http://localhost:8080/api
+VITE_API_URL=https://api.becakjogja.id/api
 VITE_DEV_MODE=true
 ```
 
@@ -212,7 +212,7 @@ Backend sudah dikonfigurasi untuk menerima request dari:
 Gunakan tools seperti Postman atau curl untuk test API:
 ```bash
 # Test login
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST https://api.becakjogja.id/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```
@@ -233,7 +233,7 @@ Backend menyediakan data seeding untuk testing:
 go build -o greenbecak-backend
 
 # Run with environment variables
-SERVER_PORT=8080 DATABASE_URL=... ./greenbecak-backend
+SERVER_PORT=443 DATABASE_URL=... ./greenbecak-backend
 ```
 
 ### Frontend Deployment
@@ -258,7 +258,7 @@ npm run build
 ### Common Issues
 
 1. **CORS Error**
-   - Pastikan backend running di port 8080
+   - Pastikan backend running di https://api.becakjogja.id
    - Check CORS configuration di backend
 
 2. **401 Unauthorized**
