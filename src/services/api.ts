@@ -319,13 +319,13 @@ export const adminAPI = {
   
   // Driver Financial Data
   getDriverFinancialData: async (params?: any) => {
-    const response = await api.get('/admin/drivers/financial-data/', { params });
+    const response = await api.get('/admin/drivers/financial-data', { params });
     return response.data;
   },
   
   // Tariffs
   createTariff: async (tariffData: any) => {
-    const response = await api.post('/admin/tariffs', tariffData);
+    const response = await api.post('/admin/tariffs/', tariffData);
     return response.data;
   },
   
