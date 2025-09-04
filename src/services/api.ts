@@ -378,7 +378,7 @@ export const adminAPI = {
   
   // Admin Orders
   getAdminOrders: async (params?: any) => {
-    const response = await api.get('/admin/orders', { params });
+    const response = await api.get('/orders', { params });
     return response.data;
   },
 };
