@@ -115,7 +115,7 @@ export const authAPI = {
 // Orders API
 export const ordersAPI = {
   createOrder: async (orderData: any) => {
-    const response = await api.post('/orders/public', orderData);
+    const response = await api.post('/orders/public/', orderData);
     return response.data;
   },
   
