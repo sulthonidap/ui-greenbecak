@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, AlertCircle } from 'lucide-react';
+import { User, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const DriverLogin: React.FC = () => {
   const [driverId, setDriverId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Load remembered data on component mount
+  useEffect(() => {
+    const rememberedData = localStorage.getItem('rememberedDriver');
+    if (rememberedData) {
+      try {
+        const { driverId: rememberedDriverId, rememberMe: rememberedRememberMe } = JSON.parse(rememberedData);
+        if (rememberedRememberMe) {
+          setDriverId(rememberedDriverId);
+          setRememberMe(true);
+        }
+      } catch (error) {
+        console.error('Error parsing remembered data:', error);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +39,25 @@ const DriverLogin: React.FC = () => {
     
     try {
       setError('');
+      setIsLoading(true);
+      
+      // Simulasi delay untuk animasi loading
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       await login('driver', { username: driverId, password });
+      
+      // Simpan ke localStorage jika remember me dicentang
+      if (rememberMe) {
+        localStorage.setItem('rememberedDriver', JSON.stringify({ driverId, rememberMe: true }));
+      } else {
+        localStorage.removeItem('rememberedDriver');
+      }
+      
       navigate('/driver');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Login gagal. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,20 +98,31 @@ const DriverLogin: React.FC = () => {
                 placeholder="ID Driver"
               />
             </div>
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
                   setError('');
                 }}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -87,6 +132,8 @@ const DriverLogin: React.FC = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
@@ -104,9 +151,17 @@ const DriverLogin: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
-              Masuk
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                  Memproses...
+                </>
+              ) : (
+                'Masuk'
+              )}
             </button>
           </div>
           
