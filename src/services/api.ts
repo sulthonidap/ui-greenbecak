@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// Base API configuration - always use proxy to avoid CORS issues
-const API_BASE_URL = '/api';
+// Base API configuration - use proxy in development
+const API_BASE_URL = import.meta.env.DEV 
+  ? '/api'  // Use Vite proxy in development
+  : (import.meta.env.VITE_API_URL || 'https://api.becakjogja.id/api');
 
 // Get API host for error messages
 const API_HOST = import.meta.env.VITE_API_URL 
