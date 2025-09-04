@@ -4,14 +4,10 @@ import { adminAPI } from '../services/api';
 import {
   ArrowLeft,
   Search,
-  Filter,
-  TrendingUp,
   Clock,
   MapPin,
   Car,
   Users,
-  Calendar,
-  Star,
   Eye,
   MoreHorizontal,
   CalendarDays,
@@ -39,161 +35,6 @@ interface Driver {
   averagePerHour?: number;
 }
 
-// Mock data untuk driver (fallback)
-const mockDrivers: Driver[] = [
-  {
-    id: '1',
-    name: 'Ahmad Supriadi',
-    email: 'ahmad@greenbecak.com',
-    phone: '+62 812-3456-7890',
-    vehicleType: 'Becak Listrik',
-    vehicleNumber: 'BL-001',
-    status: 'active',
-    totalTrips: 156,
-    selectedDateTrips: 8,
-    totalEarnings: 2500000,
-    selectedDateEarnings: 120000,
-    lastActive: '2 menit yang lalu',
-    location: 'Malioboro',
-    isOnline: true,
-    startTime: '08:00',
-    endTime: '17:00',
-    workingHours: 9,
-    averagePerHour: 13333
-  },
-  {
-    id: '2',
-    name: 'Budi Santoso',
-    email: 'budi@greenbecak.com',
-    phone: '+62 812-3456-7891',
-    vehicleType: 'Delman',
-    vehicleNumber: 'DL-001',
-    status: 'active',
-    totalTrips: 142,
-    selectedDateTrips: 6,
-    totalEarnings: 2200000,
-    selectedDateEarnings: 90000,
-    lastActive: '5 menit yang lalu',
-    location: 'Tugu',
-    isOnline: true,
-    startTime: '07:30',
-    endTime: '16:30',
-    workingHours: 9,
-    averagePerHour: 10000
-  },
-  {
-    id: '3',
-    name: 'Citra Dewi',
-    email: 'citra@greenbecak.com',
-    phone: '+62 812-3456-7892',
-    vehicleType: 'Becak Listrik',
-    vehicleNumber: 'BL-002',
-    status: 'active',
-    totalTrips: 189,
-    selectedDateTrips: 12,
-    totalEarnings: 3200000,
-    selectedDateEarnings: 180000,
-    lastActive: '1 menit yang lalu',
-    location: 'Kraton',
-    isOnline: true,
-    startTime: '06:00',
-    endTime: '18:00',
-    workingHours: 12,
-    averagePerHour: 15000
-  },
-     {
-     id: '4',
-     name: 'Dedi Kurniawan',
-     email: 'dedi@greenbecak.com',
-     phone: '+62 812-3456-7893',
-     vehicleType: 'Delman',
-     vehicleNumber: 'DL-002',
-     status: 'inactive',
-     totalTrips: 98,
-     selectedDateTrips: 0,
-     totalEarnings: 1500000,
-     selectedDateEarnings: 0,
-     lastActive: '1 jam yang lalu',
-     location: 'Pasar Beringharjo',
-     isOnline: false
-   },
-   {
-     id: '5',
-     name: 'Eko Prasetyo',
-     email: 'eko@greenbecak.com',
-     phone: '+62 812-3456-7894',
-     vehicleType: 'Becak Listrik',
-     vehicleNumber: 'BL-003',
-     status: 'active',
-     totalTrips: 203,
-     selectedDateTrips: 15,
-     totalEarnings: 3800000,
-     selectedDateEarnings: 225000,
-     lastActive: '30 detik yang lalu',
-     location: 'Jl. Solo',
-     isOnline: true,
-     startTime: '07:00',
-     endTime: '19:00',
-     workingHours: 12,
-     averagePerHour: 18750
-   },
-   {
-     id: '6',
-     name: 'Fajar Ramadhan',
-     email: 'fajar@greenbecak.com',
-     phone: '+62 812-3456-7895',
-     vehicleType: 'Delman',
-     vehicleNumber: 'DL-003',
-     status: 'active',
-     totalTrips: 167,
-     selectedDateTrips: 9,
-     totalEarnings: 2800000,
-     selectedDateEarnings: 135000,
-     lastActive: '3 menit yang lalu',
-     location: 'Jl. Magelang',
-     isOnline: true,
-     startTime: '08:30',
-     endTime: '17:30',
-     workingHours: 9,
-     averagePerHour: 15000
-   },
-   {
-     id: '7',
-     name: 'Gita Sari',
-     email: 'gita@greenbecak.com',
-     phone: '+62 812-3456-7896',
-     vehicleType: 'Becak Listrik',
-     vehicleNumber: 'BL-004',
-     status: 'active',
-     totalTrips: 145,
-     selectedDateTrips: 7,
-     totalEarnings: 2600000,
-     selectedDateEarnings: 105000,
-     lastActive: '1 menit yang lalu',
-     location: 'Jl. Kaliurang',
-     isOnline: true,
-     startTime: '09:00',
-     endTime: '18:00',
-     workingHours: 9,
-     averagePerHour: 11667
-   },
-   {
-     id: '8',
-     name: 'Hendra Wijaya',
-     email: 'hendra@greenbecak.com',
-     phone: '+62 812-3456-7897',
-     vehicleType: 'Delman',
-     vehicleNumber: 'DL-004',
-     status: 'offline',
-     totalTrips: 89,
-     selectedDateTrips: 0,
-     totalEarnings: 1200000,
-     selectedDateEarnings: 0,
-     lastActive: '2 jam yang lalu',
-     location: 'Jl. Parangtritis',
-     isOnline: false
-   }
- ];
 
 const DriverPerformance: React.FC = () => {
   const navigate = useNavigate();
@@ -252,11 +93,6 @@ const DriverPerformance: React.FC = () => {
         setError(error.response?.data?.message || 'Gagal mengambil data driver');
       }
 
-      // Fallback to mock data for development
-      if (import.meta.env.DEV) {
-        console.log('Using mock data as fallback...');
-        setDrivers(mockDrivers);
-      }
     } finally {
       setLoading(false);
     }

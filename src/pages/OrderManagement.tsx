@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Eye, Edit3, Trash2, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, MapPin, Phone, User, Calendar, DollarSign, Star, CalendarDays } from 'lucide-react';
-import { ordersAPI } from '../services/api';
+import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, User, DollarSign, Star, CalendarDays } from 'lucide-react';
+import { adminAPI } from '../services/api';
 
 interface Order {
   id: string;
@@ -31,206 +31,6 @@ interface Order {
   tariffName?: string;
 }
 
-// Mock data untuk order (fallback)
-const mockOrders: Order[] = [
-  {
-    id: 'ORD001',
-    orderNumber: 'GB-2024-001',
-    customerName: 'Ahmad Fauzi',
-    customerPhone: '08123456789',
-    customerAddress: 'Jl. Malioboro No. 123, Yogyakarta',
-    destination: 'Malioboro Mall',
-    driverName: 'Budi Santoso',
-    driverPhone: '08123456790',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL001',
-    distance: '2.5 km',
-    price: 25000,
-    status: 'completed',
-    paymentStatus: 'paid',
-    orderDate: new Date('2024-12-19T10:30:00'),
-    pickupTime: new Date('2024-12-19T10:35:00'),
-    completionTime: new Date('2024-12-19T10:50:00'),
-    rating: 5,
-    review: 'Sangat puas dengan pelayanan!',
-    estimatedTime: '15 menit',
-    actualTime: '15 menit'
-  },
-  {
-    id: 'ORD002',
-    orderNumber: 'GB-2024-002',
-    customerName: 'Siti Nurhaliza',
-    customerPhone: '08123456791',
-    customerAddress: 'Jl. Pasar Kembang No. 45, Yogyakarta',
-    destination: 'Taman Sari',
-    driverName: 'Ahmad Reza',
-    driverPhone: '08123456792',
-    vehicleType: 'delman',
-    vehicleCode: 'DL001',
-    distance: '3.2 km',
-    price: 32000,
-    status: 'ongoing',
-    paymentStatus: 'paid',
-    orderDate: new Date('2024-12-19T11:15:00'),
-    pickupTime: new Date('2024-12-19T11:20:00'),
-    estimatedTime: '20 menit'
-  },
-  {
-    id: 'ORD003',
-    orderNumber: 'GB-2024-003',
-    customerName: 'Joko Widodo',
-    customerPhone: '08123456793',
-    customerAddress: 'Jl. Kaliurang No. 67, Yogyakarta',
-    destination: 'Universitas Gadjah Mada',
-    driverName: 'Siti Rahma',
-    driverPhone: '08123456794',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL002',
-    distance: '4.1 km',
-    price: 41000,
-    status: 'accepted',
-    paymentStatus: 'pending',
-    orderDate: new Date('2024-12-19T11:45:00'),
-    estimatedTime: '25 menit'
-  },
-  {
-    id: 'ORD004',
-    orderNumber: 'GB-2024-004',
-    customerName: 'Dewi Lestari',
-    customerPhone: '08123456795',
-    customerAddress: 'Jl. Magelang No. 89, Yogyakarta',
-    destination: 'Keraton Yogyakarta',
-    driverName: 'Dewi Lestari',
-    driverPhone: '08123456796',
-    vehicleType: 'delman',
-    vehicleCode: 'DL002',
-    distance: '2.8 km',
-    price: 28000,
-    status: 'pending',
-    paymentStatus: 'pending',
-    orderDate: new Date('2024-12-19T12:00:00'),
-    estimatedTime: '18 menit'
-  },
-  {
-    id: 'ORD005',
-    orderNumber: 'GB-2024-005',
-    customerName: 'Budi Santoso',
-    customerPhone: '08123456797',
-    customerAddress: 'Jl. Solo No. 12, Yogyakarta',
-    destination: 'Museum Sonobudoyo',
-    driverName: 'Joko Widodo',
-    driverPhone: '08123456798',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL003',
-    distance: '1.9 km',
-    price: 19000,
-    status: 'cancelled',
-    paymentStatus: 'failed',
-    orderDate: new Date('2024-12-19T12:30:00'),
-    estimatedTime: '12 menit'
-  },
-  {
-    id: 'ORD006',
-    orderNumber: 'GB-2024-006',
-    customerName: 'Fatimah Azzahra',
-    customerPhone: '08123456799',
-    customerAddress: 'Jl. Parangtritis No. 34, Yogyakarta',
-    destination: 'Alun-Alun Kidul',
-    driverName: 'Budi Santoso',
-    driverPhone: '08123456790',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL001',
-    distance: '3.5 km',
-    price: 35000,
-    status: 'completed',
-    paymentStatus: 'paid',
-    orderDate: new Date('2024-12-19T13:00:00'),
-    pickupTime: new Date('2024-12-19T13:05:00'),
-    completionTime: new Date('2024-12-19T13:25:00'),
-    rating: 4,
-    review: 'Driver ramah dan sopan',
-    estimatedTime: '22 menit',
-    actualTime: '20 menit'
-  },
-  {
-    id: 'ORD007',
-    orderNumber: 'GB-2024-007',
-    customerName: 'Rina Marlina',
-    customerPhone: '08123456800',
-    customerAddress: 'Jl. Gejayan No. 56, Yogyakarta',
-    destination: 'Universitas Negeri Yogyakarta',
-    driverName: 'Ahmad Reza',
-    driverPhone: '08123456792',
-    vehicleType: 'delman',
-    vehicleCode: 'DL001',
-    distance: '2.8 km',
-    price: 28000,
-    status: 'ongoing',
-    paymentStatus: 'paid',
-    orderDate: new Date('2024-12-19T14:15:00'),
-    pickupTime: new Date('2024-12-19T14:20:00'),
-    estimatedTime: '18 menit'
-  },
-  {
-    id: 'ORD008',
-    orderNumber: 'GB-2024-008',
-    customerName: 'Surya Pratama',
-    customerPhone: '08123456801',
-    customerAddress: 'Jl. Cik Ditiro No. 78, Yogyakarta',
-    destination: 'Pasar Beringharjo',
-    driverName: 'Siti Rahma',
-    driverPhone: '08123456794',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL002',
-    distance: '1.5 km',
-    price: 15000,
-    status: 'pending',
-    paymentStatus: 'pending',
-    orderDate: new Date('2024-12-19T14:30:00'),
-    estimatedTime: '10 menit'
-  },
-  {
-    id: 'ORD009',
-    orderNumber: 'GB-2024-009',
-    customerName: 'Diana Putri',
-    customerPhone: '08123456802',
-    customerAddress: 'Jl. Sudirman No. 90, Yogyakarta',
-    destination: 'Mall Malioboro',
-    driverName: 'Dewi Lestari',
-    driverPhone: '08123456796',
-    vehicleType: 'delman',
-    vehicleCode: 'DL002',
-    distance: '4.2 km',
-    price: 42000,
-    status: 'completed',
-    paymentStatus: 'paid',
-    orderDate: new Date('2024-12-19T15:00:00'),
-    pickupTime: new Date('2024-12-19T15:05:00'),
-    completionTime: new Date('2024-12-19T15:30:00'),
-    rating: 5,
-    review: 'Pelayanan sangat memuaskan!',
-    estimatedTime: '25 menit',
-    actualTime: '25 menit'
-  },
-  {
-    id: 'ORD010',
-    orderNumber: 'GB-2024-010',
-    customerName: 'Bambang Sutejo',
-    customerPhone: '08123456803',
-    customerAddress: 'Jl. Monjali No. 12, Yogyakarta',
-    destination: 'Monumen Jogja Kembali',
-    driverName: 'Joko Widodo',
-    driverPhone: '08123456798',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL003',
-    distance: '3.8 km',
-    price: 38000,
-    status: 'accepted',
-    paymentStatus: 'paid',
-    orderDate: new Date('2024-12-19T15:30:00'),
-    estimatedTime: '23 menit'
-  }
-];
 
 const OrderManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -251,7 +51,7 @@ const OrderManagement: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await ordersAPI.getOrders();
+      const response = await adminAPI.getAdminOrders();
 
       const normalized = (response.orders || []).map((o: any) => ({
         id: o.id?.toString() || `order-${Date.now()}`,
@@ -290,14 +90,13 @@ const OrderManagement: React.FC = () => {
         setError('Anda harus login sebagai admin untuk mengakses data order');
       } else if (error.response?.status === 403) {
         setError('Anda tidak memiliki akses ke halaman ini');
+      } else if (error.response?.status === 404) {
+        setError('Endpoint admin orders belum tersedia di backend');
       } else if (error.code === 'ERR_NETWORK') {
         setError('Tidak dapat terhubung ke server. Pastikan backend sudah running di port 8080');
       } else {
         setError(error.response?.data?.message || 'Gagal mengambil data order');
       }
-
-      // Fallback to mock data
-      setOrders(mockOrders);
     } finally {
       setLoading(false);
     }
@@ -363,77 +162,6 @@ const OrderManagement: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
-    try {
-      await ordersAPI.updateOrder(orderId, { status: newStatus });
-
-      // Update local state
-      setOrders(prev => prev.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      ));
-
-      alert('Status order berhasil diperbarui!');
-    } catch (error: any) {
-      console.error('Failed to update order status:', error);
-      if (error.response?.status === 401) {
-        alert('Anda harus login sebagai admin untuk mengubah status order');
-      } else if (error.response?.status === 403) {
-        alert('Anda tidak memiliki akses untuk mengubah status order');
-      } else if (error.code === 'ERR_NETWORK') {
-        alert('Tidak dapat terhubung ke server. Pastikan backend sudah running');
-      } else {
-        alert(error.response?.data?.message || 'Gagal memperbarui status order');
-      }
-    }
-  };
-
-  const handlePaymentStatusChange = async (orderId: string, newPaymentStatus: Order['paymentStatus']) => {
-    try {
-      await ordersAPI.updateOrder(orderId, { payment_status: newPaymentStatus });
-
-      // Update local state
-      setOrders(prev => prev.map(order =>
-        order.id === orderId ? { ...order, paymentStatus: newPaymentStatus } : order
-      ));
-
-      alert('Status pembayaran berhasil diperbarui!');
-    } catch (error: any) {
-      console.error('Failed to update payment status:', error);
-      if (error.response?.status === 401) {
-        alert('Anda harus login sebagai admin untuk mengubah status pembayaran');
-      } else if (error.response?.status === 403) {
-        alert('Anda tidak memiliki akses untuk mengubah status pembayaran');
-      } else if (error.code === 'ERR_NETWORK') {
-        alert('Tidak dapat terhubung ke server. Pastikan backend sudah running');
-      } else {
-        alert(error.response?.data?.message || 'Gagal memperbarui status pembayaran');
-      }
-    }
-  };
-
-  const handleDelete = async (orderId: string) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus order ini?')) {
-      try {
-        await ordersAPI.deleteOrder(orderId);
-
-        // Update local state
-        setOrders(prev => prev.filter(order => order.id !== orderId));
-
-        alert('Order berhasil dihapus!');
-      } catch (error: any) {
-        console.error('Failed to delete order:', error);
-        if (error.response?.status === 401) {
-          alert('Anda harus login sebagai admin untuk menghapus order');
-        } else if (error.response?.status === 403) {
-          alert('Anda tidak memiliki akses untuk menghapus order');
-        } else if (error.code === 'ERR_NETWORK') {
-          alert('Tidak dapat terhubung ke server. Pastikan backend sudah running');
-        } else {
-          alert(error.response?.data?.message || 'Gagal menghapus order');
-        }
-      }
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {

@@ -94,72 +94,12 @@ const UserManagement: React.FC = () => {
         setError('Anda harus login sebagai admin untuk mengakses data user');
       } else if (error.response?.status === 403) {
         setError('Anda tidak memiliki akses ke halaman ini');
+      } else if (error.response?.status === 404) {
+        setError('Endpoint admin users belum tersedia di backend');
       } else if (error.code === 'ERR_NETWORK') {
         setError('Tidak dapat terhubung ke server. Pastikan backend sudah running di port 8080');
       } else {
         setError(error.response?.data?.message || 'Gagal mengambil data user');
-      }
-      
-      // Fallback to mock data for development
-      if (import.meta.env.DEV) {
-        console.log('Using mock data as fallback...');
-        setUsers([
-          {
-            id: 'U001',
-            name: 'Budi Santoso',
-            email: 'budi.santoso@email.com',
-            phone: '08123456789',
-            username: 'budi.santoso',
-            password: 'password123',
-            role: 'driver',
-            vehicleType: 'becak-listrik',
-            vehicleCode: 'BL001',
-            licenseNumber: '1234567890',
-            address: 'Jl. Malioboro No. 123, Yogyakarta',
-            emergencyContact: 'Siti Santoso',
-            emergencyPhone: '08123456788',
-            status: 'active',
-            joinDate: new Date('2024-01-15'),
-            totalTrips: 156,
-            totalEarnings: 3120000,
-            lastLogin: new Date('2024-12-19T10:30:00')
-          },
-          {
-            id: 'U002',
-            name: 'Ahmad Reza',
-            email: 'ahmad.reza@email.com',
-            phone: '08123456790',
-            username: 'ahmad.reza',
-            password: 'password123',
-            role: 'driver',
-            vehicleType: 'delman',
-            vehicleCode: 'DL001',
-            licenseNumber: '1234567891',
-            address: 'Jl. Pasar Kembang No. 45, Yogyakarta',
-            emergencyContact: 'Fatimah Reza',
-            emergencyPhone: '08123456791',
-            status: 'active',
-            joinDate: new Date('2024-02-01'),
-            totalTrips: 143,
-            totalEarnings: 2860000,
-            lastLogin: new Date('2024-12-19T09:15:00')
-          },
-          {
-            id: 'U006',
-            name: 'Admin Utama',
-            email: 'admin@greenbecak.com',
-            phone: '08123456798',
-            username: 'admin',
-            password: 'admin123',
-            role: 'admin',
-            address: 'Jl. Admin No. 1, Yogyakarta',
-            emergencyContact: 'Admin Backup',
-            emergencyPhone: '08123456799',
-            status: 'active',
-            joinDate: new Date('2024-01-01'),
-            lastLogin: new Date('2024-12-19T12:00:00')
-          }
-        ]);
       }
     } finally {
       setLoading(false);

@@ -336,6 +336,12 @@ export const adminAPI = {
     const response = await api.get('/admin/analytics/orders');
     return response.data;
   },
+  
+  // Admin Orders
+  getAdminOrders: async (params?: any) => {
+    const response = await api.get('/admin/orders', { params });
+    return response.data;
+  },
 };
 
 // Driver API

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserPlus, ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare } from 'lucide-react';
 import { adminAPI } from '../services/api';
 
 interface Driver {
@@ -20,89 +20,6 @@ interface Driver {
   totalEarnings: number;
 }
 
-// Mock data untuk driver (fallback)
-const mockDrivers: Driver[] = [
-  {
-    id: 'D001',
-    name: 'Budi Santoso',
-    email: 'budi.santoso@email.com',
-    phone: '08123456789',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL001',
-    licenseNumber: '1234567890',
-    address: 'Jl. Malioboro No. 123, Yogyakarta',
-    emergencyContact: 'Siti Santoso',
-    emergencyPhone: '08123456788',
-    status: 'active',
-    joinDate: new Date('2024-01-15'),
-    totalTrips: 156,
-    totalEarnings: 3120000
-  },
-  {
-    id: 'D002',
-    name: 'Ahmad Reza',
-    email: 'ahmad.reza@email.com',
-    phone: '08123456790',
-    vehicleType: 'delman',
-    vehicleCode: 'DL001',
-    licenseNumber: '1234567891',
-    address: 'Jl. Pasar Kembang No. 45, Yogyakarta',
-    emergencyContact: 'Fatimah Reza',
-    emergencyPhone: '08123456791',
-    status: 'active',
-    joinDate: new Date('2024-02-01'),
-    totalTrips: 143,
-    totalEarnings: 2860000
-  },
-  {
-    id: 'D003',
-    name: 'Joko Widodo',
-    email: 'joko.widodo@email.com',
-    phone: '08123456792',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL002',
-    licenseNumber: '1234567892',
-    address: 'Jl. Kaliurang No. 67, Yogyakarta',
-    emergencyContact: 'Iriana Widodo',
-    emergencyPhone: '08123456793',
-    status: 'inactive',
-    joinDate: new Date('2024-01-20'),
-    totalTrips: 98,
-    totalEarnings: 1960000
-  },
-  {
-    id: 'D004',
-    name: 'Siti Rahma',
-    email: 'siti.rahma@email.com',
-    phone: '08123456794',
-    vehicleType: 'delman',
-    vehicleCode: 'DL002',
-    licenseNumber: '1234567893',
-    address: 'Jl. Magelang No. 89, Yogyakarta',
-    emergencyContact: 'Ahmad Rahma',
-    emergencyPhone: '08123456795',
-    status: 'active',
-    joinDate: new Date('2024-02-10'),
-    totalTrips: 167,
-    totalEarnings: 3340000
-  },
-  {
-    id: 'D005',
-    name: 'Dewi Lestari',
-    email: 'dewi.lestari@email.com',
-    phone: '08123456796',
-    vehicleType: 'becak-listrik',
-    vehicleCode: 'BL003',
-    licenseNumber: '1234567894',
-    address: 'Jl. Solo No. 12, Yogyakarta',
-    emergencyContact: 'Budi Lestari',
-    emergencyPhone: '08123456797',
-    status: 'inactive',
-    joinDate: new Date('2024-01-25'),
-    totalTrips: 134,
-    totalEarnings: 2680000
-  }
-];
 
 const DriverList: React.FC = () => {
   const navigate = useNavigate();
@@ -153,11 +70,6 @@ const DriverList: React.FC = () => {
         setError(error.response?.data?.message || 'Gagal mengambil data driver');
       }
       
-      // Fallback to mock data for development
-      if (import.meta.env.DEV) {
-        console.log('Using mock data as fallback...');
-        setDrivers(mockDrivers);
-      }
     } finally {
       setLoading(false);
     }
