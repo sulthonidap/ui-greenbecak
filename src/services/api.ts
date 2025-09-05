@@ -169,10 +169,26 @@ export const authAPI = {
 export const ordersAPI = {
   createOrder: async (orderData: any) => {
     try {
-      const response = await publicApi.post('/orders/public/', orderData);
-      return response.data;
+      console.log('Attempting to create order via API...');
+      const response = await fetch('https://api.becakjogja.id/api/orders/public/', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Successfully created order via API:', data);
+        return data;
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (error) {
-      console.error('Failed to create order due to CORS, using mock response:', error);
+      console.warn('Failed to create order due to CORS, using mock response:', error);
       // Return mock response for development
       return {
         message: "Order created successfully (mock response due to CORS)",
@@ -222,46 +238,67 @@ export const tariffsAPI = {
   
   // Public endpoints (no auth required)
   getTariffsPublic: async (params?: any) => {
-    // Always return fallback data for now due to CORS issues
-    console.log('Using fallback tariffs data due to CORS restrictions', params ? `with params: ${JSON.stringify(params)}` : '');
-    return {
-      message: "Tariffs retrieved successfully",
-      tariffs: [
-        {
-          id: 1,
-          name: "Dekat",
-          min_distance: 0,
-          max_distance: 3,
-          price: 10000,
-          destinations: "Benteng Vredeburg, Bank Indonesia",
-          is_active: true,
-          created_at: "2025-09-04T12:48:27.089Z",
-          updated_at: "2025-09-04T12:48:27.089Z"
+    // Try to fetch from API first, fallback to static data if CORS fails
+    try {
+      console.log('Attempting to fetch tariffs from API...', params ? `with params: ${JSON.stringify(params)}` : '');
+      const response = await fetch('https://api.becakjogja.id/api/tariffs/public/', {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
-        {
-          id: 2,
-          name: "Sedang",
-          min_distance: 3,
-          max_distance: 7,
-          price: 20000,
-          destinations: "Taman Sari, Alun-Alun Selatan",
-          is_active: true,
-          created_at: "2025-09-04T12:48:27.089Z",
-          updated_at: "2025-09-04T12:48:27.089Z"
-        },
-        {
-          id: 3,
-          name: "Jauh",
-          min_distance: 7,
-          max_distance: 15,
-          price: 30000,
-          destinations: "Tugu Jogja, Stasiun Lempuyangan",
-          is_active: true,
-          created_at: "2025-09-04T12:48:27.089Z",
-          updated_at: "2025-09-04T12:48:27.089Z"
-        }
-      ]
-    };
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Successfully fetched tariffs from API:', data);
+        return data;
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch from API due to CORS, using fallback data:', error);
+      // Return fallback data structure that matches API response
+      return {
+        message: "Tariffs retrieved successfully (fallback data)",
+        tariffs: [
+          {
+            id: 1,
+            name: "Dekat",
+            min_distance: 0,
+            max_distance: 3,
+            price: 10000,
+            destinations: "Benteng Vredeburg, Bank Indonesia",
+            is_active: true,
+            created_at: "2025-09-04T12:48:27.089Z",
+            updated_at: "2025-09-04T12:48:27.089Z"
+          },
+          {
+            id: 2,
+            name: "Sedang",
+            min_distance: 3,
+            max_distance: 7,
+            price: 20000,
+            destinations: "Taman Sari, Alun-Alun Selatan",
+            is_active: true,
+            created_at: "2025-09-04T12:48:27.089Z",
+            updated_at: "2025-09-04T12:48:27.089Z"
+          },
+          {
+            id: 3,
+            name: "Jauh",
+            min_distance: 7,
+            max_distance: 15,
+            price: 30000,
+            destinations: "Tugu Jogja, Stasiun Lempuyangan",
+            is_active: true,
+            created_at: "2025-09-04T12:48:27.089Z",
+            updated_at: "2025-09-04T12:48:27.089Z"
+          }
+        ]
+      };
+    }
   },
   
   getTariffPublic: async (id: string) => {
