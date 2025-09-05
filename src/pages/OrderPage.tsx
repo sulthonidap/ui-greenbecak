@@ -63,41 +63,19 @@ const OrderPage: React.FC = () => {
         console.warn('CORS error detected for public tariffs endpoint, using fallback data');
       }
       
-      // Fallback to distanceOptions from context with better data
-      const fallbackTariffs = [
-        {
-          id: '1',
-          name: 'Dekat',
-          distance: '0 - 3 km',
-          price: 10000,
-          destination: 'Benteng Vredeburg, Bank Indonesia',
-          minDistance: 0,
-          maxDistance: 3,
-          isActive: true,
-        },
-        {
-          id: '2',
-          name: 'Sedang',
-          distance: '3 - 7 km',
-          price: 20000,
-          destination: 'Taman Sari, Alun-Alun Selatan',
-          minDistance: 3,
-          maxDistance: 7,
-          isActive: true,
-        },
-        {
-          id: '3',
-          name: 'Jauh',
-          distance: '7 - 15 km',
-          price: 30000,
-          destination: 'Tugu Jogja, Stasiun Lempuyangan',
-          minDistance: 7,
-          maxDistance: 15,
-          isActive: true,
-        }
-      ];
+      // Use fallback data from context
+      const fallbackTariffs = distanceOptions.map(option => ({
+        id: option.id,
+        name: option.name,
+        distance: option.distance,
+        price: option.price,
+        destination: option.destination,
+        minDistance: 0,
+        maxDistance: 0,
+        isActive: true,
+      }));
       
-      console.log('Using fallback tariffs:', fallbackTariffs);
+      console.log('Using fallback tariffs from context:', fallbackTariffs);
       setTariffs(fallbackTariffs);
     } finally {
       setLoading(false);
