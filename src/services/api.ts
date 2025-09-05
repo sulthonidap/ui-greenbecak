@@ -30,6 +30,22 @@ const api = axios.create({
   },
 });
 
+// Create a separate instance for public endpoints (no credentials)
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+  // No credentials for public endpoints to avoid CORS issues
+  withCredentials: false,
+  validateStatus: function (status) {
+    return status >= 200 && status < 300;
+  },
+});
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
@@ -45,6 +61,35 @@ api.interceptors.request.use(
   },
   (error) => {
     console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for publicApi
+publicApi.interceptors.response.use(
+  (response) => {
+    console.log('Public API response received:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('Public API response error:', error);
+    console.error('Public API error details:', {
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      url: error.config?.url,
+      headers: error.response?.headers
+    });
+    
+    // Handle CORS errors specifically for public endpoints
+    if (error.code === 'ERR_NETWORK' || error.message.includes('CORS') || error.message.includes('Access-Control-Allow-Origin')) {
+      console.error('CORS Error detected on public endpoint. This might be due to:');
+      console.error(`1. Backend not running at ${API_HOST}`);
+      console.error('2. CORS preflight request not handled properly');
+      console.error('3. Missing CORS headers in backend response');
+      console.error('4. Backend CORS policy not allowing requests from frontend domain');
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -123,7 +168,7 @@ export const authAPI = {
 // Orders API
 export const ordersAPI = {
   createOrder: async (orderData: any) => {
-    const response = await api.post('/orders/public/', orderData);
+    const response = await publicApi.post('/orders/public/', orderData);
     return response.data;
   },
   
@@ -162,12 +207,12 @@ export const tariffsAPI = {
   
   // Public endpoints (no auth required)
   getTariffsPublic: async (params?: any) => {
-    const response = await api.get('/tariffs/public/', { params });
+    const response = await publicApi.get('/tariffs/public/', { params });
     return response.data;
   },
   
   getTariffPublic: async (id: string) => {
-    const response = await api.get(`/tariffs/public/${id}`);
+    const response = await publicApi.get(`/tariffs/public/${id}`);
     return response.data;
   },
   
@@ -464,17 +509,17 @@ export const driverAPI = {
 // Location API (public)
 export const locationAPI = {
   getNearbyDrivers: async (params: any) => {
-    const response = await api.get('/location/drivers/nearby/', { params });
+    const response = await publicApi.get('/location/drivers/nearby/', { params });
     return response.data;
   },
   
   getDriverLocation: async (id: string) => {
-    const response = await api.get(`/location/drivers/${id}`);
+    const response = await publicApi.get(`/location/drivers/${id}`);
     return response.data;
   },
   
   getDriverRoute: async (orderId: string) => {
-    const response = await api.get(`/location/routes/${orderId}/`);
+    const response = await publicApi.get(`/location/routes/${orderId}/`);
     return response.data;
   },
 };
