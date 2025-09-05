@@ -241,7 +241,7 @@ export const tariffsAPI = {
     // Try to fetch from API first, fallback to static data if CORS fails
     try {
       console.log('Attempting to fetch tariffs from API...', params ? `with params: ${JSON.stringify(params)}` : '');
-      const response = await fetch('https://api.becakjogja.id/api/tariffs/public/', {
+      const response = await fetch('https://api.becakjogja.id/api/tariffs/public', {
         method: 'GET',
         mode: 'cors',
         headers: {
