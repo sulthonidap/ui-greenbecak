@@ -185,9 +185,29 @@ export const ordersAPI = {
         console.log('Successfully created order via API:', data);
         return data;
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // Try to get error message from response body
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // If can't parse JSON, use default error message
+        }
+        
+        const error = new Error(errorMessage);
+        (error as any).response = { status: response.status, data: { error: errorMessage } };
+        throw error;
       }
     } catch (error) {
+      // Re-throw the error if it's an API error (not CORS)
+      if (error instanceof Error && error.message !== 'Failed to fetch') {
+        throw error;
+      }
+      
       console.warn('Failed to create order due to CORS, using mock response:', error);
       // Return mock response for development
       return {

@@ -150,8 +150,11 @@ const OrderPage: React.FC = () => {
         setError('Kode kendaraan tidak ditemukan atau tidak tersedia.');
       } else if (error.code === 'ERR_NETWORK') {
         setError('Tidak dapat terhubung ke server. Silakan coba lagi.');
+      } else if (error.message && error.message !== 'Failed to fetch') {
+        // Handle error message from API response
+        setError(error.message);
       } else {
-        setError(error.response?.data?.message || 'Gagal membuat pesanan. Silakan coba lagi.');
+        setError(error.response?.data?.error || error.response?.data?.message || 'Gagal membuat pesanan. Silakan coba lagi.');
       }
     } finally {
       setSubmitting(false);
