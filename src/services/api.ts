@@ -170,7 +170,7 @@ export const ordersAPI = {
   createOrder: async (orderData: any) => {
     try {
       console.log('Attempting to create order via API...');
-      const response = await fetch('https://api.becakjogja.id/api/orders/public/', {
+      const response = await fetch('https://api.becakjogja.id/api/orders/public', {
         method: 'POST',
         mode: 'cors',
         headers: {
