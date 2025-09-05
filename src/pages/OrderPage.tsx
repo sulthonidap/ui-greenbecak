@@ -58,6 +58,11 @@ const OrderPage: React.FC = () => {
         message: error.message
       });
       
+      // Check if it's a CORS error
+      if (error.message && error.message.includes('CORS')) {
+        console.warn('CORS error detected for public tariffs endpoint, using fallback data');
+      }
+      
       // Fallback to distanceOptions from context with better data
       const fallbackTariffs = [
         {
