@@ -52,16 +52,6 @@ const OrderPage: React.FC = () => {
       
     } catch (error: any) {
       console.error('Failed to fetch tariffs:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-      
-      // Check if it's a CORS error
-      if (error.message && error.message.includes('CORS')) {
-        console.warn('CORS error detected for public tariffs endpoint, using fallback data');
-      }
       
       // Use fallback data from context
       const fallbackTariffs = distanceOptions.map(option => ({
