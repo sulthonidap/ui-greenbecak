@@ -6,6 +6,7 @@ import { useOrder } from '../context/OrderContext';
 const PaymentPage: React.FC = () => {
   const { currentOrder, submitOrder, clearCurrentOrder } = useOrder();
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success'>('pending');
+  const [paymentMethod, setPaymentMethod] = useState<'qris' | 'cash'>('qris');
   const navigate = useNavigate();
   const location = useLocation();
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -156,8 +157,8 @@ const PaymentPage: React.FC = () => {
                       id="qris"
                       type="radio"
                       name="payment-method"
-                      checked
-                      readOnly
+                      checked={paymentMethod === 'qris'}
+                      onChange={() => setPaymentMethod('qris')}
                       className="w-4 h-4 text-green-800 focus:ring-green-400"
                     />
                     <label htmlFor="qris" className="ml-2 block text-sm font-medium text-gray-700">
@@ -165,52 +166,68 @@ const PaymentPage: React.FC = () => {
                     </label>
                   </div>
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <h3 className="font-semibold text-blue-800 mb-2">Instruksi Pembayaran:</h3>
-                    <ol className="text-sm text-blue-700 space-y-1">
-                      <li>1. Buka aplikasi e-wallet pilihan Anda (OVO, GoPay, Dana, LinkAja, dll)</li>
-                      <li>2. Pilih menu "Scan QR" atau "Pindai QR"</li>
-                      <li>3. Arahkan kamera ke QR code di bawah ini</li>
-                      <li>4. Masukkan jumlah pembayaran: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></li>
-                      <li>5. Periksa detail pembayaran dengan teliti</li>
-                      <li>6. Konfirmasi pembayaran</li>
-                      <li>7. Simpan bukti pembayaran untuk referensi</li>
-                    </ol>
-                    
-                    <div className="mt-3 p-3 bg-white rounded border border-blue-300">
-                      <p className="text-xs text-blue-600 font-medium">💡 Tips: Pastikan saldo e-wallet Anda mencukupi sebelum melakukan pembayaran</p>
-                    </div>
+                  <div className="flex items-center mb-4">
+                    <input
+                      id="cash"
+                      type="radio"
+                      name="payment-method"
+                      checked={paymentMethod === 'cash'}
+                      onChange={() => setPaymentMethod('cash')}
+                      className="w-4 h-4 text-green-800 focus:ring-green-400"
+                    />
+                    <label htmlFor="cash" className="ml-2 block text-sm font-medium text-gray-700">
+                      Tunai (Bayar di tempat)
+                    </label>
                   </div>
                   
-                  <div className="flex justify-center p-4 bg-gray-50 rounded-lg mb-4">
-                    <div className="w-48 h-48 bg-white p-4 flex items-center justify-center border border-gray-300 rounded">
-                      <img 
-                        src="/image/mockup-qr.png" 
-                        alt="QR Code Pembayaran" 
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-yellow-800">Penting!</h3>
-                        <div className="mt-1 text-sm text-yellow-700">
-                          <p>• Pastikan jumlah pembayaran sesuai dengan total pesanan</p>
-                          <p>• Simpan bukti pembayaran untuk konfirmasi</p>
-                          <p>• Pembayaran akan diverifikasi dalam 1-2 menit</p>
-                          <p>• Jangan tutup halaman ini sampai pembayaran selesai</p>
-                          <p>• Jika ada masalah, hubungi customer service</p>
+                  {paymentMethod === 'qris' && (
+                    <>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h3 className="font-semibold text-blue-800 mb-2">Instruksi Pembayaran:</h3>
+                        <ol className="text-sm text-blue-700 space-y-1">
+                          <li>1. Buka aplikasi e-wallet pilihan Anda (OVO, GoPay, Dana, LinkAja, dll)</li>
+                          <li>2. Pilih menu "Scan QR" atau "Pindai QR"</li>
+                          <li>3. Arahkan kamera ke QR code di bawah ini</li>
+                          <li>4. Masukkan jumlah pembayaran: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></li>
+                          <li>5. Periksa detail pembayaran dengan teliti</li>
+                          <li>6. Konfirmasi pembayaran</li>
+                          <li>7. Simpan bukti pembayaran untuk referensi</li>
+                        </ol>
+                        
+                        <div className="mt-3 p-3 bg-white rounded border border-blue-300">
+                          <p className="text-xs text-blue-600 font-medium">💡 Tips: Pastikan saldo e-wallet Anda mencukupi sebelum melakukan pembayaran</p>
                         </div>
                       </div>
+                      
+                      <div className="flex justify-center p-4 bg-gray-50 rounded-lg mb-4">
+                        <div className="w-48 h-48 bg-white p-4 flex items-center justify-center border border-gray-300 rounded">
+                          <img 
+                            src="/image/mockup-qr.png" 
+                            alt="QR Code Pembayaran" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  
+                  {paymentMethod === 'cash' && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                      <h3 className="font-semibold text-green-800 mb-2">Pembayaran Tunai:</h3>
+                      <div className="text-sm text-green-700 space-y-2">
+                        <p>• Pembayaran dilakukan langsung kepada driver saat perjalanan dimulai</p>
+                        <p>• Siapkan uang tunai sebesar: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></p>
+                        <p>• Pastikan uang yang disiapkan dalam kondisi baik dan tidak rusak</p>
+                        <p>• Driver akan memberikan struk pembayaran setelah pembayaran diterima</p>
+                      </div>
+                      
+                      <div className="mt-3 p-3 bg-white rounded border border-green-300">
+                        <p className="text-xs text-green-600 font-medium">💡 Tips: Siapkan uang pas untuk memudahkan transaksi</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  
+                  
                 </div>
               </div>
             </>
@@ -291,7 +308,7 @@ const PaymentPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Metode Pembayaran:</span>
-                      <span className="font-medium">QRIS</span>
+                      <span className="font-medium">{paymentMethod === 'qris' ? 'QRIS' : 'Tunai'}</span>
                     </div>
                   </div>
 
@@ -374,16 +391,7 @@ const PaymentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Security & Guarantee */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-green-800 mb-2">Jaminan Keamanan:</h4>
-                <div className="text-sm text-green-700 space-y-1">
-                  <p>• Pembayaran aman dengan enkripsi SSL</p>
-                  <p>• Data pribadi terlindungi</p>
-                  <p>• Garansi uang kembali jika ada masalah</p>
-                  <p>• Driver terverifikasi dan terpercaya</p>
-                </div>
-              </div>
+            
 
               <div className="text-center">
                 <button
