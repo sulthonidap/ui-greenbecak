@@ -23,7 +23,7 @@ const Navbar: React.FC = () => {
               <div className="w-10 h-10 bg-green-800 rounded-full flex items-center justify-center">
                 <span className="text-white text-xl font-bold">GT</span>
               </div>
-              <span className="ml-2 text-xl font-semibold text-gray-900">GreenTrans</span>
+              <span className="ml-2 text-xl font-semibold text-gray-900">BecakJogja</span>
             </Link>
           </div>
           

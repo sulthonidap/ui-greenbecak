@@ -4,7 +4,7 @@ GreenBecak adalah aplikasi web modern untuk layanan transportasi ramah lingkunga
 
 ## 🌱 Tentang Aplikasi
 
-GreenBecak (GreenTrans) adalah platform transportasi yang menawarkan:
+GreenBecak (BecakJogja) adalah platform transportasi yang menawarkan:
 - **Becak Listrik** - Transportasi tradisional yang dimodernisasi dengan tenaga listrik
 - **Delman** - Transportasi tradisional dengan kuda
 

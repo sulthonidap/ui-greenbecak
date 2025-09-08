@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Clock, CreditCard, CheckCircle, Star, ChevronRight, Leaf, Shield, Users } from 'lucide-react';
+import { MapPin, Clock, CreditCard, CheckCircle, Star, ChevronRight, Leaf, Shield, Users, Download } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   return (
@@ -24,7 +24,7 @@ const LandingPage: React.FC = () => {
                 Transportasi Masa Depan
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Green<span className="text-yellow-300">Trans</span>
+                Becak<span className="text-yellow-300">Jogja</span>
               </h1>
               <p className="text-xl md:text-2xl mb-6 text-green-50">
                 Transportasi ramah lingkungan untuk mobilitas perkotaan yang lebih baik
@@ -42,11 +42,18 @@ const LandingPage: React.FC = () => {
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
                 <a 
+                  href="https://drive.usercontent.google.com/download?id=1ChlUvSQ0AXeJPKvoS5Dk3JyOb42JS3FQ&export=download&authuser=0&confirm=t&uuid=e5488790-41b5-46ce-af19-53f0d94cb1ac&at=AN8xHopDYUbwJyJS6eGCjRKZiK18:1757302923429" 
+                  className="inline-flex items-center bg-yellow-500 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-yellow-400 transition duration-300 transform hover:-translate-y-1"
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Download Aplikasi
+                </a>
+                {/* <a 
                   href="#cara-order" 
                   className="inline-flex items-center bg-transparent border-2 border-white text-white font-semibold px-6 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition duration-300"
                 >
                   Pelajari Lebih Lanjut
-                </a>
+                </a> */}
               </div>
             </div>
             <div className="md:w-1/2 flex justify-center">
@@ -75,7 +82,7 @@ const LandingPage: React.FC = () => {
             <div className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium mb-4">
               Keunggulan Kami
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Mengapa Memilih GreenTrans?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Mengapa Memilih BecakJogja?</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Kami menawarkan solusi transportasi yang efisien, nyaman dan ramah lingkungan untuk kebutuhan perjalanan Anda.
             </p>
@@ -307,7 +314,7 @@ const LandingPage: React.FC = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-green-800 to-green-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Siap Untuk Mencoba GreenTrans?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Siap Untuk Mencoba BecakJogja?</h2>
           <p className="text-xl text-green-100 mb-10 max-w-3xl mx-auto">
             Bergabunglah dengan ribuan orang yang telah beralih ke transportasi ramah lingkungan. Pesan perjalanan pertama Anda sekarang!
           </p>

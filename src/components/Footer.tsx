@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
               <div className="w-10 h-10 bg-green-800 rounded-full flex items-center justify-center">
                 <span className="text-white text-xl font-bold">GT</span>
               </div>
-              <span className="ml-2 text-xl font-semibold">GreenTrans</span>
+              <span className="ml-2 text-xl font-semibold">BecakJogja</span>
             </div>
             <p className="mt-2 text-sm text-gray-300">
               Transportasi ramah lingkungan untuk mobilitas perkotaan yang lebih baik.
