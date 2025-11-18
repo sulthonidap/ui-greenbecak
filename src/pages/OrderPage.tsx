@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrder, DistanceOption } from '../context/OrderContext';
 import { tariffsAPI, ordersAPI } from '../services/api';
-import { MapPin, CheckCircle, Phone, CarFront, Bike, ArrowLeft } from 'lucide-react';
+import { MapPin, CheckCircle, Phone } from 'lucide-react';
 
 interface TariffOption {
   id: string;
@@ -24,7 +24,7 @@ const OrderPage: React.FC = () => {
   const [pedicabCode, setPedicabCode] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<TariffOption | null>(null);
-  const [selectedTransport, setSelectedTransport] = useState<'becak' | 'delman' | null>(null);
+  const [selectedTransport] = useState<'delman'>('delman');
   const navigate = useNavigate();
 
   // Fetch active tariffs from backend (public endpoint - no login required)
@@ -81,7 +81,7 @@ const OrderPage: React.FC = () => {
     e.preventDefault();
     
     if (!pedicabCode.trim()) {
-      setError(`${selectedTransport === 'becak' ? 'Kode Becak' : 'Kode Delman'} harus diisi!`);
+      setError('Kode Andong harus diisi!');
       return;
     }
     
@@ -108,7 +108,7 @@ const OrderPage: React.FC = () => {
       customer_phone: whatsappNumber,
       customer_name: `Customer ${whatsappNumber}`,
       tariff_id: tariffId,
-      notes: `Transport: ${selectedTransport === 'delman' ? 'Delman' : 'Becak Listrik'}`
+      notes: `Transport: Andong`
     };
     
     try {
@@ -161,52 +161,20 @@ const OrderPage: React.FC = () => {
     }
   };
 
-  if (!selectedTransport) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-green-800 p-6 text-white">
-            <h1 className="text-2xl font-bold">Pilih Transportasi</h1>
-            <p className="text-green-50">Pilih jenis transportasi yang ingin Anda pesan</p>
-          </div>
-          <div className="p-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <button
-                onClick={() => setSelectedTransport('becak')}
-                className="flex flex-col items-center p-6 border rounded-lg hover:bg-green-50 hover:border-green-800 transition-all"
-              >
-                <Bike size={48} className="text-green-800 mb-2" />
-                <span className="font-medium">Becak Listrik</span>
-              </button>
-              <button
-                onClick={() => setSelectedTransport('delman')}
-                className="flex flex-col items-center p-6 border rounded-lg hover:bg-blue-50 hover:border-blue-800 transition-all"
-              >
-                <CarFront size={48} className="text-blue-800 mb-2" />
-                <span className="font-medium">Delman</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const isDelman = selectedTransport === 'delman';
-  const themeColor = isDelman ? 'blue' : 'green';
+  const themeColor = '#264A7C';
 
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className={`bg-${themeColor}-800 p-6 text-white`}>
-            <h1 className="text-2xl font-bold">Pesan {isDelman ? 'Delman' : 'GreenBecak'}</h1>
-            <p className="text-${themeColor}-50">Memuat data tarif...</p>
+          <div className="p-6 text-white" style={{ backgroundColor: themeColor }}>
+            <h1 className="text-2xl font-bold">Pesan Andong</h1>
+            <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Memuat data tarif...</p>
           </div>
           <div className="p-6">
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto" style={{ borderColor: themeColor }}></div>
                 <p className="mt-2 text-gray-600">Memuat data tarif...</p>
               </div>
             </div>
@@ -219,16 +187,9 @@ const OrderPage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className={`bg-${themeColor}-800 p-6 text-white relative`}>
-          <button
-            onClick={() => setSelectedTransport(null)}
-            className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center text-white hover:text-gray-200 transition-colors"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            <span>Kembali</span>
-          </button>
-          <h1 className="text-2xl font-bold">Pesan {isDelman ? 'Delman' : 'GreenBecak'}</h1>
-          <p className="text-${themeColor}-50">Isi formulir di bawah untuk memesan perjalanan Anda</p>
+        <div className="p-6 text-white relative" style={{ backgroundColor: themeColor }}>
+          <h1 className="text-2xl font-bold">Pesan Andong</h1>
+          <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Isi formulir di bawah untuk memesan perjalanan Anda</p>
         </div>
         
         <form onSubmit={handleSubmit} className="p-6">
@@ -242,7 +203,7 @@ const OrderPage: React.FC = () => {
           
           <div className="mb-6">
             <label htmlFor="pedicabCode" className="block mb-2 text-sm font-medium text-gray-700">
-              Kode {isDelman ? 'Delman' : 'Becak'}
+              Kode Andong
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -257,12 +218,20 @@ const OrderPage: React.FC = () => {
                   setError('');
                 }}
                 disabled={submitting}
-                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-${themeColor}-800 focus:border-${themeColor}-800 block w-full pl-10 p-2.5 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                placeholder={`Masukkan kode ${isDelman ? 'delman' : 'becak'} (contoh: ${isDelman ? 'DL' : 'GT'}-123)`}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = themeColor;
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${themeColor}40`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.boxShadow = '';
+                }}
+                placeholder="Masukkan kode andong (contoh: DL-123)"
               />
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Kode {isDelman ? 'delman' : 'becak'} terdapat pada bagian depan {isDelman ? 'delman' : 'becak'} atau bisa ditanyakan kepada pengemudi
+              Kode andong terdapat pada bagian depan andong atau bisa ditanyakan kepada pengemudi
             </p>
           </div>
           
@@ -283,7 +252,15 @@ const OrderPage: React.FC = () => {
                   setError('');
                 }}
                 disabled={submitting}
-                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-${themeColor}-800 focus:border-${themeColor}-800 block w-full pl-10 p-2.5 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = themeColor;
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${themeColor}40`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.boxShadow = '';
+                }}
                 placeholder="Masukkan nomor WhatsApp (contoh: 08123456789)"
               />
             </div>
@@ -315,14 +292,19 @@ const OrderPage: React.FC = () => {
                     submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                   } ${
                     selectedOption?.id === option.id 
-                      ? `border-${themeColor}-800 bg-${themeColor}-50 ring-2 ring-${themeColor}-800`
-                      : 'border-gray-200 hover:border-green-200 hover:bg-green-50'
+                      ? 'ring-2'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
+                  style={selectedOption?.id === option.id ? {
+                    borderColor: themeColor,
+                    backgroundColor: 'rgba(38, 74, 124, 0.1)',
+                    boxShadow: `0 0 0 2px ${themeColor}40`
+                  } : {}}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-medium text-gray-900">{option.name}</h4>
                     {selectedOption?.id === option.id && (
-                      <CheckCircle size={18} className={`text-${themeColor}-800`} />
+                      <CheckCircle size={18} style={{ color: themeColor }} />
                     )}
                   </div>
                   <p className="text-sm text-gray-500 mb-2">{option.distance}</p>
@@ -342,7 +324,17 @@ const OrderPage: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
-            className={`w-full bg-${themeColor}-800 hover:bg-${themeColor}-600 text-white font-medium rounded-lg text-sm px-5 py-3 text-center transition duration-300 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="w-full text-white font-medium rounded-lg text-sm px-5 py-3 text-center transition duration-300"
+            style={{ 
+              backgroundColor: submitting ? `${themeColor}80` : themeColor,
+              cursor: submitting ? 'not-allowed' : 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              if (!submitting) e.currentTarget.style.backgroundColor = '#1e3a5f';
+            }}
+            onMouseLeave={(e) => {
+              if (!submitting) e.currentTarget.style.backgroundColor = themeColor;
+            }}
           >
             {submitting ? (
               <div className="flex items-center justify-center">
