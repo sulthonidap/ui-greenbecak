@@ -15,23 +15,23 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="sticky top-0 z-50 bg-white shadow-md backdrop-blur-sm bg-white/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <div className="w-10 h-10 bg-green-800 rounded-full flex items-center justify-center">
-                <span className="text-white text-xl font-bold">GT</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#264A7C' }}>
+                <span className="text-white text-xl font-bold">AJ</span>
               </div>
               <span className="ml-2 text-xl font-semibold text-gray-900">AndongJogja</span>
             </Link>
           </div>
           
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
-            <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-800">
+            <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
               Beranda
             </Link>
-            <Link to="/pesan" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-800">
+            <Link to="/pesan" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
               Pesan
             </Link>
             
@@ -39,23 +39,26 @@ const Navbar: React.FC = () => {
               <>
                 <Link 
                   to={userType === 'admin' ? '/admin' : '/driver'} 
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
                 >
                   Dashboard
                 </Link>
                 <button 
                   onClick={handleLogout}
-                  className="px-3 py-2 rounded-md text-sm font-medium text-white bg-green-800 hover:bg-green-600"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-white transition-colors"
+                  style={{ backgroundColor: '#264A7C' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#264A7C'}
                 >
                   Keluar
                 </button>
               </>
             ) : (
               <div className="flex space-x-2">
-                <Link to="/login-driver" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-800">
+                <Link to="/login-driver" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
                   Login Driver
                 </Link>
-                <Link to="/login-admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-800">
+                <Link to="/login-admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
                   Login Admin
                 </Link>
               </div>
@@ -65,7 +68,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center sm:hidden">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md text-gray-700 hover:text-green-800 focus:outline-none"
+              className="p-2 rounded-md text-gray-700 hover:text-[#264A7C] focus:outline-none transition-colors"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -79,14 +82,14 @@ const Navbar: React.FC = () => {
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link 
               to="/" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-800"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               Beranda
             </Link>
             <Link 
               to="/pesan" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-800"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               Pesan
@@ -96,14 +99,17 @@ const Navbar: React.FC = () => {
               <>
                 <Link 
                   to={userType === 'admin' ? '/admin' : '/driver'} 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-800"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <button 
                   onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white bg-green-800 hover:bg-green-600"
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white transition-colors"
+                  style={{ backgroundColor: '#264A7C' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#264A7C'}
                 >
                   Keluar
                 </button>
@@ -112,14 +118,14 @@ const Navbar: React.FC = () => {
               <>
                 <Link 
                   to="/login-driver" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-800"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login Driver
                 </Link>
                 <Link 
                   to="/login-admin" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-800"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login Admin
