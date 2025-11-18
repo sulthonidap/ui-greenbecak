@@ -3,7 +3,7 @@ import axios from 'axios';
 // Base API configuration - use proxy in development
 const API_BASE_URL = import.meta.env.DEV 
   ? '/api'  // Use Vite proxy in development
-  : (import.meta.env.VITE_API_URL || 'https://api.becakjogja.id/api');
+  : (import.meta.env.VITE_API_URL || 'https://api.andongjogja.id/api');
 
 // Get API host for error messages
 const API_HOST = import.meta.env.VITE_API_URL 
@@ -170,7 +170,7 @@ export const ordersAPI = {
   createOrder: async (orderData: any) => {
     try {
       console.log('Attempting to create order via API...');
-      const response = await fetch('https://api.becakjogja.id/api/orders/public', {
+      const response = await fetch('https://api.andongjogja.id/api/orders/public', {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -261,7 +261,7 @@ export const tariffsAPI = {
     // Try to fetch from API first, fallback to static data if CORS fails
     try {
       console.log('Attempting to fetch tariffs from API...', params ? `with params: ${JSON.stringify(params)}` : '');
-      const response = await fetch('https://api.becakjogja.id/api/tariffs/public', {
+      const response = await fetch('https://api.andongjogja.id/api/tariffs/public', {
         method: 'GET',
         mode: 'cors',
         headers: {

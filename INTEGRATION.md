@@ -199,7 +199,7 @@ try {
 ### 1. Environment Variables
 ```bash
 # .env.local
-VITE_API_URL=https://api.becakjogja.id/api
+VITE_API_URL=https://api.andongjogja.id/api
 VITE_DEV_MODE=true
 ```
 
@@ -212,7 +212,7 @@ Backend sudah dikonfigurasi untuk menerima request dari:
 Gunakan tools seperti Postman atau curl untuk test API:
 ```bash
 # Test login
-curl -X POST https://api.becakjogja.id/api/auth/login \
+curl -X POST https://api.andongjogja.id/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```
