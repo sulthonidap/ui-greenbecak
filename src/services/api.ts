@@ -8,7 +8,7 @@ const API_BASE_URL = import.meta.env.DEV
 // Get API host for error messages
 const API_HOST = import.meta.env.VITE_API_URL 
   ? new URL(import.meta.env.VITE_API_URL).origin
-  : 'https://api.becakjogja.id';
+  : 'https://api.andongjogja.id';
 
 // Check if we're in development mode
 const isDev = import.meta.env.DEV;
@@ -620,7 +620,7 @@ export const driverAPI = {
   },
   
   setOnlineStatus: async (status: boolean) => {
-    const response = await api.put('/driver/online-status/', { is_online: status });
+    const response = await api.put('/driver/online-status', { is_online: status });
     return response.data;
   },
   
