@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useOrder, DistanceOption } from '../context/OrderContext';
 import { tariffsAPI, ordersAPI } from '../services/api';
 import { MapPin, CheckCircle, Phone } from 'lucide-react';
@@ -17,6 +17,7 @@ interface TariffOption {
 
 const OrderPage: React.FC = () => {
   const { distanceOptions, setOrder } = useOrder();
+  const [searchParams] = useSearchParams();
   const [tariffs, setTariffs] = useState<TariffOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -24,8 +25,19 @@ const OrderPage: React.FC = () => {
   const [pedicabCode, setPedicabCode] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<TariffOption | null>(null);
-  const [selectedTransport] = useState<'delman'>('delman');
+  const [codeFromQR, setCodeFromQR] = useState(false);
   const navigate = useNavigate();
+
+  // Read code parameter from URL and auto-fill pedicab code
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl) {
+      setPedicabCode(codeFromUrl);
+      setCodeFromQR(true);
+      // Clear the indicator after 5 seconds
+      setTimeout(() => setCodeFromQR(false), 5000);
+    }
+  }, [searchParams]);
 
   // Fetch active tariffs from backend (public endpoint - no login required)
   const fetchTariffs = async () => {
@@ -205,6 +217,14 @@ const OrderPage: React.FC = () => {
             <label htmlFor="pedicabCode" className="block mb-2 text-sm font-medium text-gray-700">
               Kode Andong
             </label>
+            {codeFromQR && (
+              <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 animate-fade-in">
+                <CheckCircle size={16} className="text-green-600" />
+                <p className="text-sm text-green-700">
+                  Kode andong telah terisi otomatis dari QR code
+                </p>
+              </div>
+            )}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <MapPin size={18} className="text-gray-400" />
@@ -216,15 +236,18 @@ const OrderPage: React.FC = () => {
                 onChange={(e) => {
                   setPedicabCode(e.target.value);
                   setError('');
+                  setCodeFromQR(false);
                 }}
                 disabled={submitting}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none"
+                className={`bg-gray-50 border text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none transition-colors ${
+                  codeFromQR ? 'border-green-300' : 'border-gray-300'
+                }`}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = themeColor;
                   e.currentTarget.style.boxShadow = `0 0 0 2px ${themeColor}40`;
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.borderColor = codeFromQR ? '#86efac' : '';
                   e.currentTarget.style.boxShadow = '';
                 }}
                 placeholder="Masukkan kode andong (contoh: DL-123)"
@@ -237,7 +260,7 @@ const OrderPage: React.FC = () => {
           
           <div className="mb-6">
             <label htmlFor="whatsappNumber" className="block mb-2 text-sm font-medium text-gray-700">
-              Nomor WhatsApp
+              Nomor WhatsApp Kamu
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

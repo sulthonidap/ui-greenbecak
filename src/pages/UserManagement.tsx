@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserPlus, ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare, Shield, Eye, EyeOff, Key } from 'lucide-react';
+import { UserPlus, ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare, Shield, Eye, EyeOff, Key, QrCode, Download } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface User {
   id: string;
@@ -49,6 +50,9 @@ const UserManagement: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'delete' | 'resetPassword' | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedDriverCode, setSelectedDriverCode] = useState<string>('');
+  const [selectedDriverName, setSelectedDriverName] = useState<string>('');
   
   // Helper untuk format tanggal yang aman terhadap undefined/string
   const formatDate = (date: any) => {
@@ -234,6 +238,47 @@ const UserManagement: React.FC = () => {
       ...prev,
       [userId]: !prev[userId]
     }));
+  };
+
+  // Generate QR Code for driver
+  const handleGenerateQR = (driverCode: string, driverName: string) => {
+    if (!driverCode) {
+      showError('Driver code tidak tersedia');
+      return;
+    }
+    setSelectedDriverCode(driverCode);
+    setSelectedDriverName(driverName);
+    setShowQRModal(true);
+  };
+
+  // Generate QR code value - link ke halaman pesan dengan driver_code
+  const generateQRValue = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/pesan?code=${selectedDriverCode}`;
+  };
+
+  // Download QR code as image
+  const downloadQRCode = () => {
+    const svg = document.querySelector('.qr-code-svg') as HTMLElement;
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `qrcode-${selectedDriverCode}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   const activeUsers = users.filter(user => user.status === 'active');
@@ -531,6 +576,15 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
+                        {user.role === 'driver' && user.vehicleCode && (
+                          <button
+                            onClick={() => handleGenerateQR(user.vehicleCode || '', user.name)}
+                            className="text-purple-600 hover:text-purple-900"
+                            title="Generate QR Code"
+                          >
+                            <QrCode className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(user.id)}
                           className="text-blue-600 hover:text-blue-900"
@@ -645,6 +699,51 @@ const UserManagement: React.FC = () => {
                      )}
          </div>
        </div>
+
+       {/* QR Code Modal */}
+       {showQRModal && (
+         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+             <div className="mt-3">
+               <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-lg font-medium text-gray-900">QR Code Driver</h3>
+                 <button
+                   onClick={() => setShowQRModal(false)}
+                   className="text-gray-400 hover:text-gray-600"
+                 >
+                   <X className="h-5 w-5" />
+                 </button>
+               </div>
+               <div className="text-center">
+                 <p className="text-sm text-gray-600 mb-2">{selectedDriverName}</p>
+                 <p className="text-xs text-gray-500 mb-4">Driver Code: <span className="font-semibold">{selectedDriverCode}</span></p>
+                 <div className="flex justify-center mb-4 p-4 bg-white rounded-lg border-2 border-gray-200">
+                   <QRCodeSVG
+                     className="qr-code-svg"
+                     value={generateQRValue()}
+                     size={200}
+                     level="H"
+                     includeMargin={true}
+                   />
+                 </div>
+                 <p className="text-xs text-gray-500 mb-4">
+                   Scan QR code ini untuk langsung ke halaman pesan dengan driver code: <span className="font-semibold">{selectedDriverCode}</span>
+                 </p>
+                 <button
+                   onClick={downloadQRCode}
+                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                   style={{ backgroundColor: '#264A7C' }}
+                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#264A7C'}
+                 >
+                   <Download size={16} className="mr-2" />
+                   Download QR Code
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
 
        {/* Confirmation Modal */}
        {showConfirmModal && (
