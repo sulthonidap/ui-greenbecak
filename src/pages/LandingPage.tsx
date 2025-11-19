@@ -73,7 +73,7 @@ const LandingPage: React.FC = () => {
                   <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a 
-                  href="https://drive.usercontent.google.com/download?id=1ChlUvSQ0AXeJPKvoS5Dk3JyOb42JS3FQ&export=download&authuser=0&confirm=t&uuid=e5488790-41b5-46ce-af19-53f0d94cb1ac&at=AN8xHopDYUbwJyJS6eGCjRKZiK18:1757302923429" 
+                  href="https://drive.usercontent.google.com/download?id=1vaj3tfKNLOJYnAC9QULO8qELiHDPiOE9&export=download&authuser=0&confirm=t&uuid=47d1778d-d080-4766-9678-a09893d5c8cc&at=ALWLOp4yHaR_0H3cX-sKXk4Q9gf6:1763534938127" 
                   className="inline-flex items-center justify-center bg-yellow-400 text-gray-900 font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl shadow-2xl hover:bg-yellow-300 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 text-sm sm:text-base"
                 >
                   <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-bounce" />
