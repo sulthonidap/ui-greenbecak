@@ -54,14 +54,9 @@ const Navbar: React.FC = () => {
                 </button>
               </>
             ) : (
-              <div className="flex space-x-2">
-                <Link to="/login-driver" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
-                  Login Driver
-                </Link>
-                <Link to="/login-admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
-                  Login Admin
-                </Link>
-              </div>
+              <Link to="/login-admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#264A7C] transition-colors">
+                Login Admin
+              </Link>
             )}
           </div>
           
@@ -115,22 +110,13 @@ const Navbar: React.FC = () => {
                 </button>
               </>
             ) : (
-              <>
-                <Link 
-                  to="/login-driver" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login Driver
-                </Link>
-                <Link 
-                  to="/login-admin" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login Admin
-                </Link>
-              </>
+              <Link 
+                to="/login-admin" 
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#264A7C] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login Admin
+              </Link>
             )}
           </div>
         </div>
