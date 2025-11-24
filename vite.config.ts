@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Get API URL from environment or use default
-  const apiUrl = process.env.VITE_API_URL || 'https://api.andongjogja.id';
+  const apiUrl = process.env.VITE_API_URL || 'https://api.becakjogja.id';
   const apiPort = process.env.VITE_API_PORT || '443';
   
   return {
