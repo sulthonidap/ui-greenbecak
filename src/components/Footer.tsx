@@ -8,9 +8,9 @@ const Footer: React.FC = () => {
           <div className="mb-6 md:mb-0">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-green-800 rounded-full flex items-center justify-center">
-                <span className="text-white text-xl font-bold">GT</span>
+                <span className="text-white text-xl font-bold">BJ</span>
               </div>
-              <span className="ml-2 text-xl font-semibold">AndongJogja</span>
+              <span className="ml-2 text-xl font-semibold">BecakJogja</span>
             </div>
             <p className="mt-2 text-sm text-gray-300">
               Transportasi ramah lingkungan untuk mobilitas perkotaan yang lebih baik.
@@ -59,7 +59,7 @@ const Footer: React.FC = () => {
         <hr className="my-6 border-gray-700" />
         
         <div className="flex flex-col sm:flex-row sm:justify-between items-center">
-          <span className="text-sm text-gray-300">© 2025 AndongJogja. Hak Cipta Dilindungi.</span>
+          <span className="text-sm text-gray-300">© 2025 BecakJogja. Hak Cipta Dilindungi.</span>
           <div className="flex mt-4 space-x-6 sm:mt-0">
             <a href="#" className="text-gray-300 hover:text-white">
               <span className="sr-only">Facebook</span>

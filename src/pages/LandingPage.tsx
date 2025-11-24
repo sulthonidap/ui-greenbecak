@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { MapPin, Clock, CreditCard, CheckCircle, Star, ChevronRight, Leaf, Shield, Users, Download, Sparkles, Zap, Heart, Award } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
-  const themeColor = '#264A7C';
-  const themeColorLight = 'rgba(38, 74, 124, 0.1)';
-  const themeColorDark = '#1e3a5f';
+  const themeColor = '#047857';
+  const themeColorLight = 'rgba(4, 120, 87, 0.1)';
+  const themeColorDark = '#065f46';
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -37,8 +37,8 @@ const LandingPage: React.FC = () => {
       <section className="relative overflow-hidden" style={{ backgroundColor: themeColor }}>
         {/* Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-20 animate-pulse" style={{ backgroundColor: '#60a5fa', filter: 'blur(100px)' }}></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-20 animate-pulse" style={{ backgroundColor: '#3b82f6', filter: 'blur(100px)', animationDelay: '1s' }}></div>
+          <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-15 animate-pulse" style={{ backgroundColor: '#6ee7b7', filter: 'blur(100px)' }}></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-15 animate-pulse" style={{ backgroundColor: '#34d399', filter: 'blur(100px)', animationDelay: '1s' }}></div>
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24 lg:py-32 relative z-10">
@@ -51,7 +51,7 @@ const LandingPage: React.FC = () => {
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight animate-slide-in-left">
-                <span className="text-white">Andong</span>
+                <span className="text-white">Becak</span>
                 <span className="text-yellow-300 ml-1 sm:ml-2 animate-bounce-slow">Jogja</span>
               </h1>
               
@@ -59,7 +59,7 @@ const LandingPage: React.FC = () => {
                 Jelajahi Jogja dengan cara yang autentik
               </p>
               <p className="text-sm sm:text-base md:text-lg mb-6 sm:mb-8 text-white/80 max-w-xl mx-auto md:mx-0 animate-fade-in-up animation-delay-400">
-                Nikmati perjalanan yang nyaman, aman, dan ramah lingkungan dengan layanan AndongJogja. 
+                Nikmati perjalanan yang nyaman, aman, dan ramah lingkungan dengan layanan BecakJogja. 
                 Solusi transportasi tradisional dengan teknologi modern.
               </p>
               
@@ -86,15 +86,15 @@ const LandingPage: React.FC = () => {
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500 animate-float">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
                 <img 
-                  src="image/hero-andong.jpeg" 
-                  alt="AndongJogja" 
+                  src="image/hero.jpg" 
+                  alt="BecakJogja" 
                   className="w-full h-[300px] sm:h-[400px] md:h-[500px] object-cover"
                 />
                 <div className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 bg-gradient-to-t from-black/50 to-transparent"></div>
               </div>
               {/* Decorative elements - hidden on mobile */}
               <div className="hidden sm:block absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-30 animate-pulse" style={{ backgroundColor: themeColor, filter: 'blur(20px)' }}></div>
-              <div className="hidden sm:block absolute -bottom-6 -left-6 w-32 h-32 rounded-full opacity-30 animate-pulse" style={{ backgroundColor: '#60a5fa', filter: 'blur(30px)', animationDelay: '1.5s' }}></div>
+              <div className="hidden sm:block absolute -bottom-6 -left-6 w-32 h-32 rounded-full opacity-20 animate-pulse" style={{ backgroundColor: '#6ee7b7', filter: 'blur(30px)', animationDelay: '1.5s' }}></div>
             </div>
           </div>
         </div>
@@ -132,7 +132,7 @@ const LandingPage: React.FC = () => {
               <Award size={14} className="sm:w-4 sm:h-4 animate-spin-slow" />
               <span>Keunggulan Kami</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900 animate-fade-in-up px-4">Mengapa Pilih AndongJogja?</h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900 animate-fade-in-up px-4">Mengapa Pilih BecakJogja?</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up animation-delay-200 px-4">
               Solusi transportasi yang menggabungkan tradisi dan teknologi untuk pengalaman terbaik
             </p>
@@ -158,12 +158,12 @@ const LandingPage: React.FC = () => {
               {
                 icon: <Shield size={32} />,
                 title: 'Aman & Nyaman',
-                description: 'Pengemudi terlatih dan andong yang terawat untuk kenyamanan dan keamanan perjalanan Anda.'
+                description: 'Pengemudi terlatih dan becak yang terawat untuk kenyamanan dan keamanan perjalanan Anda.'
               },
               {
                 icon: <Users size={32} />,
                 title: 'Komunitas Lokal',
-                description: 'Mendukung ekonomi lokal dan memberdayakan pengemudi andong dengan teknologi modern.'
+                description: 'Mendukung ekonomi lokal dan memberdayakan pengemudi becak dengan teknologi modern.'
               },
               {
                 icon: <Heart size={32} />,
@@ -206,7 +206,7 @@ const LandingPage: React.FC = () => {
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900 animate-fade-in-up px-4">Cara Memesan</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up animation-delay-200 px-4">
-              Hanya 4 langkah sederhana untuk memesan perjalanan AndongJogja Anda
+              Hanya 4 langkah sederhana untuk memesan perjalanan BecakJogja Anda
             </p>
           </div>
           
@@ -219,7 +219,7 @@ const LandingPage: React.FC = () => {
                 step: '1',
                 icon: <MapPin size={32} />,
                 title: 'Masukkan Kode',
-                description: 'Masukkan kode andong yang tersedia di lokasi Anda'
+                description: 'Masukkan kode becak yang tersedia di lokasi Anda'
               },
               {
                 step: '2',
@@ -299,7 +299,7 @@ const LandingPage: React.FC = () => {
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900 animate-fade-in-up px-4">Apa Kata Pelanggan Kami</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up animation-delay-200 px-4">
-              Pengalaman nyata dari pengguna layanan AndongJogja
+              Pengalaman nyata dari pengguna layanan BecakJogja
             </p>
           </div>
           
@@ -355,12 +355,12 @@ const LandingPage: React.FC = () => {
       {/* CTA Section */}
       <section className="py-16 sm:py-20 md:py-24 text-white relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${themeColor} 0%, ${themeColorDark} 100%)` }}>
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 rounded-full animate-pulse" style={{ backgroundColor: '#60a5fa', filter: 'blur(100px)' }}></div>
-          <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 rounded-full animate-pulse" style={{ backgroundColor: '#3b82f6', filter: 'blur(100px)', animationDelay: '1s' }}></div>
+          <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 rounded-full animate-pulse" style={{ backgroundColor: '#6ee7b7', filter: 'blur(100px)', opacity: 0.15 }}></div>
+          <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 rounded-full animate-pulse" style={{ backgroundColor: '#34d399', filter: 'blur(100px)', animationDelay: '1s', opacity: 0.15 }}></div>
         </div>
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 animate-fade-in-up px-4">Siap Untuk Mencoba AndongJogja?</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 animate-fade-in-up px-4">Siap Untuk Mencoba BecakJogja?</h2>
           <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 text-white/90 max-w-2xl mx-auto animate-fade-in-up animation-delay-200 px-4">
             Bergabunglah dengan ribuan orang yang telah beralih ke transportasi ramah lingkungan. 
             Pesan perjalanan pertama Anda sekarang!

@@ -93,7 +93,7 @@ const OrderPage: React.FC = () => {
     e.preventDefault();
     
     if (!pedicabCode.trim()) {
-      setError('Kode Andong harus diisi!');
+      setError('Kode Becak harus diisi!');
       return;
     }
     
@@ -120,7 +120,7 @@ const OrderPage: React.FC = () => {
       customer_phone: whatsappNumber,
       customer_name: `Customer ${whatsappNumber}`,
       tariff_id: tariffId,
-      notes: `Transport: Andong`
+      notes: `Transport: Becak`
     };
     
     try {
@@ -173,14 +173,14 @@ const OrderPage: React.FC = () => {
     }
   };
 
-  const themeColor = '#264A7C';
+  const themeColor = '#047857';
 
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-6 text-white" style={{ backgroundColor: themeColor }}>
-            <h1 className="text-2xl font-bold">Pesan Andong</h1>
+            <h1 className="text-2xl font-bold">Pesan Becak</h1>
             <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Memuat data tarif...</p>
           </div>
           <div className="p-6">
@@ -200,7 +200,7 @@ const OrderPage: React.FC = () => {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6 text-white relative" style={{ backgroundColor: themeColor }}>
-          <h1 className="text-2xl font-bold">Pesan Andong</h1>
+          <h1 className="text-2xl font-bold">Pesan Becak</h1>
           <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Isi formulir di bawah untuk memesan perjalanan Anda</p>
         </div>
         
@@ -215,13 +215,13 @@ const OrderPage: React.FC = () => {
           
           <div className="mb-6">
             <label htmlFor="pedicabCode" className="block mb-2 text-sm font-medium text-gray-700">
-              Kode Andong
+              Kode Becak
             </label>
             {codeFromQR && (
               <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 animate-fade-in">
                 <CheckCircle size={16} className="text-green-600" />
                 <p className="text-sm text-green-700">
-                  Kode andong telah terisi otomatis dari QR code
+                  Kode becak telah terisi otomatis dari QR code
                 </p>
               </div>
             )}
@@ -250,11 +250,11 @@ const OrderPage: React.FC = () => {
                   e.currentTarget.style.borderColor = codeFromQR ? '#86efac' : '';
                   e.currentTarget.style.boxShadow = '';
                 }}
-                placeholder="Masukkan kode andong (contoh: DL-123)"
+                placeholder="Masukkan kode becak (contoh: DL-123)"
               />
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Kode andong terdapat pada bagian depan andong atau bisa ditanyakan kepada pengemudi
+              Kode becak terdapat pada bagian depan becak atau bisa ditanyakan kepada pengemudi
             </p>
           </div>
           
@@ -320,7 +320,7 @@ const OrderPage: React.FC = () => {
                   }`}
                   style={selectedOption?.id === option.id ? {
                     borderColor: themeColor,
-                    backgroundColor: 'rgba(38, 74, 124, 0.1)',
+                    backgroundColor: 'rgba(4, 120, 87, 0.1)',
                     boxShadow: `0 0 0 2px ${themeColor}40`
                   } : {}}
                 >
@@ -353,7 +353,7 @@ const OrderPage: React.FC = () => {
               cursor: submitting ? 'not-allowed' : 'pointer'
             }}
             onMouseEnter={(e) => {
-              if (!submitting) e.currentTarget.style.backgroundColor = '#1e3a5f';
+              if (!submitting) e.currentTarget.style.backgroundColor = '#065f46';
             }}
             onMouseLeave={(e) => {
               if (!submitting) e.currentTarget.style.backgroundColor = themeColor;
