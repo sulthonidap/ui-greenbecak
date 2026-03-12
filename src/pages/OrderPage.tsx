@@ -44,11 +44,11 @@ const OrderPage: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       console.log('Fetching tariffs from backend (public endpoint)...');
       const response = await tariffsAPI.getTariffsPublic();
       console.log('Tariffs response:', response);
-      
+
       const normalized = (response.tariffs || []).map((t: any) => ({
         id: t.id?.toString() || '1', // Ensure valid numeric ID
         name: t.name,
@@ -61,10 +61,10 @@ const OrderPage: React.FC = () => {
       }));
       console.log('Normalized tariffs:', normalized);
       setTariffs(normalized);
-      
+
     } catch (error: any) {
       console.error('Failed to fetch tariffs:', error);
-      
+
       // Use fallback data from context
       const fallbackTariffs = distanceOptions.map(option => ({
         id: option.id,
@@ -76,14 +76,14 @@ const OrderPage: React.FC = () => {
         maxDistance: 0,
         isActive: true,
       }));
-      
+
       console.log('Using fallback tariffs from context:', fallbackTariffs);
       setTariffs(fallbackTariffs);
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Load tariffs on component mount
   useEffect(() => {
     fetchTariffs();
@@ -91,29 +91,29 @@ const OrderPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!pedicabCode.trim()) {
       setError('Kode Becak harus diisi!');
       return;
     }
-    
+
     if (!whatsappNumber.trim()) {
       setError('Nomor WhatsApp harus diisi!');
       return;
     }
-    
+
     if (!selectedOption) {
       setError('Silahkan pilih jarak perjalanan!');
       return;
     }
-    
+
     // Validate tariff ID
     const tariffId = parseInt(selectedOption.id);
     if (isNaN(tariffId) || tariffId <= 0) {
       setError('ID tarif tidak valid. Silakan pilih jarak perjalanan lagi.');
       return;
     }
-    
+
     // Prepare order data for API
     const orderData = {
       becak_code: pedicabCode,
@@ -122,16 +122,16 @@ const OrderPage: React.FC = () => {
       tariff_id: tariffId,
       notes: `Transport: Becak`
     };
-    
+
     try {
       setSubmitting(true);
       setError('');
-      
+
       console.log('Sending order data:', orderData);
-      
+
       // Create order via API
       const response = await ordersAPI.createOrder(orderData);
-      
+
       // Set order in context for payment page
       const distanceOption: DistanceOption = {
         id: selectedOption.id,
@@ -140,21 +140,21 @@ const OrderPage: React.FC = () => {
         price: selectedOption.price,
         destination: selectedOption.destination,
       };
-      
+
       setOrder(pedicabCode, distanceOption, whatsappNumber);
-      
+
       // Navigate to payment page with order ID
-      navigate('/pembayaran', { 
-        state: { 
+      navigate('/pembayaran', {
+        state: {
           orderId: response.order?.id || response.id,
-          orderNumber: response.order?.order_number || response.order_number 
-        } 
+          orderNumber: response.order?.order_number || response.order_number
+        }
       });
-      
+
     } catch (error: any) {
       console.error('Failed to create order:', error);
       console.error('Request data:', orderData);
-      
+
       if (error.response?.status === 400) {
         const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Data pesanan tidak valid. Silakan cek kembali informasi yang dimasukkan.';
         setError(errorMessage);
@@ -203,16 +203,16 @@ const OrderPage: React.FC = () => {
           <h1 className="text-2xl font-bold">Pesan Becak</h1>
           <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Isi formulir di bawah untuk memesan perjalanan Anda</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6">
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-500 rounded-md">
               {error}
             </div>
           )}
-          
 
-          
+
+
           <div className="mb-6">
             <label htmlFor="pedicabCode" className="block mb-2 text-sm font-medium text-gray-700">
               Kode Becak
@@ -239,9 +239,8 @@ const OrderPage: React.FC = () => {
                   setCodeFromQR(false);
                 }}
                 disabled={submitting}
-                className={`bg-gray-50 border text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none transition-colors ${
-                  codeFromQR ? 'border-green-300' : 'border-gray-300'
-                }`}
+                className={`bg-gray-50 border text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none transition-colors ${codeFromQR ? 'border-green-300' : 'border-gray-300'
+                  }`}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = themeColor;
                   e.currentTarget.style.boxShadow = `0 0 0 2px ${themeColor}40`;
@@ -257,10 +256,10 @@ const OrderPage: React.FC = () => {
               Kode becak terdapat pada bagian depan becak atau bisa ditanyakan kepada pengemudi
             </p>
           </div>
-          
+
           <div className="mb-6">
             <label htmlFor="whatsappNumber" className="block mb-2 text-sm font-medium text-gray-700">
-              Nomor WhatsApp Kamu
+              Nomor Gojek mu
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -291,7 +290,7 @@ const OrderPage: React.FC = () => {
               Nomor WhatsApp akan digunakan untuk konfirmasi pesanan dan komunikasi dengan pengemudi
             </p>
           </div>
-          
+
           <div className="mb-6">
             <h3 className="block mb-3 text-sm font-medium text-gray-700">
               Pilih Jarak Perjalanan
@@ -301,54 +300,52 @@ const OrderPage: React.FC = () => {
                 <p className="text-gray-500">Tidak ada tarif yang tersedia saat ini</p>
               </div>
             ) : (
-            <div className="grid md:grid-cols-3 gap-4">
-              {tariffs.map((option) => (
-                <div 
-                  key={option.id}
-                  onClick={() => {
-                    if (!submitting) {
-                      setSelectedOption(option);
-                      setError('');
-                    }
-                  }}
-                  className={`border rounded-lg p-4 transition-all ${
-                    submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                  } ${
-                    selectedOption?.id === option.id 
-                      ? 'ring-2'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                  style={selectedOption?.id === option.id ? {
-                    borderColor: themeColor,
-                    backgroundColor: 'rgba(4, 120, 87, 0.1)',
-                    boxShadow: `0 0 0 2px ${themeColor}40`
-                  } : {}}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-gray-900">{option.name}</h4>
-                    {selectedOption?.id === option.id && (
-                      <CheckCircle size={18} style={{ color: themeColor }} />
+              <div className="grid md:grid-cols-3 gap-4">
+                {tariffs.map((option) => (
+                  <div
+                    key={option.id}
+                    onClick={() => {
+                      if (!submitting) {
+                        setSelectedOption(option);
+                        setError('');
+                      }
+                    }}
+                    className={`border rounded-lg p-4 transition-all ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      } ${selectedOption?.id === option.id
+                        ? 'ring-2'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    style={selectedOption?.id === option.id ? {
+                      borderColor: themeColor,
+                      backgroundColor: 'rgba(4, 120, 87, 0.1)',
+                      boxShadow: `0 0 0 2px ${themeColor}40`
+                    } : {}}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium text-gray-900">{option.name}</h4>
+                      {selectedOption?.id === option.id && (
+                        <CheckCircle size={18} style={{ color: themeColor }} />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-2">{option.distance}</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      Rp {option.price.toLocaleString('id-ID')}
+                    </p>
+                    {option.destination && (
+                      <p className="text-sm text-gray-500 mb-2">* {option.destination}</p>
                     )}
+
                   </div>
-                  <p className="text-sm text-gray-500 mb-2">{option.distance}</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    Rp {option.price.toLocaleString('id-ID')}
-                  </p>
-                  {option.destination && (
-                    <p className="text-sm text-gray-500 mb-2">* {option.destination}</p>
-                  )}
-                  
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             )}
           </div>
-          
+
           <button
             type="submit"
             disabled={submitting}
             className="w-full text-white font-medium rounded-lg text-sm px-5 py-3 text-center transition duration-300"
-            style={{ 
+            style={{
               backgroundColor: submitting ? `${themeColor}80` : themeColor,
               cursor: submitting ? 'not-allowed' : 'pointer'
             }}
