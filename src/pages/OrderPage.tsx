@@ -259,7 +259,7 @@ const OrderPage: React.FC = () => {
 
           <div className="mb-6">
             <label htmlFor="whatsappNumber" className="block mb-2 text-sm font-medium text-gray-700">
-              Nomor Gojek mu
+              Nomor Order Gojek
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -283,12 +283,12 @@ const OrderPage: React.FC = () => {
                   e.currentTarget.style.borderColor = '';
                   e.currentTarget.style.boxShadow = '';
                 }}
-                placeholder="Masukkan nomor WhatsApp (contoh: 08123456789)"
+              // placeholder="Masukkan nomor WhatsApp (contoh: 08123456789)"
               />
             </div>
-            <p className="mt-1 text-sm text-gray-500">
+            {/* <p className="mt-1 text-sm text-gray-500">
               Nomor WhatsApp akan digunakan untuk konfirmasi pesanan dan komunikasi dengan pengemudi
-            </p>
+            </p> */}
           </div>
 
           <div className="mb-6">
