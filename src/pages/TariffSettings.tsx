@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Save, ArrowLeft, Plus, Trash2, Edit3 } from 'lucide-react';
+import { DollarSign, Save, Plus, Trash2, Edit3 } from 'lucide-react';
 import { tariffsAPI } from '../services/api';
 import { useOrder } from '../context/OrderContext';
 
@@ -10,6 +10,7 @@ interface TariffFormData {
   maxDistance: number;
   price: number;
   destinations: string;
+  isGojek: boolean;
 }
 
 interface TariffOption {
@@ -21,10 +22,10 @@ interface TariffOption {
   minDistance: number;
   maxDistance: number;
   isActive: boolean;
+  isGojek: boolean;
 }
 
 const TariffSettings: React.FC = () => {
-  const navigate = useNavigate();
   const { distanceOptions, updateTariff, addTariff, deleteTariff } = useOrder();
   const [tariffs, setTariffs] = useState<TariffOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +40,8 @@ const TariffSettings: React.FC = () => {
     minDistance: 0,
     maxDistance: 0,
     price: 0,
-    destinations: ''
+    destinations: '',
+    isGojek: false
   });
 
   // Auto hide success message after 3 seconds
@@ -76,6 +78,7 @@ const TariffSettings: React.FC = () => {
         minDistance: t.min_distance,
         maxDistance: t.max_distance,
         isActive: t.is_active,
+        isGojek: t.is_gojek,
       }));
       setTariffs(normalized);
       
@@ -98,6 +101,7 @@ const TariffSettings: React.FC = () => {
         minDistance: 0,
         maxDistance: 0,
         isActive: true,
+        isGojek: false,
       })));
     } finally {
       setLoading(false);
@@ -110,10 +114,10 @@ const TariffSettings: React.FC = () => {
   }, [statusFilter]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'minDistance' || name === 'maxDistance' ? parseInt(value) || 0 : value
+      [name]: type === 'checkbox' ? checked : (name === 'price' || name === 'minDistance' || name === 'maxDistance' ? parseInt(value) || 0 : value)
     }));
   };
 
@@ -124,7 +128,8 @@ const TariffSettings: React.FC = () => {
       minDistance: tariff.minDistance || 0,
       maxDistance: tariff.maxDistance || 0,
       price: tariff.price,
-      destinations: tariff.destination
+      destinations: tariff.destination,
+      isGojek: tariff.isGojek
     });
   };
 
@@ -135,7 +140,8 @@ const TariffSettings: React.FC = () => {
       minDistance: 0,
       maxDistance: 0,
       price: 0,
-      destinations: ''
+      destinations: '',
+      isGojek: false
     });
   };
 
@@ -147,7 +153,8 @@ const TariffSettings: React.FC = () => {
       minDistance: 0,
       maxDistance: 0,
       price: 0,
-      destinations: ''
+      destinations: '',
+      isGojek: false
     });
   };
 
@@ -164,6 +171,7 @@ const TariffSettings: React.FC = () => {
         price: formData.price,
         destinations: formData.destinations,
         is_active: true,
+        is_gojek: formData.isGojek,
       };
       
       if (isEditing) {
@@ -181,6 +189,7 @@ const TariffSettings: React.FC = () => {
                 destination: formData.destinations,
                 minDistance: formData.minDistance,
                 maxDistance: formData.maxDistance,
+                isGojek: formData.isGojek,
               }
             : tariff
         ));
@@ -192,6 +201,7 @@ const TariffSettings: React.FC = () => {
           distance: `${formData.minDistance} - ${formData.maxDistance} km`,
           price: formData.price,
           destination: formData.destinations,
+          isGojek: formData.isGojek,
         });
         
         setSuccessMessage('Tarif berhasil diperbarui!');
@@ -208,6 +218,7 @@ const TariffSettings: React.FC = () => {
           minDistance: formData.minDistance,
           maxDistance: formData.maxDistance,
           isActive: true,
+          isGojek: formData.isGojek,
         };
         
         // Update local state
@@ -225,7 +236,8 @@ const TariffSettings: React.FC = () => {
         minDistance: 0,
         maxDistance: 0,
         price: 0,
-        destinations: ''
+        destinations: '',
+        isGojek: false
       });
       
       setIsEditing(null);
@@ -486,6 +498,20 @@ const TariffSettings: React.FC = () => {
                       placeholder="Contoh: Malioboro, Tugu"
                     />
                   </div>
+                  
+                  <div className="flex items-center space-x-3 p-2 bg-white rounded-md border border-gray-300">
+                    <input
+                      type="checkbox"
+                      id="isGojek"
+                      name="isGojek"
+                      checked={formData.isGojek}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <label htmlFor="isGojek" className="text-sm font-medium text-gray-700">
+                      Trigger Form Gojek di /pesan
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3">
@@ -527,6 +553,9 @@ const TariffSettings: React.FC = () => {
                     Destinasi
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Gojek?
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -536,9 +565,14 @@ const TariffSettings: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {tariffs.map((tariff) => (
-                  <tr key={tariff.id} className="hover:bg-gray-50">
+                  <tr key={tariff.id} className={`${tariff.isGojek ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'} transition-colors`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {tariff.name}
+                      <div className="flex items-center gap-2">
+                        {tariff.name}
+                        {tariff.isGojek && (
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase">Gojek</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {tariff.distance}
@@ -548,6 +582,16 @@ const TariffSettings: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {tariff.destination}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {tariff.isGojek ? (
+                        <span className="text-blue-600 font-medium flex items-center gap-1">
+                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Ya
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">Tidak</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${

@@ -13,6 +13,7 @@ interface TariffOption {
   minDistance: number;
   maxDistance: number;
   isActive: boolean;
+  isGojek: boolean;
 }
 
 const OrderPage: React.FC = () => {
@@ -26,6 +27,7 @@ const OrderPage: React.FC = () => {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<TariffOption | null>(null);
   const [codeFromQR, setCodeFromQR] = useState(false);
+  const [isGojek, setIsGojek] = useState(false);
   const navigate = useNavigate();
 
   // Read code parameter from URL and auto-fill pedicab code
@@ -58,6 +60,7 @@ const OrderPage: React.FC = () => {
         minDistance: t.min_distance,
         maxDistance: t.max_distance,
         isActive: t.is_active,
+        isGojek: t.is_gojek,
       }));
       console.log('Normalized tariffs:', normalized);
       setTariffs(normalized);
@@ -75,6 +78,7 @@ const OrderPage: React.FC = () => {
         minDistance: 0,
         maxDistance: 0,
         isActive: true,
+        isGojek: false,
       }));
 
       console.log('Using fallback tariffs from context:', fallbackTariffs);
@@ -89,6 +93,15 @@ const OrderPage: React.FC = () => {
     fetchTariffs();
   }, []);
 
+  // Update isGojek when selectedOption changes
+  useEffect(() => {
+    if (selectedOption) {
+      setIsGojek(selectedOption.isGojek);
+    } else {
+      setIsGojek(false);
+    }
+  }, [selectedOption]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,8 +110,8 @@ const OrderPage: React.FC = () => {
       return;
     }
 
-    if (!whatsappNumber.trim()) {
-      setError('Nomor WhatsApp harus diisi!');
+    if (isGojek && !whatsappNumber.trim()) {
+      setError('ID Order Gojek harus diisi!');
       return;
     }
 
@@ -117,10 +130,10 @@ const OrderPage: React.FC = () => {
     // Prepare order data for API
     const orderData = {
       becak_code: pedicabCode,
-      customer_phone: whatsappNumber,
-      customer_name: `Customer ${whatsappNumber}`,
+      customer_phone: isGojek ? whatsappNumber : '08123456789', // Default phone if not Gojek
+      customer_name: isGojek ? `Gojek-${whatsappNumber}` : `Customer ${pedicabCode}`,
       tariff_id: tariffId,
-      notes: `Transport: Becak`
+      notes: isGojek ? `Transport: Gojek Order` : `Transport: Becak`
     };
 
     try {
@@ -256,40 +269,32 @@ const OrderPage: React.FC = () => {
               Kode becak terdapat pada bagian depan becak atau bisa ditanyakan kepada pengemudi
             </p>
           </div>
+          {/* Manual Gojek Toggle removed as requested - now triggered by specific tariff selection */}
 
-          <div className="mb-6">
-            <label htmlFor="whatsappNumber" className="block mb-2 text-sm font-medium text-gray-700">
-              Nomor Order Gojek
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Phone size={18} className="text-gray-400" />
+          {isGojek && (
+            <div className="mb-6 animate-fade-in">
+              <label htmlFor="whatsappNumber" className="block mb-2 text-sm font-medium text-gray-700">
+                ID Order Gojek
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Phone size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="whatsappNumber"
+                  value={whatsappNumber}
+                  onChange={(e) => {
+                    setWhatsappNumber(e.target.value);
+                    setError('');
+                  }}
+                  disabled={submitting}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="tempel nomor order gojekmu disini"
+                />
               </div>
-              <input
-                type="tel"
-                id="whatsappNumber"
-                value={whatsappNumber}
-                onChange={(e) => {
-                  setWhatsappNumber(e.target.value);
-                  setError('');
-                }}
-                disabled={submitting}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5 focus:outline-none"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = themeColor;
-                  e.currentTarget.style.boxShadow = `0 0 0 2px ${themeColor}40`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '';
-                  e.currentTarget.style.boxShadow = '';
-                }}
-              // placeholder="Masukkan nomor WhatsApp (contoh: 08123456789)"
-              />
             </div>
-            {/* <p className="mt-1 text-sm text-gray-500">
-              Nomor WhatsApp akan digunakan untuk konfirmasi pesanan dan komunikasi dengan pengemudi
-            </p> */}
-          </div>
+          )}
 
           <div className="mb-6">
             <h3 className="block mb-3 text-sm font-medium text-gray-700">
