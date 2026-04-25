@@ -14,6 +14,7 @@ interface TariffOption {
   maxDistance: number;
   isActive: boolean;
   isGojek: boolean;
+  isSubsidi: boolean;
 }
 
 const OrderPage: React.FC = () => {
@@ -61,6 +62,7 @@ const OrderPage: React.FC = () => {
         maxDistance: t.max_distance,
         isActive: t.is_active,
         isGojek: t.is_gojek,
+        isSubsidi: t.is_subsidi,
       }));
       console.log('Normalized tariffs:', normalized);
       setTariffs(normalized);
@@ -79,6 +81,7 @@ const OrderPage: React.FC = () => {
         maxDistance: 0,
         isActive: true,
         isGojek: false,
+        isSubsidi: false,
       }));
 
       console.log('Using fallback tariffs from context:', fallbackTariffs);
@@ -152,6 +155,7 @@ const OrderPage: React.FC = () => {
         distance: selectedOption.distance,
         price: selectedOption.price,
         destination: selectedOption.destination,
+        isSubsidi: selectedOption.isSubsidi,
       };
 
       setOrder(pedicabCode, distanceOption, whatsappNumber);

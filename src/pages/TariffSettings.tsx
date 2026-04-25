@@ -11,6 +11,7 @@ interface TariffFormData {
   price: number;
   destinations: string;
   isGojek: boolean;
+  isSubsidi: boolean;
 }
 
 interface TariffOption {
@@ -23,6 +24,7 @@ interface TariffOption {
   maxDistance: number;
   isActive: boolean;
   isGojek: boolean;
+  isSubsidi: boolean;
 }
 
 const TariffSettings: React.FC = () => {
@@ -41,7 +43,8 @@ const TariffSettings: React.FC = () => {
     maxDistance: 0,
     price: 0,
     destinations: '',
-    isGojek: false
+    isGojek: false,
+    isSubsidi: false
   });
 
   // Auto hide success message after 3 seconds
@@ -79,6 +82,7 @@ const TariffSettings: React.FC = () => {
         maxDistance: t.max_distance,
         isActive: t.is_active,
         isGojek: t.is_gojek,
+        isSubsidi: t.is_subsidi,
       }));
       setTariffs(normalized);
       
@@ -102,6 +106,7 @@ const TariffSettings: React.FC = () => {
         maxDistance: 0,
         isActive: true,
         isGojek: false,
+        isSubsidi: false,
       })));
     } finally {
       setLoading(false);
@@ -129,7 +134,8 @@ const TariffSettings: React.FC = () => {
       maxDistance: tariff.maxDistance || 0,
       price: tariff.price,
       destinations: tariff.destination,
-      isGojek: tariff.isGojek
+      isGojek: tariff.isGojek,
+      isSubsidi: tariff.isSubsidi || false
     });
   };
 
@@ -141,7 +147,8 @@ const TariffSettings: React.FC = () => {
       maxDistance: 0,
       price: 0,
       destinations: '',
-      isGojek: false
+      isGojek: false,
+      isSubsidi: false
     });
   };
 
@@ -154,7 +161,8 @@ const TariffSettings: React.FC = () => {
       maxDistance: 0,
       price: 0,
       destinations: '',
-      isGojek: false
+      isGojek: false,
+      isSubsidi: false
     });
   };
 
@@ -172,6 +180,7 @@ const TariffSettings: React.FC = () => {
         destinations: formData.destinations,
         is_active: true,
         is_gojek: formData.isGojek,
+        is_subsidi: formData.isSubsidi,
       };
       
       if (isEditing) {
@@ -190,6 +199,7 @@ const TariffSettings: React.FC = () => {
                 minDistance: formData.minDistance,
                 maxDistance: formData.maxDistance,
                 isGojek: formData.isGojek,
+                isSubsidi: formData.isSubsidi,
               }
             : tariff
         ));
@@ -202,6 +212,7 @@ const TariffSettings: React.FC = () => {
           price: formData.price,
           destination: formData.destinations,
           isGojek: formData.isGojek,
+          isSubsidi: formData.isSubsidi,
         });
         
         setSuccessMessage('Tarif berhasil diperbarui!');
@@ -219,6 +230,7 @@ const TariffSettings: React.FC = () => {
           maxDistance: formData.maxDistance,
           isActive: true,
           isGojek: formData.isGojek,
+          isSubsidi: formData.isSubsidi,
         };
         
         // Update local state
@@ -237,7 +249,8 @@ const TariffSettings: React.FC = () => {
         maxDistance: 0,
         price: 0,
         destinations: '',
-        isGojek: false
+        isGojek: false,
+        isSubsidi: false
       });
       
       setIsEditing(null);
@@ -510,6 +523,20 @@ const TariffSettings: React.FC = () => {
                     />
                     <label htmlFor="isGojek" className="text-sm font-medium text-gray-700">
                       Trigger Form Gojek di /pesan
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-2 bg-white rounded-md border border-gray-300">
+                    <input
+                      type="checkbox"
+                      id="isSubsidi"
+                      name="isSubsidi"
+                      checked={formData.isSubsidi}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <label htmlFor="isSubsidi" className="text-sm font-medium text-gray-700">
+                      Subsidi (Dishub)
                     </label>
                   </div>
                 </div>

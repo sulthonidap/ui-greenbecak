@@ -171,120 +171,131 @@ const PaymentPage: React.FC = () => {
 
               <div className="mb-8">
                 <h2 className="text-lg font-semibold mb-4">Informasi Pembayaran</h2>
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="qris"
-                      type="radio"
-                      name="payment-method"
-                      checked={paymentMethod === 'qris'}
-                      onChange={() => setPaymentMethod('qris')}
-                      className="w-4 h-4 text-green-800 focus:ring-green-400"
-                    />
-                    <label htmlFor="qris" className="ml-2 block text-sm font-medium text-gray-700">
-                      QRIS (OVO, GoPay, Dana, LinkAja, dll)
-                    </label>
+                
+                {currentOrder.distanceOption.isSubsidi ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle size={32} className="text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-green-800 mb-2">Subsidi Dishub</h3>
+                    <p className="text-green-700 font-medium">
+                      Selamat paket perjalanan anda telah di bayarkan oleh dishub
+                    </p>
                   </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center mb-4">
+                      <input
+                        id="qris"
+                        type="radio"
+                        name="payment-method"
+                        checked={paymentMethod === 'qris'}
+                        onChange={() => setPaymentMethod('qris')}
+                        className="w-4 h-4 text-green-800 focus:ring-green-400"
+                      />
+                      <label htmlFor="qris" className="ml-2 block text-sm font-medium text-gray-700">
+                        QRIS (OVO, GoPay, Dana, LinkAja, dll)
+                      </label>
+                    </div>
 
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="cash"
-                      type="radio"
-                      name="payment-method"
-                      checked={paymentMethod === 'cash'}
-                      onChange={() => setPaymentMethod('cash')}
-                      className="w-4 h-4 text-green-800 focus:ring-green-400"
-                    />
-                    <label htmlFor="cash" className="ml-2 block text-sm font-medium text-gray-700">
-                      Tunai (Bayar di tempat)
-                    </label>
-                  </div>
+                    <div className="flex items-center mb-4">
+                      <input
+                        id="cash"
+                        type="radio"
+                        name="payment-method"
+                        checked={paymentMethod === 'cash'}
+                        onChange={() => setPaymentMethod('cash')}
+                        className="w-4 h-4 text-green-800 focus:ring-green-400"
+                      />
+                      <label htmlFor="cash" className="ml-2 block text-sm font-medium text-gray-700">
+                        Tunai (Bayar di tempat)
+                      </label>
+                    </div>
 
-                  {paymentMethod === 'qris' && (
-                    <>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-center">
-                        <h3 className="font-semibold text-blue-800 mb-2">Instruksi Pembayaran QRIS:</h3>
-                        <p className="text-sm text-blue-700 mb-4">
-                          Scan kode QRIS yang ada pada driver untuk melakukan pembayaran otomatis.
-                        </p>
+                    {paymentMethod === 'qris' && (
+                      <>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-center">
+                          <h3 className="font-semibold text-blue-800 mb-2">Instruksi Pembayaran QRIS:</h3>
+                          <p className="text-sm text-blue-700 mb-4">
+                            Scan kode QRIS yang ada pada driver untuk melakukan pembayaran otomatis.
+                          </p>
 
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                        />
-
-                        {!isScanning ? (
-                          <button
-                            onClick={handleScanClick}
-                            className="bg-green-700 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-2 mx-auto transition-all shadow-md active:scale-95"
-                          >
-                            <Camera size={20} />
-                            Buka Kamera & Scan QRIS
-                          </button>
-                        ) : (
-                          <div className="relative w-48 h-48 mx-auto bg-black rounded-lg overflow-hidden flex items-center justify-center">
-                            <div className="absolute inset-0 opacity-50 bg-green-900"></div>
-                            <div className="z-10 text-white flex flex-col items-center">
-                              <Scan size={48} className="animate-pulse mb-2" />
-                              <span className="text-xs font-mono">Menganalisa QR...</span>
-                            </div>
-                            {/* Scanning line animation */}
-                            <div className="absolute left-0 right-0 h-1 bg-green-400 shadow-[0_0_10px_#4ade80] animate-scan-line"></div>
-                          </div>
-                        )}
-
-                        <p className="mt-4 text-xs text-gray-500 italic">
-                          Atau ikuti instruksi manual di bawah jika scan otomatis bermasalah
-                        </p>
-                      </div>
-
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                        <h3 className="font-semibold text-gray-800 mb-2 text-sm">Instruksi Manual:</h3>
-                        <ol className="text-xs text-gray-600 space-y-1">
-                          <li>1. Buka aplikasi e-wallet (OVO, GoPay, Dana, dll)</li>
-                          <li>2. Pilih menu "Scan QR"</li>
-                          <li>3. Arahkan ke QR code driver</li>
-                          <li>4. Masukkan jumlah: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></li>
-                        </ol>
-                      </div>
-
-                      <div className="flex justify-center p-4 bg-gray-50 rounded-lg mb-4 opacity-50">
-                        <div className="relative w-40 h-40 bg-white p-4 flex items-center justify-center border border-gray-300 rounded">
-                          <img
-                            src="/image/mockup-qr.png"
-                            alt="QR Code Pembayaran"
-                            className="w-full h-full object-contain"
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
                           />
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase">QR Statis Driver</span>
+
+                          {!isScanning ? (
+                            <button
+                              onClick={handleScanClick}
+                              className="bg-green-700 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-2 mx-auto transition-all shadow-md active:scale-95"
+                            >
+                              <Camera size={20} />
+                              Buka Kamera & Scan QRIS
+                            </button>
+                          ) : (
+                            <div className="relative w-48 h-48 mx-auto bg-black rounded-lg overflow-hidden flex items-center justify-center">
+                              <div className="absolute inset-0 opacity-50 bg-green-900"></div>
+                              <div className="z-10 text-white flex flex-col items-center">
+                                <Scan size={48} className="animate-pulse mb-2" />
+                                <span className="text-xs font-mono">Menganalisa QR...</span>
+                              </div>
+                              {/* Scanning line animation */}
+                              <div className="absolute left-0 right-0 h-1 bg-green-400 shadow-[0_0_10px_#4ade80] animate-scan-line"></div>
+                            </div>
+                          )}
+
+                          <p className="mt-4 text-xs text-gray-500 italic">
+                            Atau ikuti instruksi manual di bawah jika scan otomatis bermasalah
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                          <h3 className="font-semibold text-gray-800 mb-2 text-sm">Instruksi Manual:</h3>
+                          <ol className="text-xs text-gray-600 space-y-1">
+                            <li>1. Buka aplikasi e-wallet (OVO, GoPay, Dana, dll)</li>
+                            <li>2. Pilih menu "Scan QR"</li>
+                            <li>3. Arahkan ke QR code driver</li>
+                            <li>4. Masukkan jumlah: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></li>
+                          </ol>
+                        </div>
+
+                        <div className="flex justify-center p-4 bg-gray-50 rounded-lg mb-4 opacity-50">
+                          <div className="relative w-40 h-40 bg-white p-4 flex items-center justify-center border border-gray-300 rounded">
+                            <img
+                              src="/image/mockup-qr.png"
+                              alt="QR Code Pembayaran"
+                              className="w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+                              <span className="text-[10px] font-bold text-gray-500 uppercase">QR Statis Driver</span>
+                            </div>
                           </div>
                         </div>
+                      </>
+                    )}
+
+                    {paymentMethod === 'cash' && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <h3 className="font-semibold text-green-800 mb-2">Pembayaran Tunai:</h3>
+                        <div className="text-sm text-green-700 space-y-2">
+                          <p>• Pembayaran dilakukan langsung kepada driver saat perjalanan dimulai</p>
+                          <p>• Siapkan uang tunai sebesar: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></p>
+                          <p>• Pastikan uang yang disiapkan dalam kondisi baik dan tidak rusak</p>
+                          <p>• Driver akan memberikan struk pembayaran setelah pembayaran diterima</p>
+                        </div>
+
+                        <div className="mt-3 p-3 bg-white rounded border border-green-300">
+                          <p className="text-xs text-green-600 font-medium">💡 Tips: Siapkan uang pas untuk memudahkan transaksi</p>
+                        </div>
                       </div>
-                    </>
-                  )}
-
-                  {paymentMethod === 'cash' && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                      <h3 className="font-semibold text-green-800 mb-2">Pembayaran Tunai:</h3>
-                      <div className="text-sm text-green-700 space-y-2">
-                        <p>• Pembayaran dilakukan langsung kepada driver saat perjalanan dimulai</p>
-                        <p>• Siapkan uang tunai sebesar: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></p>
-                        <p>• Pastikan uang yang disiapkan dalam kondisi baik dan tidak rusak</p>
-                        <p>• Driver akan memberikan struk pembayaran setelah pembayaran diterima</p>
-                      </div>
-
-                      <div className="mt-3 p-3 bg-white rounded border border-green-300">
-                        <p className="text-xs text-green-600 font-medium">💡 Tips: Siapkan uang pas untuk memudahkan transaksi</p>
-                      </div>
-                    </div>
-                  )}
-
-
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -301,7 +312,7 @@ const PaymentPage: React.FC = () => {
                 onClick={handlePayment}
                 className="flex-1 bg-green-800 hover:bg-green-600 text-white font-medium rounded-lg px-4 py-3 text-center transition duration-300"
               >
-                Bayar Sekarang
+                {currentOrder.distanceOption.isSubsidi ? 'Konfirmasi Pesanan' : 'Bayar Sekarang'}
               </button>
             </div>
           )}

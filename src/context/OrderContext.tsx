@@ -8,6 +8,7 @@ export interface DistanceOption {
   price: number;
   destination: string;
   isGojek?: boolean;
+  isSubsidi?: boolean;
 }
 
 export interface Order {
