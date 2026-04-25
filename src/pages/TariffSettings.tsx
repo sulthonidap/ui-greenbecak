@@ -583,6 +583,9 @@ const TariffSettings: React.FC = () => {
                     Gojek?
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Subsidi?
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -599,6 +602,9 @@ const TariffSettings: React.FC = () => {
                         {tariff.isGojek && (
                           <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase">Gojek</span>
                         )}
+                        {tariff.isSubsidi && (
+                          <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">Subsidi</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -614,6 +620,16 @@ const TariffSettings: React.FC = () => {
                       {tariff.isGojek ? (
                         <span className="text-blue-600 font-medium flex items-center gap-1">
                           <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Ya
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">Tidak</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {tariff.isSubsidi ? (
+                        <span className="text-green-600 font-medium flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-600 rounded-full"></span>
                           Ya
                         </span>
                       ) : (
