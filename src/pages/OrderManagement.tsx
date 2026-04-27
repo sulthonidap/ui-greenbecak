@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, User, DollarSign, Star, CalendarDays } from 'lucide-react';
-import { adminAPI } from '../services/api';
+import { adminAPI, tariffsAPI } from '../services/api';
 
 interface Order {
   id: string;
@@ -41,6 +41,8 @@ const OrderManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'ongoing' | 'completed' | 'cancelled'>('all');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending' | 'paid' | 'failed'>('all');
   const [vehicleFilter, setVehicleFilter] = useState<'all' | 'becak-listrik' | 'delman'>('all');
+  const [tariffFilter, setTariffFilter] = useState<string>('all');
+  const [tariffs, setTariffs] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
@@ -102,9 +104,19 @@ const OrderManagement: React.FC = () => {
     }
   };
 
+  const fetchTariffs = async () => {
+    try {
+      const response = await tariffsAPI.getTariffs();
+      setTariffs(response.tariffs || []);
+    } catch (error) {
+      console.error('Failed to fetch tariffs:', error);
+    }
+  };
+
   // Load orders on component mount
   useEffect(() => {
     fetchOrders();
+    fetchTariffs();
   }, []);
 
   // Filter data when selected date changes
@@ -123,12 +135,13 @@ const OrderManagement: React.FC = () => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || order.paymentStatus === paymentFilter;
     const matchesVehicle = vehicleFilter === 'all' || order.vehicleType === vehicleFilter;
+    const matchesTariff = tariffFilter === 'all' || order.tariffName === tariffFilter;
     
     // Filter by date
     const orderDate = order.orderDate.toISOString().split('T')[0];
     const matchesDate = selectedDate === '' || orderDate === selectedDate;
     
-    return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesDate;
+    return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesTariff && matchesDate;
   });
 
   // Pagination logic
@@ -140,7 +153,7 @@ const OrderManagement: React.FC = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, paymentFilter, vehicleFilter]);
+  }, [searchTerm, statusFilter, paymentFilter, vehicleFilter, tariffFilter]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -305,21 +318,15 @@ const OrderManagement: React.FC = () => {
               <Car className="w-6 h-6 text-green-600 mr-3" />
               <h2 className="text-lg font-semibold text-gray-900">Daftar Order</h2>
             </div>
-            <button
-              onClick={() => navigate('/admin/create-order')}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Tambah Order
-            </button>
+            {/* Tombol Tambah Order Dihapus */}
           </div>
         </div>
 
         <div className="p-6">
           {/* Filter dan Search */}
           <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4">
+              <div className="md:col-span-2 lg:col-span-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
@@ -380,12 +387,25 @@ const OrderManagement: React.FC = () => {
                 </div>
               </div>
               <div>
+                <select
+                  value={tariffFilter}
+                  onChange={(e) => setTariffFilter(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="all">Semua Tarif</option>
+                  {tariffs.map((t) => (
+                    <option key={t.id} value={t.name}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <button 
                   onClick={() => {
                     setSearchTerm('');
                     setStatusFilter('all');
                     setPaymentFilter('all');
                     setVehicleFilter('all');
+                    setTariffFilter('all');
                     setSelectedDate(new Date().toISOString().split('T')[0]);
                   }}
                   className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"

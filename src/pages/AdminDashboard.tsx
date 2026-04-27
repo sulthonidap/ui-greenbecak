@@ -21,6 +21,7 @@ import DriverDetail from './DriverDetail';
 import CustomerManagement from './CustomerManagement';
 import CustomerDetail from './CustomerDetail';
 import StandManagement from './StandManagement';
+import { adminAPI } from '../services/api';
 
 interface DriverStatus {
   id: string;
@@ -32,59 +33,54 @@ interface DriverStatus {
   totalEarnings: number;
 }
 
-// Mock data
-const drivers: DriverStatus[] = [
-  { 
-    id: 'D001', 
-    name: 'Budi Santoso', 
-    status: 'online', 
-    lastActive: new Date(), 
-    location: 'Jl. Malioboro',
-    totalTrips: 156,
-    totalEarnings: 3120000
-  },
-  { 
-    id: 'D002', 
-    name: 'Ahmad Reza', 
-    status: 'online', 
-    lastActive: new Date(), 
-    location: 'Jl. Pasar Kembang',
-    totalTrips: 143,
-    totalEarnings: 2860000
-  },
-  { 
-    id: 'D003', 
-    name: 'Joko Widodo', 
-    status: 'offline', 
-    lastActive: new Date(Date.now() - 3600000), 
-    location: 'Jl. Kaliurang',
-    totalTrips: 98,
-    totalEarnings: 1960000
-  },
-  { 
-    id: 'D004', 
-    name: 'Siti Rahma', 
-    status: 'online', 
-    lastActive: new Date(), 
-    location: 'Jl. Magelang',
-    totalTrips: 167,
-    totalEarnings: 3340000
-  },
-  { 
-    id: 'D005', 
-    name: 'Dewi Lestari', 
-    status: 'offline', 
-    lastActive: new Date(Date.now() - 7200000), 
-    location: 'Jl. Solo',
-    totalTrips: 134,
-    totalEarnings: 2680000
-  },
-];
+// Removed mock data
 
 const Dashboard: React.FC = () => {
-  const { orders } = useOrder();
   const location = useLocation();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [drivers, setDrivers] = useState<DriverStatus[]>([]);
+  const [dashboardOrders, setDashboardOrders] = useState<any[]>([]);
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoadingDrivers(true);
+        // Fetch drivers
+        const response = await adminAPI.getDrivers();
+        const normalized = (response.drivers || []).map((d: any) => ({
+          id: d.id?.toString() || d.driver_code || '',
+          name: d.name || '',
+          status: d.is_active ? 'online' : 'offline', // Using active status as proxy for online for now
+          lastActive: d.updated_at ? new Date(d.updated_at) : new Date(),
+          location: d.address || 'Tidak diketahui',
+          totalTrips: d.total_trips || 0,
+          totalEarnings: d.total_earnings || 0
+        }));
+        setDrivers(normalized);
+        
+        // Fetch orders
+        const orderResponse = await adminAPI.getAdminOrders();
+        const normalizedOrders = (orderResponse.orders || []).map((o: any) => ({
+          id: o.id?.toString() || `order-${Date.now()}`,
+          orderNumber: o.order_number || `GB-${Date.now()}`,
+          vehicleCode: o.becak_code || o.driver?.vehicle_number || o.driver?.driver_code || 'N/A',
+          distance: o.distance ? `${o.distance} km` : 'N/A',
+          price: o.price || 0,
+          status: o.status || 'pending',
+          timestamp: o.created_at ? new Date(o.created_at) : new Date(),
+        }));
+        setDashboardOrders(normalizedOrders);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setIsLoadingDrivers(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   // Check for success message from navigation state
   useEffect(() => {
@@ -97,8 +93,8 @@ const Dashboard: React.FC = () => {
     }
   }, [location.state]);
   
-  const activeOrders = (orders || []).filter(order => order.status === 'accepted');
-  const completedOrders = (orders || []).filter(order => order.status === 'completed');
+  const activeOrders = dashboardOrders.filter(order => order.status === 'accepted' || order.status === 'ongoing');
+  const completedOrders = dashboardOrders.filter(order => order.status === 'completed');
   const onlineDrivers = drivers.filter(driver => driver.status === 'online');
   
   const totalSystemEarnings = drivers.reduce((sum, driver) => sum + driver.totalEarnings, 0);
@@ -258,7 +254,7 @@ const Dashboard: React.FC = () => {
       
       <div>
         <h2 className="text-xl font-semibold mb-4">Pesanan Terbaru</h2>
-        {(orders || []).length > 0 ? (
+        {(dashboardOrders || []).length > 0 ? (
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -284,29 +280,31 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {(orders || []).map((order) => (
+                {(dashboardOrders || []).slice(0, 5).map((order) => (
                   <tr key={order.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {order.id}
+                      {order.orderNumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.pedicabCode}
+                      {order.vehicleCode}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.distanceOption?.name || 'N/A'} ({order.distanceOption?.distance || 'N/A'})
+                      {order.distance}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      Rp {order.distanceOption?.price?.toLocaleString('id-ID') || '0'}
+                      Rp {order.price?.toLocaleString('id-ID') || '0'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         order.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'ongoing' ? 'bg-purple-100 text-purple-800' :
                         order.status === 'completed' ? 'bg-green-100 text-green-800' :
                         'bg-red-100 text-red-800'
                       }`}>
                         {order.status === 'pending' ? 'Menunggu' :
                          order.status === 'accepted' ? 'Diterima' :
+                         order.status === 'ongoing' ? 'Sedang Jalan' :
                          order.status === 'completed' ? 'Selesai' :
                          'Dibatalkan'}
                       </span>
@@ -409,7 +407,7 @@ const AdminDashboard: React.FC = () => {
                 }`} />
                 User Management
               </Link>
-              <Link 
+              {/* <Link 
                 to="/admin/driver-performance" 
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                   location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/')
@@ -421,7 +419,7 @@ const AdminDashboard: React.FC = () => {
                   location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/') ? 'text-gray-300' : 'text-gray-400'
                 }`} />
                 Driver Performance
-              </Link>
+              </Link> */}
               {/* <Link 
                 to="/admin/customers" 
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
@@ -461,7 +459,7 @@ const AdminDashboard: React.FC = () => {
                 }`} />
                 Order Management
               </Link>
-              <Link 
+              {/* <Link 
                 to="/admin/finance" 
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                   location.pathname === '/admin/finance' 
@@ -473,7 +471,7 @@ const AdminDashboard: React.FC = () => {
                   location.pathname === '/admin/finance' ? 'text-gray-300' : 'text-gray-400'
                 }`} />
                 Financial Management
-              </Link>
+              </Link> */}
               
               <Link 
                 to="/admin/tariff" 
@@ -569,7 +567,7 @@ const AdminDashboard: React.FC = () => {
               >
                 User Management
               </Link>
-              <Link 
+              {/* <Link 
                 to="/admin/driver-performance" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/')
@@ -579,8 +577,8 @@ const AdminDashboard: React.FC = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Driver Performance
-              </Link>
-              <Link 
+              </Link> */}
+              {/* <Link 
                 to="/admin/customers" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   location.pathname === '/admin/customers' || location.pathname.startsWith('/admin/customer-detail/')
@@ -601,7 +599,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Analytics & Laporan
-              </Link>
+              </Link> */}
               <Link 
                 to="/admin/orders" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
@@ -613,7 +611,7 @@ const AdminDashboard: React.FC = () => {
               >
                 Order Management
               </Link>
-              <Link 
+              {/* <Link 
                 to="/admin/finance" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   location.pathname === '/admin/finance' 
@@ -623,7 +621,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Financial Management
-              </Link>
+              </Link> */}
               <Link 
                 to="/admin/withdrawals" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
@@ -646,7 +644,7 @@ const AdminDashboard: React.FC = () => {
               >
                 Pengaturan Tarif
               </Link>
-              <Link 
+              {/* <Link 
                 to="/admin/settings" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   location.pathname === '/admin/settings' 
@@ -667,7 +665,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Stand Management
-              </Link>
+              </Link> */}
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
