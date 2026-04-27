@@ -6,9 +6,9 @@ import { useOrder } from '../context/OrderContext';
 
 interface TariffFormData {
   name: string;
-  minDistance: number;
-  maxDistance: number;
-  price: number;
+  minDistance: number | '';
+  maxDistance: number | '';
+  price: number | '';
   destinations: string;
   isGojek: boolean;
   isSubsidi: boolean;
@@ -39,9 +39,9 @@ const TariffSettings: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<TariffFormData>({
     name: '',
-    minDistance: 0,
-    maxDistance: 0,
-    price: 0,
+    minDistance: '',
+    maxDistance: '',
+    price: '',
     destinations: '',
     isGojek: false,
     isSubsidi: false
@@ -122,7 +122,7 @@ const TariffSettings: React.FC = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (name === 'price' || name === 'minDistance' || name === 'maxDistance' ? parseInt(value) || 0 : value)
+      [name]: type === 'checkbox' ? checked : (name === 'price' || name === 'minDistance' || name === 'maxDistance' ? (value === '' ? '' : parseInt(value) || 0) : value)
     }));
   };
 
@@ -143,9 +143,9 @@ const TariffSettings: React.FC = () => {
     setIsAdding(true);
     setFormData({
       name: '',
-      minDistance: 0,
-      maxDistance: 0,
-      price: 0,
+      minDistance: '',
+      maxDistance: '',
+      price: '',
       destinations: '',
       isGojek: false,
       isSubsidi: false
@@ -157,9 +157,9 @@ const TariffSettings: React.FC = () => {
     setIsAdding(false);
     setFormData({
       name: '',
-      minDistance: 0,
-      maxDistance: 0,
-      price: 0,
+      minDistance: '',
+      maxDistance: '',
+      price: '',
       destinations: '',
       isGojek: false,
       isSubsidi: false
@@ -174,9 +174,9 @@ const TariffSettings: React.FC = () => {
       // Payload sesuai backend
       const payload = {
         name: formData.name,
-        min_distance: formData.minDistance,
-        max_distance: formData.maxDistance,
-        price: formData.price,
+        min_distance: formData.minDistance === '' ? 0 : formData.minDistance,
+        max_distance: formData.maxDistance === '' ? 0 : formData.maxDistance,
+        price: formData.price === '' ? 0 : formData.price,
         destinations: formData.destinations,
         is_active: true,
         is_gojek: formData.isGojek,
@@ -196,8 +196,8 @@ const TariffSettings: React.FC = () => {
                 distance: `${formData.minDistance} - ${formData.maxDistance} km`,
                 price: formData.price,
                 destination: formData.destinations,
-                minDistance: formData.minDistance,
-                maxDistance: formData.maxDistance,
+                minDistance: formData.minDistance === '' ? 0 : formData.minDistance,
+                maxDistance: formData.maxDistance === '' ? 0 : formData.maxDistance,
                 isGojek: formData.isGojek,
                 isSubsidi: formData.isSubsidi,
               }
@@ -226,8 +226,8 @@ const TariffSettings: React.FC = () => {
           distance: `${formData.minDistance} - ${formData.maxDistance} km`,
           price: formData.price,
           destination: formData.destinations,
-          minDistance: formData.minDistance,
-          maxDistance: formData.maxDistance,
+          minDistance: formData.minDistance === '' ? 0 : formData.minDistance,
+          maxDistance: formData.maxDistance === '' ? 0 : formData.maxDistance,
           isActive: true,
           isGojek: formData.isGojek,
           isSubsidi: formData.isSubsidi,
@@ -245,9 +245,9 @@ const TariffSettings: React.FC = () => {
       // Reset form
       setFormData({
         name: '',
-        minDistance: 0,
-        maxDistance: 0,
-        price: 0,
+        minDistance: '',
+        maxDistance: '',
+        price: '',
         destinations: '',
         isGojek: false,
         isSubsidi: false
@@ -497,7 +497,7 @@ const TariffSettings: React.FC = () => {
                     />
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <label htmlFor="destinations" className="block text-sm font-medium text-gray-700 mb-2">
                       Destinasi
                     </label>
