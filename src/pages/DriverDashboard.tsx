@@ -45,12 +45,7 @@ const DriverHome: React.FC = () => {
   const [updatingOnlineStatus, setUpdatingOnlineStatus] = useState(false);
   const notifiedOrderIds = useRef<Set<string>>(new Set());
 
-  // Request Notification permission on load
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission();
-    }
-  }, []);
+
   
   // Fetch online status only
   const fetchOnlineStatus = async () => {
@@ -201,28 +196,32 @@ const DriverHome: React.FC = () => {
       setTimeout(() => setShowNewOrderNotification(false), 5000);
 
       // HTML5 System Notification logic
-      if ('Notification' in window && Notification.permission === 'granted') {
-        // Find orders that haven't been notified yet
-        const newOrders = pendingOrders.filter(order => !notifiedOrderIds.current.has(order.id));
-        
-        if (newOrders.length > 0) {
-          // Send notification for the first new order
-          const latestOrder = newOrders[0];
-          const notification = new Notification('Pesanan Baru Masuk!', {
-            body: `Titik Jemput: ${latestOrder.pickup_location || 'Belum ditentukan'}`,
-            icon: '/favicon.ico', // You can replace this with your app's icon URL
-            vibrate: [200, 100, 200]
-          });
+      try {
+        if ('Notification' in window && window.Notification && Notification.permission === 'granted') {
+          // Find orders that haven't been notified yet
+          const newOrders = pendingOrders.filter(order => !notifiedOrderIds.current.has(order.id));
+          
+          if (newOrders.length > 0) {
+            // Send notification for the first new order
+            const latestOrder = newOrders[0];
+            const notification = new Notification('Pesanan Baru Masuk!', {
+              body: `Titik Jemput: ${latestOrder.pickup_location || 'Belum ditentukan'}`,
+              icon: '/favicon.ico', // You can replace this with your app's icon URL
+              vibrate: [200, 100, 200]
+            });
 
-          // Open the window if the notification is clicked
-          notification.onclick = () => {
-            window.focus();
-            notification.close();
-          };
+            // Open the window if the notification is clicked
+            notification.onclick = () => {
+              window.focus();
+              notification.close();
+            };
 
-          // Mark these orders as notified
-          newOrders.forEach(order => notifiedOrderIds.current.add(order.id));
+            // Mark these orders as notified
+            newOrders.forEach(order => notifiedOrderIds.current.add(order.id));
+          }
         }
+      } catch (e) {
+        console.warn('Browser does not fully support Notification API', e);
       }
     }
   }, [pendingOrders, isOnline]);
@@ -320,6 +319,17 @@ const DriverHome: React.FC = () => {
       const response = await driverAPI.setOnlineStatus(newStatus);
       setIsOnline(newStatus);
       setSuccessMessage(`Status berhasil diubah menjadi ${newStatus ? 'Online' : 'Offline'}`);
+      
+      // Request notification permission if going online (user gesture)
+      if (newStatus === true) {
+        try {
+          if ('Notification' in window && window.Notification && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission().catch(e => console.warn('Notification permission error', e));
+          }
+        } catch (e) {
+          console.warn('Could not request notification permission', e);
+        }
+      }
       
       // Auto clear success message after 3 seconds
       setTimeout(() => {
