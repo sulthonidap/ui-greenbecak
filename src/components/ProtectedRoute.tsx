@@ -23,7 +23,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, userType }) =
   }
 
   if (!isAuthenticated || currentUserType !== userType) {
-    return <Navigate to={userType === 'admin' ? '/login-admin' : '/login-driver'} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

@@ -6,8 +6,7 @@ import { OrderProvider } from './context/OrderContext';
 import LandingPage from './pages/LandingPage';
 import OrderPage from './pages/OrderPage';
 import PaymentPage from './pages/PaymentPage';
-import AdminLogin from './pages/AdminLogin';
-import DriverLogin from './pages/DriverLogin';
+import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import DriverDashboard from './pages/DriverDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -68,8 +67,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/pesan" element={<OrderPage />} />
           <Route path="/pembayaran" element={<PaymentPage />} />
-          <Route path="/login-admin" element={<AdminLogin />} />
-          <Route path="/login-driver" element={<DriverLogin />} />
+          <Route path="/login" element={<Login />} />
           <Route 
             path="/admin/*" 
             element={

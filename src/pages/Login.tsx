@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const AdminLogin: React.FC = () => {
+const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +15,7 @@ const AdminLogin: React.FC = () => {
 
   // Load remembered data on component mount
   useEffect(() => {
-    const rememberedData = localStorage.getItem('rememberedAdmin');
+    const rememberedData = localStorage.getItem('rememberedUser');
     if (rememberedData) {
       try {
         const { username: rememberedUsername, rememberMe: rememberedRememberMe } = JSON.parse(rememberedData);
@@ -44,16 +44,22 @@ const AdminLogin: React.FC = () => {
       // Simulasi delay untuk animasi loading
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      await login('admin', { username, password });
+      const role = await login({ username, password });
       
       // Simpan ke localStorage jika remember me dicentang
       if (rememberMe) {
-        localStorage.setItem('rememberedAdmin', JSON.stringify({ username, rememberMe: true }));
+        localStorage.setItem('rememberedUser', JSON.stringify({ username, rememberMe: true }));
       } else {
-        localStorage.removeItem('rememberedAdmin');
+        localStorage.removeItem('rememberedUser');
       }
       
-      navigate('/admin');
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'driver') {
+        navigate('/driver');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Login gagal. Silakan coba lagi.');
     } finally {
@@ -68,9 +74,9 @@ const AdminLogin: React.FC = () => {
           <div className="mx-auto h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
             <Shield size={24} className="text-green-800" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Login Admin</h2>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Login</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Masuk untuk mengakses dashboard admin
+            Masuk untuk mengakses dashboard Anda
           </p>
         </div>
         
@@ -175,4 +181,4 @@ const AdminLogin: React.FC = () => {
   );
 };
 
-export default AdminLogin;
+export default Login;

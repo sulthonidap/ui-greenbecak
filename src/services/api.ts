@@ -127,20 +127,10 @@ api.interceptors.response.use(
       localStorage.removeItem('authToken');
       localStorage.removeItem('userType');
       
-      // Only redirect if user was authenticated and is on protected routes
+      // Only redirect if user was authenticated
       if (hadToken) {
-        const path = window.location.pathname;
-        const isAdminArea = path.startsWith('/admin');
-        const isDriverArea = path.startsWith('/driver');
-        
-        console.log('Redirecting due to 401 - Path:', path, 'IsAdmin:', isAdminArea, 'IsDriver:', isDriverArea);
-        
-        if (isAdminArea) {
-          window.location.href = '/login-admin';
-        } else if (isDriverArea) {
-          window.location.href = '/login-driver';
-        }
-        // if on public pages, do NOT redirect (avoid reload loop)
+        console.log('Redirecting due to 401 - Path:', window.location.pathname);
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

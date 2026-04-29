@@ -54,8 +54,8 @@ const Navbar: React.FC = () => {
                 </button>
               </>
             ) : (
-              <Link to="/login-admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#047857] transition-colors">
-                Login Admin
+              <Link to="/login" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#047857] transition-colors">
+                Login
               </Link>
             )}
           </div>
@@ -111,11 +111,11 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <Link 
-                to="/login-admin" 
+                to="/login" 
                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#047857] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Login Admin
+                Login
               </Link>
             )}
           </div>

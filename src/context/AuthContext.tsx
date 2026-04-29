@@ -16,7 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userType: UserType;
   user: User | null;
-  login: (userType: UserType, credentials: { username: string; password: string }) => Promise<void>;
+  login: (credentials: { username: string; password: string }) => Promise<UserType>;
   logout: () => void;
   getProfile: () => Promise<void>;
   loading: boolean;
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     restoreAuth();
   }, []);
 
-  const login = async (type: UserType, credentials: { username: string; password: string }) => {
+  const login = async (credentials: { username: string; password: string }): Promise<UserType> => {
     try {
       const response = await authAPI.login(credentials);
       
@@ -86,8 +86,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Store token securely
       if (response.token) {
+        const actualRole = response.user?.role as UserType;
         localStorage.setItem('authToken', response.token);
-        localStorage.setItem('userType', type);
+        localStorage.setItem('userType', actualRole || '');
         
         // Verify token was stored
         const storedToken = localStorage.getItem('authToken');
@@ -95,8 +96,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Update state
         setIsAuthenticated(true);
-        setUserType(type);
+        setUserType(actualRole);
         setUser(response.user);
+        
+        return actualRole;
       } else {
         throw new Error('No token received from server');
       }
