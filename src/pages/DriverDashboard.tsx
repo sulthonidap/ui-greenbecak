@@ -14,28 +14,78 @@ import { driverAPI, authAPI } from '../services/api';
 const playNotificationSound = () => {
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    // Set properties for a pleasant notification chime (double beep)
-    oscillator.type = 'sine';
     
-    // First beep
-    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-    
-    // Second beep (higher pitch)
-    oscillator.frequency.setValueAtTime(1108.73, audioCtx.currentTime + 0.2); // C#6
-    gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.25);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    // Fungsi untuk memainkan satu "burst" (2 kali bunyi bip keras)
+    const playBurst = (startTime: number) => {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
 
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + 0.6);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      // Square wave jauh lebih keras dan nyaring, cocok untuk di jalan/HP
+      oscillator.type = 'square';
+      
+      const volume = 1.0; // Volume maksimal
+      
+      // Bip pertama
+      oscillator.frequency.setValueAtTime(800, startTime); 
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+      gainNode.gain.setValueAtTime(volume, startTime + 0.15);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + 0.2);
+      
+      // Bip kedua (nada lebih tinggi)
+      oscillator.frequency.setValueAtTime(1000, startTime + 0.25); 
+      gainNode.gain.setValueAtTime(0, startTime + 0.25);
+      gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.27);
+      gainNode.gain.setValueAtTime(volume, startTime + 0.4);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + 0.45);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.5);
+    };
+
+    // Mainkan alarm berulang-ulang (4 kali burst) agar mirip nada dering telepon
+    const now = audioCtx.currentTime;
+    playBurst(now);          // Detik 0
+    playBurst(now + 0.8);    // Detik 0.8
+    playBurst(now + 1.6);    // Detik 1.6
+    playBurst(now + 2.4);    // Detik 2.4
+
+  } catch (e) {
+    console.warn('AudioContext not supported or blocked', e);
+  }
+};
+
+const playSuccessSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Suara "Cring" / Koin emas seperti saat mendapatkan uang
+    const playCoin = (freq: number, startTime: number) => {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.type = 'sine';
+      
+      oscillator.frequency.setValueAtTime(freq, startTime);
+      
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.5);
+    };
+
+    const now = audioCtx.currentTime;
+    // Mainkan nada rendah cepat lalu nada tinggi (mirip "Ka-Ching!")
+    playCoin(987.77, now);         // Nada B5
+    playCoin(1318.51, now + 0.1);  // Nada E6
   } catch (e) {
     console.warn('AudioContext not supported or blocked', e);
   }
@@ -328,6 +378,7 @@ const DriverHome: React.FC = () => {
       setCompletingOrderId(orderId);
       await driverAPI.completeOrder(orderId);
       setSuccessMessage('Pesanan berhasil diselesaikan!');
+      playSuccessSound(); // Mainkan suara "cring" saat sukses
       // Refresh orders and earnings after completing
       await fetchDriverData();
       setTimeout(() => setSuccessMessage(''), 3000);
