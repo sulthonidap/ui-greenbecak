@@ -12,6 +12,7 @@ import DriverDashboard from './pages/DriverDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import NotFound from './pages/NotFound';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -84,6 +85,7 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             } 
           />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       {shouldShowNavbarFooter && <Footer />}
