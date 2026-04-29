@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Clock, CreditCard, CheckCircle, Star, ChevronRight, Leaf, Shield, Users, Download, Sparkles, Zap, Heart, Award } from 'lucide-react';
+import { MapPin, Clock, CreditCard, CheckCircle, Star, ChevronRight, Leaf, Shield, Users, Download, Sparkles, Zap, Heart, Award, User } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   const themeColor = '#047857';
@@ -72,13 +72,13 @@ const LandingPage: React.FC = () => {
                   Pesan Sekarang
                   <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <a 
-                  href="https://drive.usercontent.google.com/download?id=1abgXGGXLvQPZPNsrTvM-1e77LdQ19ztw&export=download&authuser=0&confirm=t&uuid=83a519d4-998b-443c-a720-bb5bcce80a2b&at=ALWLOp7oYlX8sUbF4ee1TV0Deodh:1764025201566" 
+                <Link 
+                  to="/login" 
                   className="inline-flex items-center justify-center bg-yellow-400 text-gray-900 font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl shadow-2xl hover:bg-yellow-300 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 text-sm sm:text-base"
                 >
-                  <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-bounce" />
-                  Download Aplikasi
-                </a>
+                  <User className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Login
+                </Link>
               </div>
             </div>
             
@@ -374,13 +374,13 @@ const LandingPage: React.FC = () => {
               Pesan Sekarang
               <ChevronRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <a 
-              href="https://drive.usercontent.google.com/download?id=1ChlUvSQ0AXeJPKvoS5Dk3JyOb42JS3FQ&export=download&authuser=0&confirm=t&uuid=e5488790-41b5-46ce-af19-53f0d94cb1ac&at=AN8xHopDYUbwJyJS6eGCjRKZiK18:1757302923429"
+            <Link 
+              to="/login"
               className="inline-flex items-center justify-center bg-yellow-400 text-gray-900 font-semibold px-8 py-4 sm:px-10 sm:py-5 rounded-xl shadow-2xl hover:bg-yellow-300 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 text-base sm:text-lg"
             >
-              <Download className="mr-2 h-5 w-5 sm:h-6 sm:w-6 animate-bounce" />
-              Download Aplikasi
-            </a>
+              <User className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+              Login
+            </Link>
           </div>
         </div>
       </section>
