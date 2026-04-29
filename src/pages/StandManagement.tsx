@@ -40,7 +40,7 @@ interface StandLocation {
   capacity?: number;
   isActive: boolean;
   queueEnabled?: boolean;
-  currentDrivers?: string[];
+  currentPengayuhs?: string[];
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -59,7 +59,7 @@ const mockStands: StandLocation[] = [
     capacity: 15,
     isActive: true,
     queueEnabled: true,
-    currentDrivers: ['D001', 'D002', 'D004'],
+    currentPengayuhs: ['D001', 'D002', 'D004'],
     notes: 'Lokasi ramai saat sore-malam.',
     createdAt: new Date('2024-11-01'),
     updatedAt: new Date('2024-12-18'),
@@ -76,7 +76,7 @@ const mockStands: StandLocation[] = [
     capacity: 10,
     isActive: true,
     queueEnabled: false,
-    currentDrivers: ['D003'],
+    currentPengayuhs: ['D003'],
     notes: 'Event malam minggu padat.',
     createdAt: new Date('2024-10-12'),
     updatedAt: new Date('2024-12-10'),
@@ -93,7 +93,7 @@ const mockStands: StandLocation[] = [
     capacity: 12,
     isActive: false,
     queueEnabled: true,
-    currentDrivers: [],
+    currentPengayuhs: [],
     notes: 'Saat ini dinonaktifkan karena renovasi area.',
     createdAt: new Date('2024-09-05'),
     updatedAt: new Date('2024-11-28'),
@@ -111,7 +111,7 @@ const emptyForm: Omit<StandLocation, 'id' | 'createdAt' | 'updatedAt'> = {
   capacity: 10,
   isActive: true,
   queueEnabled: true,
-  currentDrivers: [],
+  currentPengayuhs: [],
   notes: '',
 };
 
@@ -161,7 +161,7 @@ const StandManagement: React.FC = () => {
     const active = stands.filter((s) => s.isActive).length;
     const total = stands.length;
     const totalCapacity = stands.reduce((sum, s) => sum + (s.capacity || 0), 0);
-    const totalOccupancy = stands.reduce((sum, s) => sum + (s.currentDrivers?.length || 0), 0);
+    const totalOccupancy = stands.reduce((sum, s) => sum + (s.currentPengayuhs?.length || 0), 0);
     return { active, total, totalCapacity, totalOccupancy };
   }, [stands]);
 
@@ -337,7 +337,7 @@ const StandManagement: React.FC = () => {
                         <div className="text-xs text-gray-500">radius {s.radiusMeters || 0} m</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {s.currentDrivers?.length || 0} / {s.capacity || 0}
+                        {s.currentPengayuhs?.length || 0} / {s.capacity || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
@@ -409,7 +409,7 @@ const StandManagement: React.FC = () => {
                     <div className="text-sm">
                       <div className="font-semibold">{s.name}</div>
                       <div className="text-gray-600 text-xs mb-2">{s.code} • {s.type}</div>
-                      <div className="text-xs">Kapasitas: {s.currentDrivers?.length || 0} / {s.capacity || 0}</div>
+                      <div className="text-xs">Kapasitas: {s.currentPengayuhs?.length || 0} / {s.capacity || 0}</div>
                       <div className="text-xs">Status: {s.isActive ? 'Aktif' : 'Nonaktif'}</div>
                     </div>
                   </Popup>

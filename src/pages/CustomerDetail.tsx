@@ -43,7 +43,7 @@ interface CustomerDetail {
   totalSpent: number;
   averageRating: number;
   status: 'active' | 'inactive';
-  favoriteDriver?: string;
+  favoritePengayuh?: string;
   orderHistory: OrderHistory[];
 }
 
@@ -57,7 +57,7 @@ const mockCustomerDetail: CustomerDetail = {
   totalSpent: 45000,
   averageRating: 4.8,
   status: 'active',
-  favoriteDriver: 'Ahmad Supriadi',
+  favoritePengayuh: 'Ahmad Supriadi',
   orderHistory: [
     {
       id: 'O001',
@@ -70,7 +70,7 @@ const mockCustomerDetail: CustomerDetail = {
       paymentMethod: 'QRIS',
       status: 'completed',
       rating: 5,
-      review: 'Driver sangat ramah dan aman'
+      review: 'Pengayuh sangat ramah dan aman'
     },
     {
       id: 'O002',
@@ -173,7 +173,7 @@ const CustomerDetail: React.FC = () => {
   }
 
   const completedOrders = customer.orderHistory.filter(order => order.status === 'completed');
-  const uniqueDrivers = new Set(customer.orderHistory.map(order => order.driver));
+  const uniquePengayuhs = new Set(customer.orderHistory.map(order => order.driver));
   const averageSpent = customer.totalSpent / customer.totalOrders;
 
   return (
@@ -263,8 +263,8 @@ const CustomerDetail: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <User className="w-5 h-5 text-gray-400" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Driver Favorit</p>
-                  <p className="text-sm text-gray-500">{customer.favoriteDriver || 'Belum ada'}</p>
+                  <p className="text-sm font-medium text-gray-900">Pengayuh Favorit</p>
+                  <p className="text-sm text-gray-500">{customer.favoritePengayuh || 'Belum ada'}</p>
                 </div>
               </div>
             </div>
@@ -303,7 +303,7 @@ const CustomerDetail: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Daftar Driver
+                Daftar Pengayuh
               </button>
             </nav>
           </div>
@@ -334,8 +334,8 @@ const CustomerDetail: React.FC = () => {
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-yellow-600">Driver Unik</p>
-                      <p className="text-2xl font-bold text-yellow-900">{uniqueDrivers.size}</p>
+                      <p className="text-sm font-medium text-yellow-600">Pengayuh Unik</p>
+                      <p className="text-2xl font-bold text-yellow-900">{uniquePengayuhs.size}</p>
                     </div>
                     <Users className="w-8 h-8 text-yellow-500" />
                   </div>
@@ -379,7 +379,7 @@ const CustomerDetail: React.FC = () => {
                             <Car className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="font-medium text-gray-900">Kode Kendaraan: {order.vehicleCode}</p>
-                              <p className="text-sm text-gray-500">Driver: {order.driver}</p>
+                              <p className="text-sm text-gray-500">Pengayuh: {order.driver}</p>
                             </div>
                           </div>
                           
@@ -425,10 +425,10 @@ const CustomerDetail: React.FC = () => {
 
             {activeTab === 'drivers' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Daftar Driver</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Daftar Pengayuh</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from(uniqueDrivers).map((driverName, index) => {
+                  {Array.from(uniquePengayuhs).map((driverName, index) => {
                     const driverOrders = customer.orderHistory.filter(order => order.driver === driverName);
                     const totalSpent = driverOrders.reduce((sum, order) => sum + order.amount, 0);
                     const lastOrder = driverOrders[driverOrders.length - 1];

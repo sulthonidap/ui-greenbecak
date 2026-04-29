@@ -14,7 +14,7 @@ import {
   DollarSign
 } from 'lucide-react';
 
-interface Driver {
+interface Pengayuh {
   id: string;
   name: string;
   email: string;
@@ -36,10 +36,10 @@ interface Driver {
 }
 
 
-const DriverPerformance: React.FC = () => {
+const PengayuhPerformance: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [pengayuhs, setPengayuhs] = useState<Pengayuh[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,23 +50,23 @@ const DriverPerformance: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
 
-  // Fetch drivers from backend
-  const fetchDrivers = async () => {
+  // Fetch pengayuhs from backend
+  const fetchPengayuhs = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await adminAPI.getDrivers();
+      const response = await adminAPI.getPengayuhs();
 
-      const normalized = (response.drivers || [])
-        .filter((d: any) => !d.deleted_at) // Filter out soft deleted drivers
+      const normalized = (response.pengayuhs || [])
+        .filter((d: any) => !d.deleted_at) // Filter out soft deleted pengayuhs
         .map((d: any) => ({
-          id: d.id?.toString() || d.driver_code,
+          id: d.id?.toString() || d.pengayuh_code,
           name: d.name,
           email: d.email,
           phone: d.phone,
           vehicleType: d.vehicle_type === 'andong' ? 'Delman' : 'Becak Listrik',
-          vehicleNumber: d.driver_code,
+          vehicleNumber: d.pengayuh_code,
           status: d.is_active ? 'active' : 'inactive',
           rating: d.rating || 4.5, // fallback rating
           totalTrips: d.total_trips || 0,
@@ -78,19 +78,19 @@ const DriverPerformance: React.FC = () => {
           isOnline: d.is_active,
         }));
 
-      setDrivers(normalized);
+      setPengayuhs(normalized);
 
     } catch (error: any) {
-      console.error('Failed to fetch drivers:', error);
+      console.error('Failed to fetch pengayuhs:', error);
 
       if (error.response?.status === 401) {
-        setError('Anda harus login sebagai admin untuk mengakses data driver');
+        setError('Anda harus login sebagai admin untuk mengakses data pengayuh');
       } else if (error.response?.status === 403) {
         setError('Anda tidak memiliki akses ke halaman ini');
       } else if (error.code === 'ERR_NETWORK') {
         setError('Tidak dapat terhubung ke server. Pastikan backend sudah running dan dapat diakses.');
       } else {
-        setError(error.response?.data?.message || 'Gagal mengambil data driver');
+        setError(error.response?.data?.message || 'Gagal mengambil data pengayuh');
       }
 
     } finally {
@@ -98,9 +98,9 @@ const DriverPerformance: React.FC = () => {
     }
   };
 
-  // Load drivers on component mount
+  // Load pengayuhs on component mount
   useEffect(() => {
-    fetchDrivers();
+    fetchPengayuhs();
   }, []);
 
   // Filter data when selected date changes
@@ -118,34 +118,34 @@ const DriverPerformance: React.FC = () => {
     }
   }, [location.state?.message]);
 
-  const filteredDrivers = drivers.filter(driver => {
-    const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.phone.includes(searchTerm) ||
-      driver.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || driver.status === statusFilter;
-    const matchesVehicle = vehicleFilter === 'all' || driver.vehicleType === vehicleFilter;
+  const filteredPengayuhs = pengayuhs.filter(pengayuh => {
+    const matchesSearch = pengayuh.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pengayuh.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pengayuh.phone.includes(searchTerm) ||
+      pengayuh.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || pengayuh.status === statusFilter;
+    const matchesVehicle = vehicleFilter === 'all' || pengayuh.vehicleType === vehicleFilter;
 
     return matchesSearch && matchesStatus && matchesVehicle;
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredPengayuhs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentDrivers = filteredDrivers.slice(startIndex, endIndex);
+  const currentPengayuhs = filteredPengayuhs.slice(startIndex, endIndex);
 
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, vehicleFilter]);
 
-  const totalDrivers = drivers.length;
-  const activeDrivers = drivers.filter(d => d.status === 'active').length;
-  const totalSelectedDateTrips = drivers.reduce((sum, d) => sum + d.selectedDateTrips, 0);
-  const totalSelectedDateEarnings = drivers.reduce((sum, d) => sum + d.selectedDateEarnings, 0);
+  const totalPengayuhs = pengayuhs.length;
+  const activePengayuhs = pengayuhs.filter(d => d.status === 'active').length;
+  const totalSelectedDateTrips = pengayuhs.reduce((sum, d) => sum + d.selectedDateTrips, 0);
+  const totalSelectedDateEarnings = pengayuhs.reduce((sum, d) => sum + d.selectedDateEarnings, 0);
   const averageEarningsPerTrip = totalSelectedDateTrips > 0 ? totalSelectedDateEarnings / totalSelectedDateTrips : 0;
-  const totalWorkingHours = drivers.reduce((sum, d) => sum + (d.workingHours || 0), 0);
+  const totalWorkingHours = pengayuhs.reduce((sum, d) => sum + (d.workingHours || 0), 0);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -180,7 +180,7 @@ const DriverPerformance: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data driver performance...</p>
+          <p className="mt-4 text-gray-600">Memuat data pengayuh performance...</p>
         </div>
       </div>
     );
@@ -199,7 +199,7 @@ const DriverPerformance: React.FC = () => {
                 Error: {error}
               </p>
               <button
-                onClick={fetchDrivers}
+                onClick={fetchPengayuhs}
                 className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
               >
                 Coba lagi
@@ -231,9 +231,9 @@ const DriverPerformance: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Driver Performance</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Pengayuh Performance</h1>
               <p className="text-gray-600">
-                Monitor performa driver pada tanggal{' '}
+                Monitor performa pengayuh pada tanggal{' '}
                 <span className="font-semibold text-green-600">
                   {new Date(selectedDate).toLocaleDateString('id-ID', {
                     weekday: 'long',
@@ -246,7 +246,7 @@ const DriverPerformance: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={fetchDrivers}
+            onClick={fetchPengayuhs}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <span>Refresh Data</span>
@@ -258,9 +258,9 @@ const DriverPerformance: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Driver</p>
-                <p className="text-2xl font-bold text-gray-900">{totalDrivers}</p>
-                <p className="text-xs text-gray-500 mt-1">{activeDrivers} aktif hari ini</p>
+                <p className="text-sm font-medium text-gray-600">Total Pengayuh</p>
+                <p className="text-2xl font-bold text-gray-900">{totalPengayuhs}</p>
+                <p className="text-xs text-gray-500 mt-1">{activePengayuhs} aktif hari ini</p>
               </div>
               <Users className="w-8 h-8 text-blue-500" />
             </div>
@@ -293,7 +293,7 @@ const DriverPerformance: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Jam Kerja</p>
                 <p className="text-2xl font-bold text-gray-900">{totalWorkingHours}h</p>
-                <p className="text-xs text-gray-500 mt-1">Keseluruhan driver</p>
+                <p className="text-xs text-gray-500 mt-1">Keseluruhan pengayuh</p>
               </div>
               <Clock className="w-8 h-8 text-green-500" />
             </div>
@@ -309,7 +309,7 @@ const DriverPerformance: React.FC = () => {
                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                  <input
                    type="text"
-                   placeholder="Cari driver..."
+                   placeholder="Cari pengayuh..."
                    value={searchTerm}
                    onChange={(e) => setSearchTerm(e.target.value)}
                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -362,15 +362,15 @@ const DriverPerformance: React.FC = () => {
            </div>
          </div>
 
-        {/* Driver List */}
+        {/* Pengayuh List */}
         <div className="bg-white rounded-lg shadow">
                      <div className="p-6 border-b border-gray-200">
-             <h2 className="text-lg font-semibold text-gray-900">Daftar Driver Performance</h2>
+             <h2 className="text-lg font-semibold text-gray-900">Daftar Pengayuh Performance</h2>
              <p className="text-gray-600">
-               Total {filteredDrivers.length} driver ditemukan
-               {filteredDrivers.length > 0 && (
+               Total {filteredPengayuhs.length} pengayuh ditemukan
+               {filteredPengayuhs.length > 0 && (
                  <span className="ml-2 text-sm text-gray-500">
-                   (Menampilkan {startIndex + 1} - {Math.min(endIndex, filteredDrivers.length)} dari {filteredDrivers.length})
+                   (Menampilkan {startIndex + 1} - {Math.min(endIndex, filteredPengayuhs.length)} dari {filteredPengayuhs.length})
                  </span>
                )}
              </p>
@@ -381,7 +381,7 @@ const DriverPerformance: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Driver
+                    Pengayuh
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Kendaraan
@@ -404,24 +404,24 @@ const DriverPerformance: React.FC = () => {
                 </tr>
               </thead>
                              <tbody className="bg-white divide-y divide-gray-200">
-                 {currentDrivers.map((driver) => (
+                 {currentPengayuhs.map((pengayuh) => (
                   <tr
-                    key={driver.id}
+                    key={pengayuh.id}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/admin/driver-detail/${driver.id}`)}
+                    onClick={() => navigate(`/admin/pengayuh-detail/${pengayuh.id}`)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <span className="text-sm font-medium text-blue-600">
-                              {driver.name.split(' ').map(n => n[0]).join('')}
+                              {pengayuh.name.split(' ').map(n => n[0]).join('')}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{driver.name}</div>
-                          <div className="text-sm text-gray-500">{driver.phone}</div>
+                          <div className="text-sm font-medium text-gray-900">{pengayuh.name}</div>
+                          <div className="text-sm text-gray-500">{pengayuh.phone}</div>
                         </div>
                       </div>
                     </td>
@@ -430,23 +430,23 @@ const DriverPerformance: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <Car className="w-4 h-4 text-gray-400" />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{driver.vehicleType}</div>
-                          <div className="text-sm text-gray-500">{driver.vehicleNumber}</div>
+                          <div className="text-sm font-medium text-gray-900">{pengayuh.vehicleType}</div>
+                          <div className="text-sm text-gray-500">{pengayuh.vehicleNumber}</div>
                         </div>
                       </div>
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
-                        {getOnlineStatus(driver.isOnline)}
+                        {getOnlineStatus(pengayuh.isOnline)}
                         <div>
                           <div className="flex items-center space-x-2">
-                            {getStatusBadge(driver.status)}
-                            <span className="text-xs text-gray-500">{driver.lastActive}</span>
+                            {getStatusBadge(pengayuh.status)}
+                            <span className="text-xs text-gray-500">{pengayuh.lastActive}</span>
                           </div>
                           <div className="flex items-center space-x-1 mt-1">
                             <MapPin className="w-3 h-3 text-gray-400" />
-                            <span className="text-sm text-gray-600">{driver.location}</span>
+                            <span className="text-sm text-gray-600">{pengayuh.location}</span>
                           </div>
                         </div>
                       </div>
@@ -454,27 +454,27 @@ const DriverPerformance: React.FC = () => {
 
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-blue-600">{driver.selectedDateTrips}</div>
+                        <div className="text-lg font-bold text-blue-600">{pengayuh.selectedDateTrips}</div>
                         <div className="text-xs text-gray-500">
-                          {driver.selectedDateTrips > 0 ? formatCurrency(driver.selectedDateEarnings / driver.selectedDateTrips) : 'Rp 0'}/trip
+                          {pengayuh.selectedDateTrips > 0 ? formatCurrency(pengayuh.selectedDateEarnings / pengayuh.selectedDateTrips) : 'Rp 0'}/trip
                         </div>
                       </div>
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{formatCurrency(driver.selectedDateEarnings)}</div>
+                        <div className="text-lg font-bold text-green-600">{formatCurrency(pengayuh.selectedDateEarnings)}</div>
                         <div className="text-xs text-gray-500">
-                          {driver.averagePerHour ? formatCurrency(driver.averagePerHour) + '/jam' : 'N/A'}
+                          {pengayuh.averagePerHour ? formatCurrency(pengayuh.averagePerHour) + '/jam' : 'N/A'}
                         </div>
                       </div>
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-purple-600">{driver.workingHours || 0}h</div>
+                        <div className="text-lg font-bold text-purple-600">{pengayuh.workingHours || 0}h</div>
                         <div className="text-xs text-gray-500">
-                          {driver.startTime && driver.endTime ? `${driver.startTime} - ${driver.endTime}` : 'N/A'}
+                          {pengayuh.startTime && pengayuh.endTime ? `${pengayuh.startTime} - ${pengayuh.endTime}` : 'N/A'}
                         </div>
                       </div>
                     </td>
@@ -485,7 +485,7 @@ const DriverPerformance: React.FC = () => {
                       <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           className="text-blue-600 hover:text-blue-900"
-                          onClick={() => navigate(`/admin/driver-detail/${driver.id}`)}
+                          onClick={() => navigate(`/admin/pengayuh-detail/${pengayuh.id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -500,10 +500,10 @@ const DriverPerformance: React.FC = () => {
             </table>
           </div>
 
-                     {currentDrivers.length === 0 && (
+                     {currentPengayuhs.length === 0 && (
              <div className="text-center py-12">
                <div className="text-gray-500">
-                 {filteredDrivers.length === 0 ? 'Tidak ada driver ditemukan' : 'Tidak ada data untuk halaman ini'}
+                 {filteredPengayuhs.length === 0 ? 'Tidak ada pengayuh ditemukan' : 'Tidak ada data untuk halaman ini'}
                </div>
              </div>
            )}
@@ -513,7 +513,7 @@ const DriverPerformance: React.FC = () => {
              <div className="px-6 py-4 border-t border-gray-200">
                <div className="flex items-center justify-between">
                  <div className="text-sm text-gray-700">
-                   Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredDrivers.length)} dari {filteredDrivers.length} hasil
+                   Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredPengayuhs.length)} dari {filteredPengayuhs.length} hasil
                  </div>
                  <div className="flex items-center space-x-2">
                    <button
@@ -565,4 +565,4 @@ const DriverPerformance: React.FC = () => {
   );
 };
 
-export default DriverPerformance;
+export default PengayuhPerformance;

@@ -228,7 +228,7 @@ const CreateUser: React.FC = () => {
                    required
                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                  >
-                   <option value="driver">Driver</option>
+                   <option value="driver">Pengayuh</option>
                    <option value="admin">Admin</option>
                    <option value="customer">Customer</option>
                  </select>

@@ -272,7 +272,7 @@ const PaymentPage: React.FC = () => {
                               className="w-full h-full object-contain"
                             />
                             <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-                              <span className="text-[10px] font-bold text-gray-500 uppercase">QR Statis Driver</span>
+                              <span className="text-[10px] font-bold text-gray-500 uppercase">QR Statis Pengayuh</span>
                             </div>
                           </div>
                         </div>
@@ -286,7 +286,7 @@ const PaymentPage: React.FC = () => {
                           <p>• Pembayaran dilakukan langsung kepada driver saat perjalanan dimulai</p>
                           <p>• Siapkan uang tunai sebesar: <strong>Rp {currentOrder.distanceOption.price.toLocaleString('id-ID')}</strong></p>
                           <p>• Pastikan uang yang disiapkan dalam kondisi baik dan tidak rusak</p>
-                          <p>• Driver akan memberikan struk pembayaran setelah pembayaran diterima</p>
+                          <p>• Pengayuh akan memberikan struk pembayaran setelah pembayaran diterima</p>
                         </div>
 
                         <div className="mt-3 p-3 bg-white rounded border border-green-300">
@@ -441,7 +441,7 @@ const PaymentPage: React.FC = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <h4 className="font-semibold text-blue-800 mb-2">Langkah Selanjutnya:</h4>
                 <div className="text-sm text-blue-700 space-y-1">
-                  <p>• Driver akan menghubungi Anda dalam 5-10 menit</p>
+                  <p>• Pengayuh akan menghubungi Anda dalam 5-10 menit</p>
                   <p>• Pastikan nomor WhatsApp aktif untuk komunikasi</p>
                   <p>• Siapkan diri di lokasi penjemputan (Malioboro Mall)</p>
                   <p>• Simpan bukti pembayaran ini untuk referensi</p>

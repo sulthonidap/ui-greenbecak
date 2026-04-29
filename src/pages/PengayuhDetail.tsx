@@ -33,7 +33,7 @@ interface Trip {
   review?: string;
 }
 
-interface DriverDetail {
+interface PengayuhDetail {
   id: string;
   name: string;
   email: string;
@@ -51,7 +51,7 @@ interface DriverDetail {
   trips: Trip[];
 }
 
-const mockDriverDetail: DriverDetail = {
+const mockPengayuhDetail: PengayuhDetail = {
   id: '1',
   name: 'Ahmad Supriadi',
   email: 'ahmad@greenbecak.com',
@@ -79,7 +79,7 @@ const mockDriverDetail: DriverDetail = {
       date: '2024-12-20',
       time: '14:30',
       rating: 5,
-      review: 'Driver sangat ramah dan aman'
+      review: 'Pengayuh sangat ramah dan aman'
     },
     {
       id: 'T002',
@@ -136,17 +136,17 @@ const mockDriverDetail: DriverDetail = {
   ]
 };
 
-const DriverDetail: React.FC = () => {
+const PengayuhDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const [driver, setDriver] = useState<DriverDetail | null>(null);
+  const [pengayuh, setPengayuh] = useState<PengayuhDetail | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'trips' | 'customers'>('overview');
 
   useEffect(() => {
-    // Simulate API call to get driver detail
+    // Simulate API call to get pengayuh detail
     setTimeout(() => {
-      setDriver(mockDriverDetail);
+      setPengayuh(mockPengayuhDetail);
     }, 500);
   }, [id]);
 
@@ -201,21 +201,21 @@ const DriverDetail: React.FC = () => {
     );
   };
 
-  if (!driver) {
+  if (!pengayuh) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data driver...</p>
+          <p className="mt-4 text-gray-600">Memuat data pengayuh...</p>
         </div>
       </div>
     );
   }
 
-  const completedTrips = driver.trips.filter(trip => trip.status === 'completed');
-  const ongoingTrips = driver.trips.filter(trip => trip.status === 'ongoing');
-  const cancelledTrips = driver.trips.filter(trip => trip.status === 'cancelled');
-  const uniqueCustomers = new Set(driver.trips.map(trip => trip.customerName)).size;
+  const completedTrips = pengayuh.trips.filter(trip => trip.status === 'completed');
+  const ongoingTrips = pengayuh.trips.filter(trip => trip.status === 'ongoing');
+  const cancelledTrips = pengayuh.trips.filter(trip => trip.status === 'cancelled');
+  const uniqueCustomers = new Set(pengayuh.trips.map(trip => trip.customerName)).size;
   const averageRating = completedTrips.reduce((sum, trip) => sum + (trip.rating || 0), 0) / completedTrips.length;
 
   return (
@@ -225,51 +225,51 @@ const DriverDetail: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate('/admin/driver-performance')}
+              onClick={() => navigate('/admin/pengayuh-performance')}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Kembali</span>
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Detail Driver</h1>
-              <p className="text-gray-600">Informasi lengkap driver dan riwayat perjalanan</p>
+              <h1 className="text-3xl font-bold text-gray-900">Detail Pengayuh</h1>
+              <p className="text-gray-600">Informasi lengkap pengayuh dan riwayat perjalanan</p>
             </div>
           </div>
         </div>
 
-        {/* Driver Info Card */}
+        {/* Pengayuh Info Card */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-2xl font-bold text-blue-600">
-                    {driver.name.split(' ').map(n => n[0]).join('')}
+                    {pengayuh.name.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{driver.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{pengayuh.name}</h2>
                   <div className="flex items-center space-x-2 mt-1">
-                    {getOnlineStatus(driver.isOnline)}
-                    {getStatusBadge(driver.status)}
-                    <span className="text-sm text-gray-500">• {driver.lastActive}</span>
+                    {getOnlineStatus(pengayuh.isOnline)}
+                    {getStatusBadge(pengayuh.status)}
+                    <span className="text-sm text-gray-500">• {pengayuh.lastActive}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{driver.totalTrips}</div>
+                  <div className="text-2xl font-bold text-blue-600">{pengayuh.totalTrips}</div>
                   <div className="text-sm text-gray-500">Total Trip</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{formatCurrency(driver.totalEarnings)}</div>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(pengayuh.totalEarnings)}</div>
                   <div className="text-sm text-gray-500">Total Pendapatan</div>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center space-x-1">
                     <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                    <span className="text-2xl font-bold text-gray-900">{driver.rating}</span>
+                    <span className="text-2xl font-bold text-gray-900">{pengayuh.rating}</span>
                   </div>
                   <div className="text-sm text-gray-500">Rating</div>
                 </div>
@@ -283,7 +283,7 @@ const DriverDetail: React.FC = () => {
                 <Mail className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Email</p>
-                  <p className="text-sm text-gray-500">{driver.email}</p>
+                  <p className="text-sm text-gray-500">{pengayuh.email}</p>
                 </div>
               </div>
               
@@ -291,7 +291,7 @@ const DriverDetail: React.FC = () => {
                 <Phone className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Telepon</p>
-                  <p className="text-sm text-gray-500">{driver.phone}</p>
+                  <p className="text-sm text-gray-500">{pengayuh.phone}</p>
                 </div>
               </div>
               
@@ -299,7 +299,7 @@ const DriverDetail: React.FC = () => {
                 <Car className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Kendaraan</p>
-                  <p className="text-sm text-gray-500">{driver.vehicleType} - {driver.vehicleNumber}</p>
+                  <p className="text-sm text-gray-500">{pengayuh.vehicleType} - {pengayuh.vehicleNumber}</p>
                 </div>
               </div>
               
@@ -307,7 +307,7 @@ const DriverDetail: React.FC = () => {
                 <MapPin className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Lokasi</p>
-                  <p className="text-sm text-gray-500">{driver.location}</p>
+                  <p className="text-sm text-gray-500">{pengayuh.location}</p>
                 </div>
               </div>
             </div>
@@ -358,7 +358,7 @@ const DriverDetail: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-blue-600">Total Trip</p>
-                      <p className="text-2xl font-bold text-blue-900">{driver.totalTrips}</p>
+                      <p className="text-2xl font-bold text-blue-900">{pengayuh.totalTrips}</p>
                     </div>
                     <Route className="w-8 h-8 text-blue-500" />
                   </div>
@@ -414,7 +414,7 @@ const DriverDetail: React.FC = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  {driver.trips.map((trip) => (
+                  {pengayuh.trips.map((trip) => (
                     <div key={trip.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -471,8 +471,8 @@ const DriverDetail: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Daftar Customer</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from(new Set(driver.trips.map(trip => trip.customerName))).map((customerName, index) => {
-                    const customerTrips = driver.trips.filter(trip => trip.customerName === customerName);
+                  {Array.from(new Set(pengayuh.trips.map(trip => trip.customerName))).map((customerName, index) => {
+                    const customerTrips = pengayuh.trips.filter(trip => trip.customerName === customerName);
                     const totalSpent = customerTrips.reduce((sum, trip) => sum + trip.price, 0);
                     const lastTrip = customerTrips[customerTrips.length - 1];
                     
@@ -528,4 +528,4 @@ const DriverDetail: React.FC = () => {
   );
 };
 
-export default DriverDetail;
+export default PengayuhDetail;
