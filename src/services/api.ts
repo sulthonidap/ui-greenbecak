@@ -426,11 +426,11 @@ export const notificationsAPI = {
 export const adminAPI = {
   // Users
   createUser: async (userData: any) => {
-    const response = await api.post('/admin/users', userData);
+    const response = await api.post('/admin/users/', userData);
     return response.data;
   },
   getUsers: async (params?: any) => {
-    const response = await api.get('/admin/users', { params });
+    const response = await api.get('/admin/users/', { params });
     return response.data;
   },
   
@@ -460,12 +460,12 @@ export const adminAPI = {
   
   // Drivers
   createDriver: async (driverData: any) => {
-    const response = await api.post('/admin/drivers', driverData);
+    const response = await api.post('/admin/drivers/', driverData);
     return response.data;
   },
   
   getDrivers: async (params?: any) => {
-    const response = await api.get('/admin/drivers', { params });
+    const response = await api.get('/admin/drivers/', { params });
     return response.data;
   },
   
@@ -491,7 +491,7 @@ export const adminAPI = {
   
   // Driver Financial Data
   getDriverFinancialData: async (params?: any) => {
-    const response = await api.get('/admin/drivers/financial-data', { params });
+    const response = await api.get('/admin/drivers/financial-data/', { params });
     return response.data;
   },
   
@@ -519,7 +519,7 @@ export const adminAPI = {
   
   // Withdrawals
   getWithdrawals: async (params?: any) => {
-    const response = await api.get('/admin/withdrawals', { params });
+    const response = await api.get('/admin/withdrawals/', { params });
     return response.data;
   },
   
@@ -550,7 +550,7 @@ export const adminAPI = {
   
   // Admin Orders
   getAdminOrders: async (params?: any) => {
-    const response = await api.get('/orders', { params });
+    const response = await api.get('/orders/', { params });
     return response.data;
   },
 };
