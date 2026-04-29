@@ -11,6 +11,36 @@ import { useAuth } from '../context/AuthContext';
 import { useOrder, Order } from '../context/OrderContext';
 import { driverAPI, authAPI } from '../services/api';
 
+const playNotificationSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    // Set properties for a pleasant notification chime (double beep)
+    oscillator.type = 'sine';
+    
+    // First beep
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    
+    // Second beep (higher pitch)
+    oscillator.frequency.setValueAtTime(1108.73, audioCtx.currentTime + 0.2); // C#6
+    gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.25);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.6);
+  } catch (e) {
+    console.warn('AudioContext not supported or blocked', e);
+  }
+};
+
 const DriverHome: React.FC = () => {
   const { orders, acceptOrder, completeOrder, cancelOrder } = useOrder();
   const { user } = useAuth();
@@ -195,34 +225,36 @@ const DriverHome: React.FC = () => {
       // Auto hide after 5 seconds
       setTimeout(() => setShowNewOrderNotification(false), 5000);
 
-      // HTML5 System Notification logic
-      try {
-        if ('Notification' in window && window.Notification && Notification.permission === 'granted') {
-          // Find orders that haven't been notified yet
-          const newOrders = pendingOrders.filter(order => !notifiedOrderIds.current.has(order.id));
-          
-          if (newOrders.length > 0) {
-            // Send notification for the first new order
-            const latestOrder = newOrders[0];
-            const notification = new Notification('Pesanan Baru Masuk!', {
-              body: `Titik Jemput: ${latestOrder.pickup_location || 'Belum ditentukan'}`,
-              icon: '/favicon.ico', // You can replace this with your app's icon URL
-              vibrate: [200, 100, 200]
-            });
+        // Find orders that haven't been notified yet
+        const newOrders = pendingOrders.filter(order => !notifiedOrderIds.current.has(order.id));
+        
+        if (newOrders.length > 0) {
+          // Play sound for new order
+          playNotificationSound();
 
-            // Open the window if the notification is clicked
-            notification.onclick = () => {
-              window.focus();
-              notification.close();
-            };
+          try {
+            if ('Notification' in window && window.Notification && Notification.permission === 'granted') {
+              // Send notification for the first new order
+              const latestOrder = newOrders[0];
+              const notification = new Notification('Pesanan Baru Masuk!', {
+                body: `Titik Jemput: ${latestOrder.pickup_location || 'Belum ditentukan'}`,
+                icon: '/favicon.ico', // You can replace this with your app's icon URL
+                vibrate: [200, 100, 200]
+              });
 
-            // Mark these orders as notified
-            newOrders.forEach(order => notifiedOrderIds.current.add(order.id));
+              // Open the window if the notification is clicked
+              notification.onclick = () => {
+                window.focus();
+                notification.close();
+              };
+            }
+          } catch (e) {
+            console.warn('Browser does not fully support Notification API', e);
           }
+
+          // Mark these orders as notified
+          newOrders.forEach(order => notifiedOrderIds.current.add(order.id));
         }
-      } catch (e) {
-        console.warn('Browser does not fully support Notification API', e);
-      }
     }
   }, [pendingOrders, isOnline]);
   
