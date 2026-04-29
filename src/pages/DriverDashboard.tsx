@@ -1,5 +1,5 @@
 // DriverDashboard.tsx - Updated to fix HMR issues
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { 
   List, MapPin, User, Clock, LogOut, 
@@ -38,9 +38,19 @@ const DriverHome: React.FC = () => {
   // New state for accept order improvements
   const [acceptingOrderId, setAcceptingOrderId] = useState<string | null>(null);
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState<string | null>(null);
+  const [completingOrderId, setCompletingOrderId] = useState<string | null>(null);
+  const [showCompleteConfirmation, setShowCompleteConfirmation] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [showNewOrderNotification, setShowNewOrderNotification] = useState(false);
   const [updatingOnlineStatus, setUpdatingOnlineStatus] = useState(false);
+  const notifiedOrderIds = useRef<Set<string>>(new Set());
+
+  // Request Notification permission on load
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  }, []);
   
   // Fetch online status only
   const fetchOnlineStatus = async () => {
@@ -155,37 +165,26 @@ const DriverHome: React.FC = () => {
     fetchDriverData();
   }, []);
 
-  // Auto refresh online status every 30 seconds
+  // Auto refresh online status and orders every 10 seconds (silent poll)
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchOnlineStatus();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-
-
-  // Real-time location update
-  useEffect(() => {
-    const updateLocation = async () => {
-      if (navigator.geolocation && isOnline) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          try {
-            await driverAPI.updateLocation({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              timestamp: new Date().toISOString()
-            });
-          } catch (error) {
-            console.error('Failed to update location:', error);
+    const silentPoll = async () => {
+      try {
+        await fetchOnlineStatus();
+        
+        // Hanya ambil order terbaru jika driver berstatus Online
+        if (isOnline) {
+          const ordersResponse = await driverAPI.getDriverOrders();
+          if (ordersResponse.orders) {
+            setDriverOrders(ordersResponse.orders);
           }
-        });
+        }
+      } catch (error) {
+        console.error('Silent poll failed:', error);
       }
     };
-    
-    // Update location every 30 seconds when online
-    const interval = setInterval(updateLocation, 30000);
+
+    const interval = setInterval(silentPoll, 10000); // Polling setiap 10 detik
+
     return () => clearInterval(interval);
   }, [isOnline]);
 
@@ -200,8 +199,33 @@ const DriverHome: React.FC = () => {
       setShowNewOrderNotification(true);
       // Auto hide after 5 seconds
       setTimeout(() => setShowNewOrderNotification(false), 5000);
+
+      // HTML5 System Notification logic
+      if ('Notification' in window && Notification.permission === 'granted') {
+        // Find orders that haven't been notified yet
+        const newOrders = pendingOrders.filter(order => !notifiedOrderIds.current.has(order.id));
+        
+        if (newOrders.length > 0) {
+          // Send notification for the first new order
+          const latestOrder = newOrders[0];
+          const notification = new Notification('Pesanan Baru Masuk!', {
+            body: `Titik Jemput: ${latestOrder.pickup_location || 'Belum ditentukan'}`,
+            icon: '/favicon.ico', // You can replace this with your app's icon URL
+            vibrate: [200, 100, 200]
+          });
+
+          // Open the window if the notification is clicked
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+
+          // Mark these orders as notified
+          newOrders.forEach(order => notifiedOrderIds.current.add(order.id));
+        }
+      }
     }
-  }, [pendingOrders.length, isOnline]);
+  }, [pendingOrders, isOnline]);
   
   console.log('Filtered orders:', {
     total: driverOrders.length,
@@ -260,14 +284,28 @@ const DriverHome: React.FC = () => {
     setShowAcceptConfirmation(null);
   };
   
+  const handleCompleteConfirmation = (orderId: string) => {
+    setShowCompleteConfirmation(orderId);
+  };
+
+  const handleCancelComplete = () => {
+    setShowCompleteConfirmation(null);
+  };
+
   const handleCompleteOrder = async (orderId: string) => {
     try {
+      setCompletingOrderId(orderId);
       await driverAPI.completeOrder(orderId);
+      setSuccessMessage('Pesanan berhasil diselesaikan!');
       // Refresh orders and earnings after completing
       await fetchDriverData();
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error: any) {
       console.error('Failed to complete order:', error);
       setError('Gagal menyelesaikan pesanan. Silakan coba lagi.');
+    } finally {
+      setCompletingOrderId(null);
+      setShowCompleteConfirmation(null);
     }
   };
   
@@ -400,43 +438,7 @@ const DriverHome: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center mb-4">
-            <Calendar className="w-8 h-8 text-blue-500 mr-3" />
-            <div>
-              <h3 className="text-lg font-semibold">Perjalanan Hari Ini</h3>
-              <p className="text-3xl font-bold text-blue-600">{driverEarnings?.today_trips || 0}</p>
-            </div>
-          </div>
-          <div className="mt-2 text-sm text-gray-500">
-            Total: {driverEarnings?.completed_orders || 0} perjalanan
-          </div>
-        </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center mb-4">
-            <DollarSign className="w-8 h-8 text-green-800 mr-3" />
-            <div>
-              <h3 className="text-lg font-semibold">Pendapatan Hari Ini</h3>
-              <p className="text-3xl font-bold text-green-600">
-                {formatCurrency(driverEarnings?.today_earnings || 0)}
-              </p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <div className="text-sm text-gray-500 mb-2">
-              Total: {formatCurrency(driverEarnings?.total_earnings || 0)}
-            </div>
-            <Link 
-              to="/driver/finance"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Lihat detail keuangan →
-            </Link>
-          </div>
-        </div>
-      </div>
       
       {!isOnline && (
         <div className="mb-6 p-4 bg-yellow-50 text-yellow-700 rounded-md flex items-center">
@@ -447,54 +449,6 @@ const DriverHome: React.FC = () => {
       
       {isOnline && (
         <>
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Pesanan Aktif</h2>
-            {myActiveOrders.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                {myActiveOrders.map(order => (
-                  <div key={order.id} className="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="font-semibold text-lg">Order #{order.order_number}</h3>
-                        <p className="text-gray-500 text-sm">{new Date(order.created_at).toLocaleString('id-ID')}</p>
-                      </div>
-                      <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Aktif</span>
-                    </div>
-                    <div className="mb-4">
-                      <p className="text-gray-700"><span className="font-medium">Customer:</span> {order.customer_name || 'Customer'}</p>
-                      <p className="text-gray-700"><span className="font-medium">Phone:</span> {order.customer_phone || 'N/A'}</p>
-                      <p className="text-gray-700"><span className="font-medium">Pickup:</span> {order.pickup_location || 'Belum ditentukan'}</p>
-                      <p className="text-gray-700"><span className="font-medium">Destination:</span> {order.drop_location || 'Belum ditentukan'}</p>
-                      <p className="text-gray-700"><span className="font-medium">Jarak:</span> {order.distance || 0} km</p>
-                      <p className="text-gray-700"><span className="font-medium">Biaya:</span> Rp {(order.price || 0).toLocaleString('id-ID')}</p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleCompleteOrder(order.id)}
-                        className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      >
-                        <CheckCircle size={16} className="mr-1" />
-                        Selesai
-                      </button>
-                      <button
-                        onClick={() => handleCancelOrder(order.id)}
-                        className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      >
-                        <X size={16} className="mr-1" />
-                        Batalkan
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white p-6 rounded-lg shadow-md text-center">
-                <Clock size={48} className="mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-500">Anda belum memiliki pesanan aktif.</p>
-              </div>
-            )}
-          </div>
-          
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Pesanan Tersedia</h2>
@@ -519,25 +473,25 @@ const DriverHome: React.FC = () => {
                     <div className="mb-4 space-y-2">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <p className="text-gray-600 font-medium">Customer</p>
-                          <p className="text-gray-800">{order.customer_name || 'Customer'}</p>
+                          <p className="text-gray-600 font-medium">Pelanggan</p>
+                          <p className="text-gray-800">{order.customer_name || 'Pelanggan'}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600 font-medium">Phone</p>
+                          <p className="text-gray-600 font-medium">Telepon</p>
                           <p className="text-gray-800">{order.customer_phone || 'N/A'}</p>
                         </div>
                       </div>
                       <div className="border-t pt-2">
                         <div className="flex items-center mb-1">
                           <MapPin size={14} className="text-gray-500 mr-1" />
-                          <span className="text-gray-600 font-medium text-sm">Pickup</span>
+                          <span className="text-gray-600 font-medium text-sm">Titik Jemput</span>
                         </div>
-                        <p className="text-gray-800 text-sm ml-5">{order.pickup_location || 'Malioboro Mall'}</p>
+                        <p className="text-gray-800 text-sm ml-5">{order.pickup_location || 'Belum ditentukan'}</p>
                       </div>
                       <div className="border-t pt-2">
                         <div className="flex items-center mb-1">
                           <MapPin size={14} className="text-gray-500 mr-1" />
-                          <span className="text-gray-600 font-medium text-sm">Destination</span>
+                          <span className="text-gray-600 font-medium text-sm">Tujuan</span>
                         </div>
                         <p className="text-gray-800 text-sm ml-5">{order.drop_location || 'Belum ditentukan'}</p>
                       </div>
@@ -551,64 +505,21 @@ const DriverHome: React.FC = () => {
                           <p className="text-green-600 font-bold">Rp {(order.price || 0).toLocaleString('id-ID')}</p>
                         </div>
                       </div>
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center text-gray-500">
-                            <Clock size={12} className="mr-1" />
-                            <span>Estimasi: {Math.ceil((order.distance || 0) * 3)} menit</span>
-                          </div>
-                          <div className="text-blue-600 font-medium">
-                            +{Math.ceil((order.price || 0) * 0.1).toLocaleString('id-ID')} tip
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                    {showAcceptConfirmation === order.id ? (
-                      <div className="space-y-2">
-                        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                          <p className="text-blue-800 text-sm font-medium">Konfirmasi Penerimaan</p>
-                          <p className="text-blue-700 text-xs">Anda yakin ingin menerima pesanan ini?</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleAcceptOrder(order.id)}
-                            disabled={acceptingOrderId === order.id}
-                            className="flex-1 bg-green-800 hover:bg-green-600 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                          >
-                            {acceptingOrderId === order.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Menerima...
-                              </>
-                            ) : (
-                              'Ya, Terima'
-                            )}
-                          </button>
-                          <button
-                            onClick={handleCancelAccept}
-                            disabled={acceptingOrderId === order.id}
-                            className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md"
-                          >
-                            Batal
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleAcceptConfirmation(order.id)}
-                        disabled={acceptingOrderId === order.id}
-                        className="w-full bg-green-800 hover:bg-green-600 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      >
-                        {acceptingOrderId === order.id ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Menerima...
-                          </>
-                        ) : (
-                          'Terima Pesanan'
-                        )}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleAcceptConfirmation(order.id)}
+                      disabled={acceptingOrderId === order.id}
+                      className="w-full bg-green-800 hover:bg-green-600 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
+                    >
+                      {acceptingOrderId === order.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Menerima...
+                        </>
+                      ) : (
+                        'Terima Pesanan'
+                      )}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -623,6 +534,102 @@ const DriverHome: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Pesanan Aktif</h2>
+            {myActiveOrders.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {myActiveOrders.map(order => (
+                  <div key={order.id} className="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="font-semibold text-lg">Order #{order.order_number}</h3>
+                        <p className="text-gray-500 text-sm">{new Date(order.created_at).toLocaleString('id-ID')}</p>
+                      </div>
+                      <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Aktif</span>
+                    </div>
+                    <div className="mb-4">
+                      <p className="text-gray-700"><span className="font-medium">Pelanggan:</span> {order.customer_name || 'Pelanggan'}</p>
+                      <p className="text-gray-700"><span className="font-medium">Telepon:</span> {order.customer_phone || 'N/A'}</p>
+                      <p className="text-gray-700"><span className="font-medium">Titik Jemput:</span> {order.pickup_location || 'Belum ditentukan'}</p>
+                      <p className="text-gray-700"><span className="font-medium">Tujuan:</span> {order.drop_location || 'Belum ditentukan'}</p>
+                      <p className="text-gray-700"><span className="font-medium">Jarak:</span> {order.distance || 0} km</p>
+                      <p className="text-gray-700"><span className="font-medium">Biaya:</span> Rp {(order.price || 0).toLocaleString('id-ID')}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleCompleteConfirmation(order.id)}
+                        disabled={completingOrderId === order.id}
+                        className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 font-medium py-2 px-4 rounded-md flex items-center justify-center"
+                      >
+                        {completingOrderId === order.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-700 mr-2"></div>
+                            Selesai...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={16} className="mr-1" />
+                            Selesai
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleCancelOrder(order.id)}
+                        className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-4 rounded-md flex items-center justify-center"
+                      >
+                        <X size={16} className="mr-1" />
+                        Batalkan
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                <Clock size={48} className="mx-auto text-gray-400 mb-3" />
+                <p className="text-gray-500">Anda belum memiliki pesanan aktif.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <Calendar className="w-8 h-8 text-blue-500 mr-3" />
+                <div>
+                  <h3 className="text-lg font-semibold">Perjalanan Hari Ini</h3>
+                  <p className="text-3xl font-bold text-blue-600">{driverEarnings?.today_trips || 0}</p>
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-gray-500">
+                Total: {driverEarnings?.completed_orders || 0} perjalanan
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <DollarSign className="w-8 h-8 text-green-800 mr-3" />
+                <div>
+                  <h3 className="text-lg font-semibold">Pendapatan Hari Ini</h3>
+                  <p className="text-3xl font-bold text-green-600">
+                    {formatCurrency(driverEarnings?.today_earnings || 0)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-sm text-gray-500 mb-2">
+                  Total: {formatCurrency(driverEarnings?.total_earnings || 0)}
+                </div>
+                <Link 
+                  to="/driver/finance"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Lihat detail keuangan →
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -691,6 +698,87 @@ const DriverHome: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Accept Order Confirmation Modal */}
+      {showAcceptConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4 shadow-xl">
+            <div className="flex justify-center mb-4">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <AlertCircle size={32} className="text-blue-600" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Terima Pesanan</h3>
+            <p className="text-center text-gray-600 mb-6">
+              Anda yakin ingin menerima pesanan ini?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleCancelAccept}
+                disabled={acceptingOrderId === showAcceptConfirmation}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleAcceptOrder(showAcceptConfirmation)}
+                disabled={acceptingOrderId === showAcceptConfirmation}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+              >
+                {acceptingOrderId === showAcceptConfirmation ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Menerima...
+                  </>
+                ) : (
+                  'Ya, Terima'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Order Confirmation Modal */}
+      {showCompleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4 shadow-xl">
+            <div className="flex justify-center mb-4">
+              <div className="bg-green-100 p-3 rounded-full">
+                <CheckCircle size={32} className="text-green-600" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Selesaikan Pesanan</h3>
+            <p className="text-center text-gray-600 mb-6">
+              Anda yakin telah menyelesaikan pesanan ini dan penumpang sudah sampai di tujuan?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleCancelComplete}
+                disabled={completingOrderId === showCompleteConfirmation}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleCompleteOrder(showCompleteConfirmation)}
+                disabled={completingOrderId === showCompleteConfirmation}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+              >
+                {completingOrderId === showCompleteConfirmation ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Loading...
+                  </>
+                ) : (
+                  'Ya, Selesai'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
@@ -1310,6 +1398,8 @@ const DriverFinance: React.FC = () => {
           </div>
         </div>
       )}
+
+
 
       {/* Withdrawal Modal */}
       {showWithdrawalModal && (

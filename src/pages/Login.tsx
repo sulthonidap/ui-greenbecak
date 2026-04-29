@@ -10,8 +10,19 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, userType } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (userType === 'admin') {
+        navigate('/admin');
+      } else if (userType === 'driver') {
+        navigate('/driver');
+      }
+    }
+  }, [isAuthenticated, userType, navigate]);
 
   // Load remembered data on component mount
   useEffect(() => {
