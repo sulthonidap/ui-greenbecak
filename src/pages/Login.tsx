@@ -171,10 +171,6 @@ const Login: React.FC = () => {
             </button>
           </div>
           
-          <div className="text-sm text-center text-gray-500">
-            <span>Untuk demo, gunakan: </span>
-            <span className="font-medium">username: admin_support, password: password</span>
-          </div>
         </form>
       </div>
     </div>
