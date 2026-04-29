@@ -150,7 +150,7 @@ export const authAPI = {
   },
   
   getProfile: async () => {
-    const response = await api.get('/profile/');
+    const response = await api.get('/profile');
     return response.data;
   },
 };
@@ -214,7 +214,7 @@ export const ordersAPI = {
   },
   
   getOrders: async (params?: any) => {
-    const response = await api.get('/orders/', { params });
+    const response = await api.get('/orders', { params });
     return response.data;
   },
   
@@ -237,7 +237,7 @@ export const ordersAPI = {
 // Tariffs API
 export const tariffsAPI = {
   getTariffs: async (params?: any) => {
-    const response = await api.get('/tariffs/', { params });
+    const response = await api.get('/tariffs', { params });
     return response.data;
   },
   
@@ -359,12 +359,12 @@ export const tariffsAPI = {
 // Payments API
 export const paymentsAPI = {
   createPayment: async (paymentData: any) => {
-    const response = await api.post('/payments/', paymentData);
+    const response = await api.post('/payments', paymentData);
     return response.data;
   },
   
   getPayments: async (params?: any) => {
-    const response = await api.get('/payments/', { params });
+    const response = await api.get('/payments', { params });
     return response.data;
   },
   
@@ -384,7 +384,7 @@ export const paymentsAPI = {
   },
   
   getPaymentStats: async () => {
-    const response = await api.get('/payments/stats/');
+    const response = await api.get('/payments/stats');
     return response.data;
   },
 };
@@ -392,7 +392,7 @@ export const paymentsAPI = {
 // Notifications API
 export const notificationsAPI = {
   getNotifications: async (params?: any) => {
-    const response = await api.get('/notifications/', { params });
+    const response = await api.get('/notifications', { params });
     return response.data;
   },
   
@@ -407,7 +407,7 @@ export const notificationsAPI = {
   },
   
   markAllAsRead: async () => {
-    const response = await api.put('/notifications/read-all/');
+    const response = await api.put('/notifications/read-all');
     return response.data;
   },
   
@@ -417,7 +417,7 @@ export const notificationsAPI = {
   },
   
   getNotificationStats: async () => {
-    const response = await api.get('/notifications/stats/');
+    const response = await api.get('/notifications/stats');
     return response.data;
   },
 };
@@ -426,11 +426,11 @@ export const notificationsAPI = {
 export const adminAPI = {
   // Users
   createUser: async (userData: any) => {
-    const response = await api.post('/admin/users/', userData);
+    const response = await api.post('/admin/users', userData);
     return response.data;
   },
   getUsers: async (params?: any) => {
-    const response = await api.get('/admin/users/', { params });
+    const response = await api.get('/admin/users', { params });
     return response.data;
   },
   
@@ -460,12 +460,12 @@ export const adminAPI = {
   
   // Drivers
   createDriver: async (driverData: any) => {
-    const response = await api.post('/admin/drivers/', driverData);
+    const response = await api.post('/admin/drivers', driverData);
     return response.data;
   },
   
   getDrivers: async (params?: any) => {
-    const response = await api.get('/admin/drivers/', { params });
+    const response = await api.get('/admin/drivers', { params });
     return response.data;
   },
   
@@ -485,7 +485,7 @@ export const adminAPI = {
   },
   
   getDriverPerformance: async (id: string) => {
-    const response = await api.get(`/admin/drivers/${id}/performance/`);
+    const response = await api.get(`/admin/drivers/${id}/performance`);
     return response.data;
   },
   
@@ -513,13 +513,13 @@ export const adminAPI = {
   
   // Analytics
   getAnalytics: async () => {
-    const response = await api.get('/admin/analytics/');
+    const response = await api.get('/admin/analytics');
     return response.data;
   },
   
   // Withdrawals
   getWithdrawals: async (params?: any) => {
-    const response = await api.get('/admin/withdrawals/', { params });
+    const response = await api.get('/admin/withdrawals', { params });
     return response.data;
   },
   
@@ -539,18 +539,18 @@ export const adminAPI = {
   },
   
   getRevenueAnalytics: async () => {
-    const response = await api.get('/admin/analytics/revenue/');
+    const response = await api.get('/admin/analytics/revenue');
     return response.data;
   },
   
   getOrderAnalytics: async () => {
-    const response = await api.get('/admin/analytics/orders/');
+    const response = await api.get('/admin/analytics/orders');
     return response.data;
   },
   
   // Admin Orders
   getAdminOrders: async (params?: any) => {
-    const response = await api.get('/orders/', { params });
+    const response = await api.get('/orders', { params });
     return response.data;
   },
 };
@@ -559,14 +559,14 @@ export const adminAPI = {
 export const driverAPI = {
   // Orders
   getDriverOrders: async (params?: any) => {
-    const response = await api.get('/driver/orders/', { params });
+    const response = await api.get('/driver/orders', { params });
     return response.data;
   },
   
   // Get orders by driver ID (for testing)
   getOrdersByDriverID: async (driverId: string, params?: any) => {
     console.log('API call: getOrdersByDriverID with driverId:', driverId);
-    const response = await api.get(`/driver/${driverId}/orders/`, { params });
+    const response = await api.get(`/driver/${driverId}/orders`, { params });
     console.log('API response:', response);
     return response.data;
   },
@@ -583,29 +583,29 @@ export const driverAPI = {
   
   // Earnings
   getDriverEarnings: async (params?: any) => {
-    const response = await api.get('/driver/earnings/', { params });
+    const response = await api.get('/driver/earnings', { params });
     return response.data;
   },
   
   // Withdrawals
   createWithdrawal: async (withdrawalData: any) => {
-    const response = await api.post('/driver/withdrawals/', withdrawalData);
+    const response = await api.post('/driver/withdrawals', withdrawalData);
     return response.data;
   },
   
   getDriverWithdrawals: async (params?: any) => {
-    const response = await api.get('/driver/withdrawals/', { params });
+    const response = await api.get('/driver/withdrawals', { params });
     return response.data;
   },
   
   // Location
   updateLocation: async (locationData: any) => {
-    const response = await api.post('/driver/location/', locationData);
+    const response = await api.post('/driver/location', locationData);
     return response.data;
   },
   
   getLocation: async () => {
-    const response = await api.get('/driver/location/');
+    const response = await api.get('/driver/location');
     return response.data;
   },
   
@@ -615,12 +615,12 @@ export const driverAPI = {
   },
   
   getOnlineStatus: async () => {
-    const response = await api.get('/driver/location/');
+    const response = await api.get('/driver/location');
     return response.data;
   },
   
   getLocationHistory: async (params?: any) => {
-    const response = await api.get('/driver/location/history/', { params });
+    const response = await api.get('/driver/location/history', { params });
     return response.data;
   },
 };
@@ -628,7 +628,7 @@ export const driverAPI = {
 // Location API (public)
 export const locationAPI = {
   getNearbyDrivers: async (params: any) => {
-    const response = await publicApi.get('/location/drivers/nearby/', { params });
+    const response = await publicApi.get('/location/drivers/nearby', { params });
     return response.data;
   },
   
@@ -638,7 +638,7 @@ export const locationAPI = {
   },
   
   getDriverRoute: async (orderId: string) => {
-    const response = await publicApi.get(`/location/routes/${orderId}/`);
+    const response = await publicApi.get(`/location/routes/${orderId}`);
     return response.data;
   },
 };
