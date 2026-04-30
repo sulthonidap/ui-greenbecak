@@ -642,6 +642,26 @@ export const driverAPI = {
     const response = await api.get('/driver/location/history', { params });
     return response.data;
   },
+  
+  // Public driver check
+  checkDriverCode: async (code: string) => {
+    try {
+      const response = await fetch(`https://api.becakjogja.id/api/drivers/public/check/${code}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      return { exists: false };
+    } catch (error) {
+      console.error('Failed to check driver code:', error);
+      return { exists: false };
+    }
+  },
 };
 
 // Location API (public)

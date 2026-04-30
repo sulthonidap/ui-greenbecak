@@ -418,6 +418,63 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const downloadStaticQR = async () => {
+    try {
+      const staticUrl = "https://becakjogja.id/pesan";
+      setBulkQRValue(staticUrl);
+      
+      showSuccess('Menyiapkan QR Statis...');
+      
+      // Delay agar canvas update
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const canvas = document.getElementById('bulk-qr-canvas') as HTMLCanvasElement;
+      if (!canvas) return;
+      
+      const cardCanvas = document.createElement('canvas');
+      const ctx = cardCanvas.getContext('2d');
+      const cardWidth = 400;
+      const cardHeight = 600;
+      cardCanvas.width = cardWidth;
+      cardCanvas.height = cardHeight;
+      
+      if (ctx) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cardWidth, cardHeight);
+        ctx.strokeStyle = '#264A7C';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(5, 5, cardWidth - 10, cardHeight - 10);
+        
+        ctx.fillStyle = '#264A7C';
+        ctx.fillRect(0, 0, cardWidth, 80);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('BECAKJOGJA', cardWidth / 2, 50);
+        
+        ctx.drawImage(canvas, 50, 100, 300, 300);
+        
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText('PESAN SEKARANG', cardWidth / 2, 480);
+        
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666666';
+        ctx.fillText('Scan untuk memesan perjalanan', cardWidth / 2, 540);
+        
+        const pngFile = cardCanvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.download = `QR-Statis-BecakJogja.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
+        showSuccess('QR Statis berhasil diunduh');
+      }
+    } catch (err) {
+      console.error(err);
+      showError('Gagal mengunduh QR Statis');
+    }
+  };
+
   const exportToPDF = () => {
     const doc = new jsPDF();
     
@@ -599,6 +656,13 @@ const UserManagement: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">Daftar User</h2>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button
+                onClick={downloadStaticQR}
+                className="flex items-center px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                <QrCode className="w-4 h-4 mr-2" />
+                QR Statis
+              </button>
               <button
                 onClick={downloadBulkQR}
                 className="flex items-center px-4 py-2 border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 transition-colors"

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useOrder, DistanceOption } from '../context/OrderContext';
-import { tariffsAPI, ordersAPI } from '../services/api';
-import { MapPin, CheckCircle, Phone } from 'lucide-react';
+import { tariffsAPI, ordersAPI, driverAPI } from '../services/api';
+import { MapPin, CheckCircle, Phone, AlertCircle } from 'lucide-react';
 
 interface TariffOption {
   id: string;
@@ -29,6 +29,8 @@ const OrderPage: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<TariffOption | null>(null);
   const [codeFromQR, setCodeFromQR] = useState(false);
   const [isGojek, setIsGojek] = useState(false);
+  const [driverCheckStatus, setDriverCheckStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
+  const [driverInfo, setDriverInfo] = useState<{ name: string; message: string } | null>(null);
   const navigate = useNavigate();
 
   // Read code parameter from URL and auto-fill pedicab code
@@ -104,6 +106,34 @@ const OrderPage: React.FC = () => {
       setIsGojek(false);
     }
   }, [selectedOption]);
+
+  // Check driver code when pedicabCode changes (debounced)
+  useEffect(() => {
+    if (!pedicabCode.trim()) {
+      setDriverCheckStatus('idle');
+      setDriverInfo(null);
+      return;
+    }
+
+    const checkTimer = setTimeout(async () => {
+      try {
+        setDriverCheckStatus('loading');
+        const response = await driverAPI.checkDriverCode(pedicabCode);
+        if (response.exists) {
+          setDriverCheckStatus('found');
+          setDriverInfo({ name: response.name, message: response.message });
+        } else {
+          setDriverCheckStatus('not_found');
+          setDriverInfo({ name: '', message: response.message || 'Driver tidak terdaftar.' });
+        }
+      } catch (err) {
+        console.error('Check driver error:', err);
+        setDriverCheckStatus('idle');
+      }
+    }, 800);
+
+    return () => clearTimeout(checkTimer);
+  }, [pedicabCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,6 +302,30 @@ const OrderPage: React.FC = () => {
             <p className="mt-1 text-sm text-gray-500">
               Kode becak terdapat pada bagian depan becak atau bisa ditanyakan kepada pengemudi
             </p>
+
+            {/* Driver Status Warning/Info */}
+            {driverCheckStatus === 'found' && driverInfo && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 animate-fade-in">
+                <CheckCircle size={16} className="text-blue-600" />
+                <p className="text-sm text-blue-700">
+                  {driverInfo.message}
+                </p>
+              </div>
+            )}
+
+            {driverCheckStatus === 'not_found' && driverInfo && (
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 animate-pulse-subtle">
+                <AlertCircle size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    Peringatan: Driver Belum Terdaftar
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    Kode becak <strong>{pedicabCode}</strong> belum ada di sistem kami. Anda tetap bisa melanjutkan pesanan, namun data driver akan diproses secara manual oleh admin.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
           {/* Manual Gojek Toggle removed as requested - now triggered by specific tariff selection */}
 

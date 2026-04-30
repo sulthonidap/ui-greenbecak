@@ -71,6 +71,7 @@ const Dashboard: React.FC = () => {
           id: o.id?.toString() || `order-${Date.now()}`,
           orderNumber: o.order_number || `GB-${Date.now()}`,
           vehicleCode: o.becak_code || o.driver?.vehicle_number || o.driver?.driver_code || 'N/A',
+          driverName: o.driver?.name || (o.becak_code ? 'Belum Terdaftar' : 'N/A'),
           distance: o.distance ? `${o.distance} km` : 'N/A',
           price: o.price || 0,
           status: o.status || 'pending',
@@ -296,6 +297,9 @@ const Dashboard: React.FC = () => {
                     Kode Becak
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Driver
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Jarak
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -317,6 +321,11 @@ const Dashboard: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {order.vehicleCode}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className={order.driverName === 'Belum Terdaftar' ? 'text-orange-600 font-medium' : ''}>
+                        {order.driverName}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {order.distance}
