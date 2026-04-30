@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { UserPlus, ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare, Shield, Eye, EyeOff, Key, QrCode, Download } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -55,6 +55,7 @@ const UserManagement: React.FC = () => {
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedDriverCode, setSelectedDriverCode] = useState<string>('');
   const [selectedDriverName, setSelectedDriverName] = useState<string>('');
+  const [bulkQRValue, setBulkQRValue] = useState<string>('');
   
   // Helper untuk format tanggal yang aman terhadap undefined/string
   const formatDate = (date: any) => {
@@ -282,7 +283,141 @@ const UserManagement: React.FC = () => {
     
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   };
-  
+
+  // Download QR code as a card (PNG with text)
+  const downloadQRCard = () => {
+    const svg = document.querySelector('.qr-code-svg') as HTMLElement;
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Set canvas size for the card
+      const cardWidth = 400;
+      const cardHeight = 600;
+      canvas.width = cardWidth;
+      canvas.height = cardHeight;
+      
+      // Draw background
+      if (ctx) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cardWidth, cardHeight);
+        
+        // Draw Border
+        ctx.strokeStyle = '#264A7C';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(5, 5, cardWidth - 10, cardHeight - 10);
+        
+        // Draw Header
+        ctx.fillStyle = '#264A7C';
+        ctx.fillRect(0, 0, cardWidth, 80);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('BECAKJOGJA', cardWidth / 2, 50);
+        
+        // Draw QR Code (centered)
+        const qrSize = 300;
+        ctx.drawImage(img, (cardWidth - qrSize) / 2, 100, qrSize, qrSize);
+        
+        // Draw Driver Info
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText(selectedDriverName.toUpperCase(), cardWidth / 2, 450);
+        
+        ctx.font = 'bold 22px Arial';
+        ctx.fillStyle = '#264A7C';
+        ctx.fillText(selectedDriverCode, cardWidth / 2, 490);
+        
+        // Draw Footer info
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666666';
+        ctx.fillText('Scan untuk memesan perjalanan', cardWidth / 2, 550);
+        
+        const pngFile = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.download = `QR-Card-${selectedDriverCode}.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
+      }
+    };
+    
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const downloadBulkQR = async () => {
+    const driverList = users.filter(user => user.role === 'driver' && user.vehicleCode);
+    if (driverList.length === 0) {
+      showError('Tidak ada driver dengan kode kendaraan yang ditemukan');
+      return;
+    }
+
+    try {
+      showSuccess(`Menyiapkan ${driverList.length} kartu QR...`);
+      const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: [100, 150]
+      });
+
+      for (let i = 0; i < driverList.length; i++) {
+        const driver = driverList[i];
+        if (i > 0) doc.addPage([100, 150], 'p');
+
+        // Draw Card Background/Border
+        doc.setDrawColor(38, 74, 124); // #264A7C
+        doc.setLineWidth(1);
+        doc.rect(2, 2, 96, 146);
+
+        // Draw Header
+        doc.setFillColor(38, 74, 124);
+        doc.rect(2, 2, 96, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text('BECAKJOGJA', 50, 15, { align: 'center' });
+
+        // Update hidden QR Canvas and wait for it to render
+        const qrValue = `${window.location.origin}/pesan?code=${driver.vehicleCode}`;
+        setBulkQRValue(qrValue);
+        
+        // Sedikit delay agar React merender canvas terbaru
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        const canvas = document.getElementById('bulk-qr-canvas') as HTMLCanvasElement;
+        if (canvas) {
+          const qrDataUrl = canvas.toDataURL('image/png');
+          doc.addImage(qrDataUrl, 'PNG', 15, 30, 70, 70);
+        }
+
+        // Driver Info
+        doc.setTextColor(51, 51, 51);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text(driver.name.toUpperCase(), 50, 115, { align: 'center' });
+        
+        doc.setTextColor(38, 74, 124);
+        doc.setFontSize(16);
+        doc.text(driver.vehicleCode || '', 50, 125, { align: 'center' });
+
+        doc.setTextColor(102, 102, 102);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('Scan untuk memesan perjalanan', 50, 140, { align: 'center' });
+      }
+
+      doc.save(`Bulk_QR_Cards_BecakJogja_${new Date().toISOString().split('T')[0]}.pdf`);
+      showSuccess('Bulk QR berhasil diunduh (PDF)');
+    } catch (err) {
+      console.error(err);
+      showError('Gagal melakukan bulk download');
+    }
+  };
+
   const exportToPDF = () => {
     const doc = new jsPDF();
     
@@ -464,6 +599,13 @@ const UserManagement: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">Daftar User</h2>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button
+                onClick={downloadBulkQR}
+                className="flex items-center px-4 py-2 border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 transition-colors"
+              >
+                <QrCode className="w-4 h-4 mr-2" />
+                Bulk QR
+              </button>
               <button
                 onClick={exportToPDF}
                 className="flex items-center px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors"
@@ -778,16 +920,25 @@ const UserManagement: React.FC = () => {
                  <p className="text-xs text-gray-500 mb-4">
                    Scan QR code ini untuk langsung ke halaman pesan dengan driver code: <span className="font-semibold">{selectedDriverCode}</span>
                  </p>
-                 <button
-                   onClick={downloadQRCode}
-                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
-                   style={{ backgroundColor: '#264A7C' }}
-                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
-                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#264A7C'}
-                 >
-                   <Download size={16} className="mr-2" />
-                   Download QR Code
-                 </button>
+                  <div className="flex flex-col space-y-2 mt-4">
+                    <button
+                      onClick={downloadQRCode}
+                      className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <Download size={16} className="mr-2" />
+                      Download QR Saja
+                    </button>
+                    <button
+                      onClick={downloadQRCard}
+                      className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                      style={{ backgroundColor: '#264A7C' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#264A7C'}
+                    >
+                      <Download size={16} className="mr-2" />
+                      Download Kartu QR (Ada Nama & Kode)
+                    </button>
+                  </div>
                </div>
              </div>
            </div>
@@ -835,6 +986,17 @@ const UserManagement: React.FC = () => {
            </div>
          </div>
        )}
+
+      {/* Hidden Canvas for Bulk QR Generation */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <QRCodeCanvas
+          id="bulk-qr-canvas"
+          value={bulkQRValue}
+          size={500}
+          level="H"
+          includeMargin={true}
+        />
+      </div>
      </div>
    );
  };
