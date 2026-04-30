@@ -4,6 +4,8 @@ import { UserPlus, ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X,
 import { adminAPI } from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
 import { QRCodeSVG } from 'qrcode.react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface User {
   id: string;
@@ -280,6 +282,44 @@ const UserManagement: React.FC = () => {
     
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   };
+  
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(16);
+    doc.text('Daftar User GreenBecak', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 28);
+    
+    const tableColumn = ["Nama", "Username", "Role", "Status", "Email", "Telepon", "Kode Kendaraan", "Tgl Gabung"];
+    const tableRows: any[] = [];
+
+    filteredUsers.forEach(user => {
+      const userData = [
+        user.name,
+        `@${user.username}`,
+        getRoleDisplayName(user.role),
+        user.status === 'active' ? 'Aktif' : 'Tidak Aktif',
+        user.email,
+        user.phone,
+        user.role === 'driver' ? user.vehicleCode || '-' : '-',
+        formatDate(user.created_at)
+      ];
+      tableRows.push(userData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [21, 128, 61] } // bg-green-700
+    });
+
+    doc.save(`Daftar_User_GreenBecak_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const activeUsers = users.filter(user => user.status === 'active');
   const drivers = users.filter(user => user.role === 'driver');
@@ -423,13 +463,22 @@ const UserManagement: React.FC = () => {
               <Users className="w-6 h-6 text-green-600 mr-3" />
               <h2 className="text-lg font-semibold text-gray-900">Daftar User</h2>
             </div>
-            <button
-              onClick={() => navigate('/admin/create-user')}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Tambah User
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={exportToPDF}
+                className="flex items-center px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </button>
+              <button
+                onClick={() => navigate('/admin/create-user')}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah User
+              </button>
+            </div>
           </div>
         </div>
 
