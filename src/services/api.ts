@@ -237,7 +237,7 @@ export const ordersAPI = {
 // Tariffs API
 export const tariffsAPI = {
   getTariffs: async (params?: any) => {
-    const response = await api.get('/tariffs', { params });
+    const response = await api.get('/tariffs/', { params });
     return response.data;
   },
   
@@ -359,12 +359,12 @@ export const tariffsAPI = {
 // Payments API
 export const paymentsAPI = {
   createPayment: async (paymentData: any) => {
-    const response = await api.post('/payments', paymentData);
+    const response = await api.post('/payments/', paymentData);
     return response.data;
   },
   
   getPayments: async (params?: any) => {
-    const response = await api.get('/payments', { params });
+    const response = await api.get('/payments/', { params });
     return response.data;
   },
   
@@ -392,7 +392,7 @@ export const paymentsAPI = {
 // Notifications API
 export const notificationsAPI = {
   getNotifications: async (params?: any) => {
-    const response = await api.get('/notifications', { params });
+    const response = await api.get('/notifications/', { params });
     return response.data;
   },
   
