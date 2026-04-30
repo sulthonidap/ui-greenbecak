@@ -213,6 +213,25 @@ export const ordersAPI = {
     }
   },
   
+  confirmOrderPaymentPublic: async (id: string) => {
+    try {
+      const response = await fetch(`https://api.becakjogja.id/api/orders/public/${id}/pay`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to confirm public payment:', error);
+      throw error;
+    }
+  },
+
   getOrders: async (params?: any) => {
     const response = await api.get('/orders', { params });
     return response.data;

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, User, DollarSign, Star, CalendarDays } from 'lucide-react';
+import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, User, DollarSign, Star, CalendarDays, Download } from 'lucide-react';
 import { adminAPI, tariffsAPI } from '../services/api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Order {
   id: string;
@@ -194,6 +196,44 @@ const OrderManagement: React.FC = () => {
     }).format(date);
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(16);
+    doc.text('Rekapitulasi Order GreenBecak', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 28);
+    
+    const tableColumn = ["No Order", "Tgl Order", "Customer", "Driver", "Tarif/Jarak", "Status", "Pembayaran", "Total (Rp)"];
+    const tableRows: any[] = [];
+
+    filteredOrders.forEach(order => {
+      const orderData = [
+        order.orderNumber,
+        new Date(order.orderDate).toLocaleDateString('id-ID'),
+        order.customerName,
+        order.driverName,
+        order.tariffName !== 'N/A' ? order.tariffName : order.distance,
+        order.status,
+        order.paymentStatus,
+        order.price.toLocaleString('id-ID')
+      ];
+      tableRows.push(orderData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [21, 128, 61] } // bg-green-700
+    });
+
+    doc.save(`Rekap_Order_GreenBecak_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const stats = {
     total: orders.length,
     pending: orders.filter(o => o.status === 'pending').length,
@@ -318,7 +358,15 @@ const OrderManagement: React.FC = () => {
               <Car className="w-6 h-6 text-green-600 mr-3" />
               <h2 className="text-lg font-semibold text-gray-900">Daftar Order</h2>
             </div>
-            {/* Tombol Tambah Order Dihapus */}
+            <div>
+              <button
+                onClick={exportToPDF}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </button>
+            </div>
           </div>
         </div>
 

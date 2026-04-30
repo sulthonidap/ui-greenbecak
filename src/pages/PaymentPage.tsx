@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, Receipt, ArrowLeft, Download, Share2, Camera, Scan } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { useOrder } from '../context/OrderContext';
+import { ordersAPI } from '../services/api';
 
 const PaymentPage: React.FC = () => {
   const { currentOrder, submitOrder, clearCurrentOrder } = useOrder();
@@ -24,7 +25,16 @@ const PaymentPage: React.FC = () => {
     return null;
   }
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    // If orderId exists, call the API to update status in backend
+    if (orderId) {
+      try {
+        await ordersAPI.confirmOrderPaymentPublic(orderId.toString());
+      } catch (err) {
+        console.error('Error confirming payment:', err);
+      }
+    }
+
     if (currentOrder?.distanceOption.isSubsidi) {
       setPaymentStatus('success');
       return;
