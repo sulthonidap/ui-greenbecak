@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, Receipt, ArrowLeft, Download, Share2, Camera, Scan } from 'lucide-react';
+import Confetti from 'react-confetti';
 import { useOrder } from '../context/OrderContext';
 
 const PaymentPage: React.FC = () => {
   const { currentOrder, submitOrder, clearCurrentOrder } = useOrder();
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success'>('pending');
+  const [showConfetti, setShowConfetti] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'qris' | 'cash'>('qris');
   const [isScanning, setIsScanning] = useState(false);
   const navigate = useNavigate();
@@ -23,6 +25,11 @@ const PaymentPage: React.FC = () => {
   }
 
   const handlePayment = () => {
+    if (currentOrder?.distanceOption.isSubsidi) {
+      setPaymentStatus('success');
+      return;
+    }
+
     setPaymentStatus('processing');
 
     setTimeout(() => {
@@ -81,11 +88,26 @@ const PaymentPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+      {currentOrder?.distanceOption.isSubsidi && showConfetti && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={400}
+            onConfettiComplete={() => setShowConfetti(false)}
+          />
+        </div>
+      )}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="bg-green-800 p-6 text-white">
           <h1 className="text-2xl font-bold">Pembayaran</h1>
-          <p className="text-green-50">Selesaikan pembayaran untuk pesanan Anda</p>
+          <p className="text-green-50">
+            {currentOrder.distanceOption.isSubsidi
+              ? 'Biaya perjalanan ini di dukung oleh Dinas Perhubungan DIY'
+              : 'Selesaikan pembayaran untuk pesanan Anda'}
+          </p>
         </div>
 
         <div className="p-6">
@@ -437,7 +459,7 @@ const PaymentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Next Steps */}
+              {/* Next Steps (Hidden temporarily)
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <h4 className="font-semibold text-blue-800 mb-2">Langkah Selanjutnya:</h4>
                 <div className="text-sm text-blue-700 space-y-1">
@@ -447,14 +469,13 @@ const PaymentPage: React.FC = () => {
                   <p>• Simpan bukti pembayaran ini untuk referensi</p>
                 </div>
               </div>
+              */}
 
               {/* Contact Info */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-gray-800 mb-2">Informasi Kontak:</h4>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>• Customer Service: 0812-3456-7890</p>
-                  <p>• Email: support@greenbecak.com</p>
-                  <p>• Jam Operasional: 06:00 - 22:00 WIB</p>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6 text-center">
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p className="font-medium text-gray-800 text-base">Layanan ini didukung oleh PT. Terus Melayani Bangsa</p>
+                  <p>Email: admin@tembang.com</p>
                 </div>
               </div>
 
