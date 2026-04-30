@@ -58,8 +58,8 @@ const CreatePengayuh: React.FC = () => {
         emergencyPhone: ''
       });
       
-             // Redirect ke driver list dengan pesan sukses
-       navigate('/admin/drivers', { state: { message: 'Pengayuh berhasil ditambahkan!' } });
+             // Redirect ke pengayuh performance dengan pesan sukses
+       navigate('/admin/pengayuh-performance', { state: { message: 'Pengayuh berhasil ditambahkan!' } });
     } catch (error) {
       console.error('Error creating driver:', error);
     } finally {
@@ -68,14 +68,14 @@ const CreatePengayuh: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate('/admin/drivers');
+    navigate('/admin/pengayuh-performance');
   };
 
   return (
     <div className="p-6">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/admin/drivers')}
+          onClick={() => navigate('/admin/pengayuh-performance')}
           className="flex items-center text-gray-600 hover:text-gray-800 mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

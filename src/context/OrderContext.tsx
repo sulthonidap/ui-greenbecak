@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { ordersAPI, driverAPI } from '../services/api';
+import { ordersAPI, pengayuhAPI } from '../services/api';
 
 export interface DistanceOption {
   id: string;
@@ -17,7 +17,7 @@ export interface Order {
   distanceOption: DistanceOption;
   timestamp: Date;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  driverId?: string;
+  pengayuhId?: string;
   whatsappNumber?: string;
   customerName?: string;
   pickupLocation?: string;
@@ -33,7 +33,7 @@ interface OrderContextType {
   error: string | null;
   setOrder: (pedicabCode: string, distanceOption: DistanceOption, whatsappNumber: string) => void;
   submitOrder: () => Promise<void>;
-  acceptOrder: (orderId: string, driverId: string) => Promise<void>;
+  acceptOrder: (orderId: string, pengayuhId: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
   cancelOrder: (orderId: string) => Promise<void>;
   clearCurrentOrder: () => void;
@@ -101,17 +101,17 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const acceptOrder = async (orderId: string, driverId: string) => {
+  const acceptOrder = async (orderId: string, pengayuhId: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      await driverAPI.acceptOrder(orderId);
+      await pengayuhAPI.acceptOrder(orderId);
       
       // Update local state
       setOrders(prev => prev.map(order => 
         order.id === orderId 
-          ? { ...order, status: 'accepted' as const, driverId }
+          ? { ...order, status: 'accepted' as const, pengayuhId }
           : order
       ));
       
@@ -128,7 +128,7 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setLoading(true);
       setError(null);
       
-      await driverAPI.completeOrder(orderId);
+      await pengayuhAPI.completeOrder(orderId);
       
       // Update local state
       setOrders(prev => prev.map(order => 
@@ -191,11 +191,11 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setLoading(true);
       setError(null);
       
-      const response = await driverAPI.getDriverOrders();
+      const response = await pengayuhAPI.getPengayuhOrders();
       setOrders(response.orders || []);
       
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Gagal mengambil data pesanan driver');
+      setError(error.response?.data?.message || 'Gagal mengambil data pesanan pengayuh');
     } finally {
       setLoading(false);
     }

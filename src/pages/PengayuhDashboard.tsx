@@ -1,4 +1,4 @@
-// DriverDashboard.tsx - Updated to fix HMR issues
+// PengayuhDashboard.tsx - Updated to fix HMR issues
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { 
@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOrder, Order } from '../context/OrderContext';
-import { driverAPI, authAPI } from '../services/api';
+import { pengayuhAPI, authAPI } from '../services/api';
 
 const playNotificationSound = () => {
   try {
@@ -95,14 +95,14 @@ const PengayuhHome: React.FC = () => {
   const { orders, acceptOrder, completeOrder, cancelOrder } = useOrder();
   const { user } = useAuth();
   const [isOnline, setIsOnline] = useState(false);
-  const [driverId, setDriverId] = useState<string>('1');
+  const [pengayuhId, setPengayuhId] = useState<string>('1');
   
   console.log('Auth user data:', user);
-  console.log('Driver ID being used:', driverId);
+  console.log('Pengayuh ID being used:', pengayuhId);
   
   // New state for real API data
-  const [driverOrders, setDriverOrders] = useState<any[]>([]);
-  const [driverEarnings, setDriverEarnings] = useState<any>(null);
+  const [pengayuhOrders, setPengayuhOrders] = useState<any[]>([]);
+  const [pengayuhEarnings, setPengayuhEarnings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -130,15 +130,15 @@ const PengayuhHome: React.FC = () => {
   // Fetch online status only
   const fetchOnlineStatus = async () => {
     try {
-      const locationResponse = await driverAPI.getOnlineStatus();
+      const locationResponse = await pengayuhAPI.getOnlineStatus();
       setIsOnline(locationResponse.is_online || false);
     } catch (error) {
       console.log('Could not fetch online status:', error);
     }
   };
 
-  // Fetch driver data from API
-  const fetchDriverData = async () => {
+  // Fetch pengayuh data from API
+  const fetchPengayuhData = async () => {
     try {
       setLoading(true);
       setError('');
@@ -148,27 +148,27 @@ const PengayuhHome: React.FC = () => {
       console.log('Current auth token:', token ? 'Token exists' : 'No token');
       console.log('User data:', user);
       
-      console.log('Using driver ID:', driverId);
+      console.log('Using pengayuh ID:', pengayuhId);
       
       // Fetch online status first
       await fetchOnlineStatus();
       
-      console.log('Fetching driver orders...');
-      // Fetch orders for logged-in driver
-      const ordersResponse = await driverAPI.getDriverOrders();
+      console.log('Fetching pengayuh orders...');
+      // Fetch orders for logged-in pengayuh
+      const ordersResponse = await pengayuhAPI.getPengayuhOrders();
       console.log('Orders response:', ordersResponse);
       console.log('Orders array:', ordersResponse.orders);
       console.log('First order (if exists):', ordersResponse.orders?.[0]);
-      setDriverOrders(ordersResponse.orders || []);
+      setPengayuhOrders(ordersResponse.orders || []);
       
-      console.log('Fetching driver earnings...');
+      console.log('Fetching pengayuh earnings...');
       // Fetch earnings
-      const earningsResponse = await driverAPI.getDriverEarnings();
+      const earningsResponse = await pengayuhAPI.getPengayuhEarnings();
       console.log('Earnings response:', earningsResponse);
-      setDriverEarnings(earningsResponse.earnings || null);
+      setPengayuhEarnings(earningsResponse.earnings || null);
       
     } catch (error: any) {
-      console.error('Failed to fetch driver data:', error);
+      console.error('Failed to fetch pengayuh data:', error);
       console.error('Error details:', {
         message: error.message,
         status: error.response?.status,
@@ -177,13 +177,13 @@ const PengayuhHome: React.FC = () => {
       });
       setError(`Gagal memuat data pengayuh: ${error.message || 'Silakan coba lagi.'}`);
       
-      // Try fallback to direct driver ID if auth fails
+      // Try fallback to direct pengayuh ID if auth fails
       try {
-        console.log('Trying fallback with driver ID...');
-        const fallbackResponse = await driverAPI.getOrdersByDriverID(driverId);
+        console.log('Trying fallback with pengayuh ID...');
+        const fallbackResponse = await pengayuhAPI.getOrdersByPengayuhID(pengayuhId);
         console.log('Fallback response:', fallbackResponse);
-        setDriverOrders(fallbackResponse.orders || []);
-        setDriverEarnings(null);
+        setPengayuhOrders(fallbackResponse.orders || []);
+        setPengayuhEarnings(null);
         setError(''); // Clear error if fallback works
       } catch (fallbackError) {
         console.error('Fallback also failed:', fallbackError);
@@ -191,36 +191,36 @@ const PengayuhHome: React.FC = () => {
         // Final fallback to mock data for development
         const pendingOrders = orders.filter(order => order.status === 'pending');
         const myActiveOrders = orders.filter(
-          order => order.status === 'accepted' && order.driverId === driverId
+          order => order.status === 'accepted' && order.pengayuhId === pengayuhId
         );
         const completedOrders = orders.filter(
-          order => order.status === 'completed' && order.driverId === driverId
+          order => order.status === 'completed' && order.pengayuhId === pengayuhId
         );
         
-        setDriverOrders([...pendingOrders, ...myActiveOrders, ...completedOrders]);
-        setDriverEarnings(null); // Set to null for fallback
+        setPengayuhOrders([...pendingOrders, ...myActiveOrders, ...completedOrders]);
+        setPengayuhEarnings(null); // Set to null for fallback
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Update driver ID when user data changes
+  // Update pengayuh ID when user data changes
   useEffect(() => {
-    const updateDriverId = async () => {
+    const updatePengayuhId = async () => {
       // First try to get from user data
-      if ((user as any)?.driver_id) {
-        setDriverId((user as any).driver_id.toString());
+      if ((user as any)?.pengayuh_id) {
+        setPengayuhId((user as any).pengayuh_id.toString());
         return;
       }
       
-      // If no driver_id in user data, try profile API
-      if (user?.role === 'driver') {
+      // If no pengayuh_id in user data, try profile API
+      if (user?.role === 'pengayuh') {
         try {
           const profileResponse = await authAPI.getProfile();
-          if (profileResponse.user?.driver_id) {
-            setDriverId(profileResponse.user.driver_id.toString());
-            console.log('Driver ID updated from profile:', profileResponse.user.driver_id);
+          if (profileResponse.user?.pengayuh_id) {
+            setPengayuhId(profileResponse.user.pengayuh_id.toString());
+            console.log('Pengayuh ID updated from profile:', profileResponse.user.pengayuh_id);
             return;
           }
         } catch (error) {
@@ -229,15 +229,15 @@ const PengayuhHome: React.FC = () => {
       }
       
       // Fallback to user ID or hardcoded
-      setDriverId(user?.id?.toString() || '1');
+      setPengayuhId(user?.id?.toString() || '1');
     };
     
-    updateDriverId();
+    updatePengayuhId();
   }, [user]);
 
   // Load data on component mount
   useEffect(() => {
-    fetchDriverData();
+    fetchPengayuhData();
   }, []);
 
   // Auto refresh online status and orders every 10 seconds (silent poll)
@@ -246,11 +246,11 @@ const PengayuhHome: React.FC = () => {
       try {
         await fetchOnlineStatus();
         
-        // Hanya ambil order terbaru jika driver berstatus Online
+        // Hanya ambil order terbaru jika pengayuh berstatus Online
         if (isOnline) {
-          const ordersResponse = await driverAPI.getDriverOrders();
+          const ordersResponse = await pengayuhAPI.getPengayuhOrders();
           if (ordersResponse.orders) {
-            setDriverOrders(ordersResponse.orders);
+            setPengayuhOrders(ordersResponse.orders);
           }
         }
       } catch (error) {
@@ -264,9 +264,9 @@ const PengayuhHome: React.FC = () => {
   }, [isOnline]);
 
   // Filter orders by status
-  const pendingOrders = driverOrders.filter(order => order.status === 'pending');
-  const myActiveOrders = driverOrders.filter(order => order.status === 'accepted');
-  const completedOrders = driverOrders.filter(order => order.status === 'completed');
+  const pendingOrders = pengayuhOrders.filter(order => order.status === 'pending');
+  const myActiveOrders = pengayuhOrders.filter(order => order.status === 'accepted');
+  const completedOrders = pengayuhOrders.filter(order => order.status === 'completed');
 
   // Show notification when new orders arrive
   useEffect(() => {
@@ -309,13 +309,13 @@ const PengayuhHome: React.FC = () => {
   }, [pendingOrders, isOnline]);
   
   console.log('Filtered orders:', {
-    total: driverOrders.length,
+    total: pengayuhOrders.length,
     pending: pendingOrders.length,
     active: myActiveOrders.length,
     completed: completedOrders.length
   });
   
-  const totalEarnings = driverEarnings?.total_earnings || completedOrders.reduce(
+  const totalEarnings = pengayuhEarnings?.total_earnings || completedOrders.reduce(
     (sum, order) => sum + (order.price || order.distanceOption?.price || 0), 
     0
   );
@@ -327,13 +327,13 @@ const PengayuhHome: React.FC = () => {
       setSuccessMessage('');
       
       console.log('Accepting order:', orderId);
-      await driverAPI.acceptOrder(orderId);
+      await pengayuhAPI.acceptOrder(orderId);
       
       // Show success message
       setSuccessMessage('Pesanan berhasil diterima!');
       
       // Refresh orders after accepting
-      await fetchDriverData();
+      await fetchPengayuhData();
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -343,7 +343,7 @@ const PengayuhHome: React.FC = () => {
       
       // More specific error messages
       if (error.response?.status === 409) {
-        setError('Pesanan sudah diterima driver lain.');
+        setError('Pesanan sudah diterima pengayuh lain.');
       } else if (error.response?.status === 404) {
         setError('Pesanan tidak ditemukan.');
       } else if (error.code === 'ERR_NETWORK') {
@@ -376,11 +376,11 @@ const PengayuhHome: React.FC = () => {
   const handleCompleteOrder = async (orderId: string) => {
     try {
       setCompletingOrderId(orderId);
-      await driverAPI.completeOrder(orderId);
+      await pengayuhAPI.completeOrder(orderId);
       setSuccessMessage('Pesanan berhasil diselesaikan!');
       playSuccessSound(); // Mainkan suara "cring" saat sukses
       // Refresh orders and earnings after completing
-      await fetchDriverData();
+      await fetchPengayuhData();
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error: any) {
       console.error('Failed to complete order:', error);
@@ -399,7 +399,7 @@ const PengayuhHome: React.FC = () => {
     try {
       setUpdatingOnlineStatus(true);
       const newStatus = !isOnline;
-      const response = await driverAPI.setOnlineStatus(newStatus);
+      const response = await pengayuhAPI.setOnlineStatus(newStatus);
       setIsOnline(newStatus);
       setSuccessMessage(`Status berhasil diubah menjadi ${newStatus ? 'Online' : 'Offline'}`);
       
@@ -512,7 +512,7 @@ const PengayuhHome: React.FC = () => {
             </button>
           </div>
           <button
-            onClick={fetchDriverData}
+            onClick={fetchPengayuhData}
             disabled={loading}
             className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 text-sm font-medium flex items-center"
           >
@@ -693,11 +693,11 @@ const PengayuhHome: React.FC = () => {
                 <Calendar className="w-8 h-8 text-blue-500 mr-3" />
                 <div>
                   <h3 className="text-lg font-semibold">Perjalanan Hari Ini</h3>
-                  <p className="text-3xl font-bold text-blue-600">{driverEarnings?.today_trips || 0}</p>
+                  <p className="text-3xl font-bold text-blue-600">{pengayuhEarnings?.today_trips || 0}</p>
                 </div>
               </div>
               <div className="mt-2 text-sm text-gray-500">
-                Total: {driverEarnings?.completed_orders || 0} perjalanan
+                Total: {pengayuhEarnings?.completed_orders || 0} perjalanan
               </div>
             </div>
 
@@ -707,16 +707,16 @@ const PengayuhHome: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold">Pendapatan Hari Ini</h3>
                   <p className="text-3xl font-bold text-green-600">
-                    {formatCurrency(driverEarnings?.today_earnings || 0)}
+                    {formatCurrency(pengayuhEarnings?.today_earnings || 0)}
                   </p>
                 </div>
               </div>
               <div className="mt-2">
                 <div className="text-sm text-gray-500 mb-2">
-                  Total: {formatCurrency(driverEarnings?.total_earnings || 0)}
+                  Total: {formatCurrency(pengayuhEarnings?.total_earnings || 0)}
                 </div>
                 <Link 
-                  to="/driver/finance"
+                  to="/pengayuh/finance"
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                 >
                   Lihat detail keuangan →
@@ -877,17 +877,17 @@ const PengayuhHome: React.FC = () => {
 };
 
 const Profile: React.FC = () => {
-  const [driverProfile, setDriverProfile] = useState<any>(null);
+  const [pengayuhProfile, setPengayuhProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch driver profile from API
-  const fetchDriverProfile = async () => {
+  // Fetch pengayuh profile from API
+  const fetchPengayuhProfile = async () => {
     try {
       setLoading(true);
       setError('');
       
-      console.log('Fetching driver profile...');
+      console.log('Fetching pengayuh profile...');
       const profileResponse = await authAPI.getProfile();
       console.log('Profile response:', profileResponse);
       
@@ -896,12 +896,12 @@ const Profile: React.FC = () => {
       console.log('User data:', userData);
       
       if (userData) {
-        // Fetch additional driver data (earnings, trips, etc.)
+        // Fetch additional pengayuh data (earnings, trips, etc.)
         let totalTrips = 0;
         let rating = 'N/A';
         
         try {
-          const earningsResponse = await driverAPI.getDriverEarnings();
+          const earningsResponse = await pengayuhAPI.getPengayuhEarnings();
           console.log('Earnings response for profile:', earningsResponse);
           
           if (earningsResponse.earnings) {
@@ -916,11 +916,11 @@ const Profile: React.FC = () => {
           console.log('Could not fetch earnings data:', earningsError);
         }
         
-        setDriverProfile({
+        setPengayuhProfile({
           name: userData.name || 'Pengayuh',
           email: userData.email || 'N/A',
           phone: userData.phone || 'N/A',
-          driver_code: userData.driver_code || 'N/A',
+          pengayuh_code: userData.pengayuh_code || 'N/A',
           status: userData.status || 'inactive',
           join_date: userData.created_at || null,
           vehicle_type: userData.vehicle_type || 'delman',
@@ -932,7 +932,7 @@ const Profile: React.FC = () => {
       }
       
     } catch (error: any) {
-      console.error('Failed to fetch driver profile:', error);
+      console.error('Failed to fetch pengayuh profile:', error);
       console.error('Profile error details:', {
         message: error.message,
         status: error.response?.status,
@@ -941,11 +941,11 @@ const Profile: React.FC = () => {
       setError(`Gagal memuat profil pengayuh: ${error.message || 'Silakan coba lagi.'}`);
       
       // Fallback to mock data for development
-      setDriverProfile({
+      setPengayuhProfile({
         name: 'Budi Santoso',
         email: 'budi.santoso@example.com',
         phone: '+62 812-3456-7890',
-        driver_code: 'BEC001',
+        pengayuh_code: 'BEC001',
         status: 'active',
         join_date: '2024-01-15',
         vehicle_type: 'becak_listrik',
@@ -959,7 +959,7 @@ const Profile: React.FC = () => {
 
   // Load profile on component mount
   useEffect(() => {
-    fetchDriverProfile();
+    fetchPengayuhProfile();
   }, []);
 
   if (loading) {
@@ -992,8 +992,8 @@ const Profile: React.FC = () => {
             <User size={32} className="text-gray-600" />
           </div>
           <div className="ml-6">
-            <h2 className="text-xl font-semibold">{driverProfile?.name || 'Pengayuh'}</h2>
-            <p className="text-gray-500">ID: {driverProfile?.driver_code || 'N/A'}</p>
+            <h2 className="text-xl font-semibold">{pengayuhProfile?.name || 'Pengayuh'}</h2>
+            <p className="text-gray-500">ID: {pengayuhProfile?.pengayuh_code || 'N/A'}</p>
           </div>
         </div>
         
@@ -1002,21 +1002,21 @@ const Profile: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium">{driverProfile?.email || 'N/A'}</p>
+              <p className="font-medium">{pengayuhProfile?.email || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Nomor Telepon</p>
-              <p className="font-medium">{driverProfile?.phone || 'N/A'}</p>
+              <p className="font-medium">{pengayuhProfile?.phone || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Tanggal Bergabung</p>
-              <p className="font-medium">{driverProfile?.join_date ? new Date(driverProfile.join_date).toLocaleDateString('id-ID') : 'N/A'}</p>
+              <p className="font-medium">{pengayuhProfile?.join_date ? new Date(pengayuhProfile.join_date).toLocaleDateString('id-ID') : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Status</p>
               <p className="inline-flex items-center">
-                <span className={`w-2 h-2 rounded-full mr-2 ${driverProfile?.status === 'active' ? 'bg-green-800' : 'bg-gray-400'}`}></span>
-                <span className="font-medium">{driverProfile?.status === 'active' ? 'Aktif' : 'Tidak Aktif'}</span>
+                <span className={`w-2 h-2 rounded-full mr-2 ${pengayuhProfile?.status === 'active' ? 'bg-green-800' : 'bg-gray-400'}`}></span>
+                <span className="font-medium">{pengayuhProfile?.status === 'active' ? 'Aktif' : 'Tidak Aktif'}</span>
               </p>
             </div>
           </div>
@@ -1027,24 +1027,24 @@ const Profile: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Kode Becak</p>
-              <p className="font-medium">{driverProfile?.driver_code || 'N/A'}</p>
+              <p className="font-medium">{pengayuhProfile?.pengayuh_code || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Jenis Kendaraan</p>
               <p className="font-medium">
-                {driverProfile?.vehicle_type === 'becak_listrik' ? 'Becak Listrik' :
-                 driverProfile?.vehicle_type === 'becak_motor' ? 'Becak Motor' :
-                 driverProfile?.vehicle_type === 'becak_manual' ? 'Becak Manual' :
-                 driverProfile?.vehicle_type === 'andong' ? 'Andong' : 'Delman'}
+                {pengayuhProfile?.vehicle_type === 'becak_listrik' ? 'Becak Listrik' :
+                 pengayuhProfile?.vehicle_type === 'becak_motor' ? 'Becak Motor' :
+                 pengayuhProfile?.vehicle_type === 'becak_manual' ? 'Becak Manual' :
+                 pengayuhProfile?.vehicle_type === 'andong' ? 'Andong' : 'Delman'}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Total Perjalanan</p>
-              <p className="font-medium">{driverProfile?.total_trips || 0}</p>
+              <p className="font-medium">{pengayuhProfile?.total_trips || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Rating</p>
-              <p className="font-medium">{driverProfile?.rating ? `${driverProfile.rating}/5.0` : 'N/A'}</p>
+              <p className="font-medium">{pengayuhProfile?.rating ? `${pengayuhProfile.rating}/5.0` : 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -1056,8 +1056,8 @@ const Profile: React.FC = () => {
 const PengayuhFinance: React.FC = () => {
   const { orders } = useOrder();
   const { user } = useAuth();
-  // Get driver ID from user data (driver_id) or fallback to hardcoded for testing
-  const driverId = (user as any)?.driver_id?.toString() || user?.id?.toString() || '1';
+  // Get pengayuh ID from user data (pengayuh_id) or fallback to hardcoded for testing
+  const pengayuhId = (user as any)?.pengayuh_id?.toString() || user?.id?.toString() || '1';
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -1067,37 +1067,37 @@ const PengayuhFinance: React.FC = () => {
   const [accountName, setAccountName] = useState('');
   
   // Real API data state
-  const [driverEarnings, setDriverEarnings] = useState<any>(null);
-  const [driverWithdrawals, setDriverWithdrawals] = useState<any[]>([]);
+  const [pengayuhEarnings, setPengayuhEarnings] = useState<any>(null);
+  const [pengayuhWithdrawals, setPengayuhWithdrawals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submittingWithdrawal, setSubmittingWithdrawal] = useState(false);
   
-  // Fetch driver financial data from API
-  const fetchDriverFinancialData = async () => {
+  // Fetch pengayuh financial data from API
+  const fetchPengayuhFinancialData = async () => {
     try {
       setLoading(true);
       setError('');
       
       // Fetch earnings
-      const earningsResponse = await driverAPI.getDriverEarnings();
-      console.log('DriverFinance - Earnings response:', earningsResponse);
-      console.log('DriverFinance - Earnings response.earnings:', earningsResponse.earnings);
-      console.log('DriverFinance - Earnings response.earnings?.total_earnings:', earningsResponse.earnings?.total_earnings);
-      console.log('DriverFinance - Setting driverEarnings to:', earningsResponse.earnings || null);
-      setDriverEarnings(earningsResponse.earnings || null);
+      const earningsResponse = await pengayuhAPI.getPengayuhEarnings();
+      console.log('PengayuhFinance - Earnings response:', earningsResponse);
+      console.log('PengayuhFinance - Earnings response.earnings:', earningsResponse.earnings);
+      console.log('PengayuhFinance - Earnings response.earnings?.total_earnings:', earningsResponse.earnings?.total_earnings);
+      console.log('PengayuhFinance - Setting pengayuhEarnings to:', earningsResponse.earnings || null);
+      setPengayuhEarnings(earningsResponse.earnings || null);
       
       // Fetch withdrawals
-      const withdrawalsResponse = await driverAPI.getDriverWithdrawals();
-      setDriverWithdrawals(withdrawalsResponse.withdrawals || []);
+      const withdrawalsResponse = await pengayuhAPI.getPengayuhWithdrawals();
+      setPengayuhWithdrawals(withdrawalsResponse.withdrawals || []);
       
     } catch (error: any) {
-      console.error('Failed to fetch driver financial data:', error);
+      console.error('Failed to fetch pengayuh financial data:', error);
       setError('Gagal memuat data keuangan. Silakan coba lagi.');
       
       // Set empty data if API fails
-      setDriverEarnings(null);
-      setDriverWithdrawals([]);
+      setPengayuhEarnings(null);
+      setPengayuhWithdrawals([]);
     } finally {
       setLoading(false);
     }
@@ -1105,25 +1105,25 @@ const PengayuhFinance: React.FC = () => {
 
   // Load data on component mount
   useEffect(() => {
-    fetchDriverFinancialData();
+    fetchPengayuhFinancialData();
   }, []);
 
-  // Debug: Log driverEarnings whenever it changes
+  // Debug: Log pengayuhEarnings whenever it changes
   useEffect(() => {
-    console.log('DriverFinance - driverEarnings updated:', driverEarnings);
-    console.log('DriverFinance - driverEarnings.total_earnings:', driverEarnings?.total_earnings);
-    console.log('DriverFinance - driverEarnings.today_earnings:', driverEarnings?.today_earnings);
-    console.log('DriverFinance - driverEarnings.completed_orders:', driverEarnings?.completed_orders);
-    console.log('DriverFinance - driverEarnings.today_trips:', driverEarnings?.today_trips);
-    console.log('DriverFinance - driverEarnings.monthly_earnings:', driverEarnings?.monthly_earnings);
-    console.log('DriverFinance - driverEarnings.monthly_trips:', driverEarnings?.monthly_trips);
-  }, [driverEarnings]);
+    console.log('PengayuhFinance - pengayuhEarnings updated:', pengayuhEarnings);
+    console.log('PengayuhFinance - pengayuhEarnings.total_earnings:', pengayuhEarnings?.total_earnings);
+    console.log('PengayuhFinance - pengayuhEarnings.today_earnings:', pengayuhEarnings?.today_earnings);
+    console.log('PengayuhFinance - pengayuhEarnings.completed_orders:', pengayuhEarnings?.completed_orders);
+    console.log('PengayuhFinance - pengayuhEarnings.today_trips:', pengayuhEarnings?.today_trips);
+    console.log('PengayuhFinance - pengayuhEarnings.monthly_earnings:', pengayuhEarnings?.monthly_earnings);
+    console.log('PengayuhFinance - pengayuhEarnings.monthly_trips:', pengayuhEarnings?.monthly_trips);
+  }, [pengayuhEarnings]);
 
   const completedOrders = orders.filter(
-    order => order.status === 'completed' && order.driverId === driverId
+    order => order.status === 'completed' && order.pengayuhId === pengayuhId
   );
 
-  const totalEarnings = driverEarnings?.total_earnings || completedOrders.reduce(
+  const totalEarnings = pengayuhEarnings?.total_earnings || completedOrders.reduce(
     (sum, order) => sum + (order.distanceOption?.price || 0), 
     0
   );
@@ -1174,10 +1174,10 @@ const PengayuhFinance: React.FC = () => {
         notes: `Penarikan ke ${selectedBank}`
       };
       
-      await driverAPI.createWithdrawal(withdrawalData);
+      await pengayuhAPI.createWithdrawal(withdrawalData);
       
       // Refresh data after successful withdrawal
-      await fetchDriverFinancialData();
+      await fetchPengayuhFinancialData();
       
       setShowWithdrawalModal(false);
       // Reset form
@@ -1215,7 +1215,7 @@ const PengayuhFinance: React.FC = () => {
         <p className="text-gray-600">Kelola pendapatan dan penarikan saldo Anda</p>
         {/* Debug info */}
         <div className="text-xs text-gray-500 mt-2">
-          Loading: {loading.toString()} | Error: {error} | DriverEarnings: {driverEarnings ? 'Loaded' : 'Not loaded'}
+          Loading: {loading.toString()} | Error: {error} | PengayuhEarnings: {pengayuhEarnings ? 'Loaded' : 'Not loaded'}
         </div>
       </div>
 
@@ -1243,7 +1243,7 @@ const PengayuhFinance: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Total Pendapatan</h3>
               <p className="text-2xl font-bold text-blue-600">
-                {formatCurrency(driverEarnings?.total_earnings || 0)}
+                {formatCurrency(pengayuhEarnings?.total_earnings || 0)}
               </p>
             </div>
           </div>
@@ -1255,12 +1255,12 @@ const PengayuhFinance: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Pendapatan Hari Ini</h3>
               <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(driverEarnings?.today_earnings || 0)}
+                {formatCurrency(pengayuhEarnings?.today_earnings || 0)}
               </p>
             </div>
           </div>
           <div className="mt-2 text-sm text-gray-500">
-            Bulan ini: {formatCurrency(driverEarnings?.monthly_earnings || 0)}
+            Bulan ini: {formatCurrency(pengayuhEarnings?.monthly_earnings || 0)}
           </div>
         </div>
 
@@ -1270,12 +1270,12 @@ const PengayuhFinance: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Perjalanan Hari Ini</h3>
               <p className="text-2xl font-bold text-orange-600">
-                {driverEarnings?.today_trips || 0}
+                {pengayuhEarnings?.today_trips || 0}
               </p>
             </div>
           </div>
           <div className="mt-2 text-sm text-gray-500">
-            Bulan ini: {driverEarnings?.monthly_trips || 0} • Total: {driverEarnings?.completed_orders || 0}
+            Bulan ini: {pengayuhEarnings?.monthly_trips || 0} • Total: {pengayuhEarnings?.completed_orders || 0}
           </div>
         </div>
 
@@ -1285,8 +1285,8 @@ const PengayuhFinance: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Rata-rata per Trip</h3>
               <p className="text-2xl font-bold text-purple-600">
-                {formatCurrency(driverEarnings?.total_earnings && driverEarnings?.completed_orders && driverEarnings.completed_orders > 0 ? 
-                  driverEarnings.total_earnings / driverEarnings.completed_orders : 0)}
+                {formatCurrency(pengayuhEarnings?.total_earnings && pengayuhEarnings?.completed_orders && pengayuhEarnings.completed_orders > 0 ? 
+                  pengayuhEarnings.total_earnings / pengayuhEarnings.completed_orders : 0)}
               </p>
             </div>
           </div>
@@ -1302,7 +1302,7 @@ const PengayuhFinance: React.FC = () => {
             Status Penarikan
           </h3>
           <div className="space-y-4">
-            {driverWithdrawals.length > 0 ? (
+            {pengayuhWithdrawals.length > 0 ? (
               <>
                 <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
                   <div>
@@ -1310,7 +1310,7 @@ const PengayuhFinance: React.FC = () => {
                     <p className="text-sm text-yellow-600">Menunggu approval admin</p>
                   </div>
                   <span className="text-lg font-bold text-yellow-800">
-                    {formatCurrency(driverWithdrawals.filter(w => w.status === 'pending').reduce((sum, w) => sum + w.amount, 0))}
+                    {formatCurrency(pengayuhWithdrawals.filter(w => w.status === 'pending').reduce((sum, w) => sum + w.amount, 0))}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
@@ -1319,7 +1319,7 @@ const PengayuhFinance: React.FC = () => {
                     <p className="text-sm text-green-600">Total yang sudah ditarik</p>
                   </div>
                   <span className="text-lg font-bold text-green-800">
-                    {formatCurrency(driverWithdrawals.filter(w => w.status === 'completed').reduce((sum, w) => sum + w.amount, 0))}
+                    {formatCurrency(pengayuhWithdrawals.filter(w => w.status === 'completed').reduce((sum, w) => sum + w.amount, 0))}
                   </span>
                 </div>
               </>
@@ -1345,15 +1345,15 @@ const PengayuhFinance: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Hari Ini</span>
-              <span className="font-medium">{formatCurrency(driverEarnings?.today_earnings || 0)}</span>
+              <span className="font-medium">{formatCurrency(pengayuhEarnings?.today_earnings || 0)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Bulan Ini</span>
-              <span className="font-medium">{formatCurrency(driverEarnings?.monthly_earnings || 0)}</span>
+              <span className="font-medium">{formatCurrency(pengayuhEarnings?.monthly_earnings || 0)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Total Semua Waktu</span>
-              <span className="font-medium">{formatCurrency(driverEarnings?.total_earnings || 0)}</span>
+              <span className="font-medium">{formatCurrency(pengayuhEarnings?.total_earnings || 0)}</span>
             </div>
           </div>
         </div>
@@ -1365,8 +1365,8 @@ const PengayuhFinance: React.FC = () => {
           <h3 className="text-lg font-semibold">Transaksi Terbaru</h3>
         </div>
         <div className="divide-y divide-gray-200">
-          {driverWithdrawals.length > 0 ? (
-            driverWithdrawals.map((withdrawal: any) => (
+          {pengayuhWithdrawals.length > 0 ? (
+            pengayuhWithdrawals.map((withdrawal: any) => (
               <div 
                 key={withdrawal.id} 
                 className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
@@ -1520,11 +1520,11 @@ const PengayuhFinance: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Masukkan jumlah"
                   min="10000"
-                  max={driverEarnings?.total_earnings || 0}
+                  max={pengayuhEarnings?.total_earnings || 0}
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Saldo tersedia: {formatCurrency(driverEarnings?.total_earnings || 0)}
+                  Saldo tersedia: {formatCurrency(pengayuhEarnings?.total_earnings || 0)}
                 </p>
               </div>
 
@@ -1624,15 +1624,15 @@ const PengayuhDashboard: React.FC = () => {
           </div>
           <div className="flex flex-col flex-grow pt-5 overflow-y-auto">
             <nav className="flex-1 px-2 space-y-1">
-              <Link to="/driver" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-white bg-blue-900">
+              <Link to="/pengayuh" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-white bg-blue-900">
                 <List className="mr-3 h-6 w-6 text-blue-300" />
                 Dashboard
               </Link>
-              <Link to="/driver/profile" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-700 hover:text-white">
+              <Link to="/pengayuh/profile" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-700 hover:text-white">
                 <User className="mr-3 h-6 w-6 text-blue-300" />
                 Profil
               </Link>
-              <Link to="/driver/finance" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-700 hover:text-white">
+              <Link to="/pengayuh/finance" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-700 hover:text-white">
                 <DollarSign className="mr-3 h-6 w-6 text-blue-300" />
                 Keuangan
               </Link>
@@ -1670,21 +1670,21 @@ const PengayuhDashboard: React.FC = () => {
           {isMobileMenuOpen && (
             <div className="bg-blue-800 pt-2 pb-3 space-y-1 sm:px-3">
               <Link 
-                to="/driver" 
+                to="/pengayuh" 
                 className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-900"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Dashboard
               </Link>
               <Link 
-                to="/driver/profile" 
+                to="/pengayuh/profile" 
                 className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-700 hover:text-white"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Profil
               </Link>
               <Link 
-                to="/driver/finance" 
+                to="/pengayuh/finance" 
                 className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-700 hover:text-white"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

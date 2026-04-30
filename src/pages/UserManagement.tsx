@@ -242,16 +242,12 @@ const UserManagement: React.FC = () => {
 
   // Generate QR Code for driver
   const handleGenerateQR = (driverCode: string, driverName: string) => {
-    if (!driverCode) {
-      showError('Pengayuh code tidak tersedia');
-      return;
-    }
     setSelectedPengayuhCode(driverCode);
     setSelectedPengayuhName(driverName);
     setShowQRModal(true);
   };
 
-  // Generate QR code value - link ke halaman pesan dengan driver_code
+  // Generate QR code value - link ke halaman pesan dengan pengayuh_code
   const generateQRValue = () => {
     const baseUrl = window.location.origin;
     return `${baseUrl}/pesan?code=${selectedPengayuhCode}`;
@@ -727,7 +723,7 @@ const UserManagement: React.FC = () => {
                    />
                  </div>
                  <p className="text-xs text-gray-500 mb-4">
-                   Scan QR code ini untuk langsung ke halaman pesan dengan driver code: <span className="font-semibold">{selectedPengayuhCode}</span>
+                   Scan QR code ini untuk langsung ke halaman pesan dengan pengayuh code: <span className="font-semibold">{selectedPengayuhCode}</span>
                  </p>
                  <button
                    onClick={downloadQRCode}

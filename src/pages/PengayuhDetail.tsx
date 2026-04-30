@@ -139,15 +139,67 @@ const mockPengayuhDetail: PengayuhDetail = {
 const PengayuhDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
   const [pengayuh, setPengayuh] = useState<PengayuhDetail | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'trips' | 'customers'>('overview');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call to get pengayuh detail
-    setTimeout(() => {
-      setPengayuh(mockPengayuhDetail);
-    }, 500);
+    const fetchDetail = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const response = await adminAPI.getPengayuh(id);
+        const d = response.driver || response.pengayuh;
+        
+        if (d) {
+          // Fetch performance data for earnings etc
+          let performance = { total_earnings: 0, completed_orders: 0, rating: 0 };
+          try {
+            const perfResponse = await adminAPI.getPengayuhPerformance(id);
+            performance = perfResponse.performance || performance;
+          } catch (e) {
+            console.error('Failed to fetch performance:', e);
+          }
+
+          setPengayuh({
+            id: d.id?.toString() || d.driver_code,
+            name: d.name,
+            email: d.email,
+            phone: d.phone,
+            vehicleType: d.vehicle_type === 'andong' ? 'Delman' : 'Becak Listrik',
+            vehicleNumber: d.driver_code,
+            status: d.is_active ? 'active' : 'inactive',
+            rating: d.rating || performance.rating || 4.5,
+            totalTrips: d.total_trips || performance.completed_orders || 0,
+            totalEarnings: d.total_earnings || performance.total_earnings || 0,
+            joinDate: d.created_at,
+            lastActive: d.updated_at ? new Date(d.updated_at).toLocaleTimeString() : 'N/A',
+            location: d.address || 'Unknown',
+            isOnline: d.is_active,
+            trips: (d.orders || []).map((o: any) => ({
+              id: o.id?.toString(),
+              customerName: o.customer_name || 'Customer',
+              customerPhone: o.customer_phone || 'N/A',
+              pickupLocation: o.pickup_location,
+              destination: o.drop_location,
+              distance: `${o.distance || 0} km`,
+              price: o.price || 0,
+              status: o.status === 'completed' ? 'completed' : o.status === 'cancelled' ? 'cancelled' : 'ongoing',
+              date: o.created_at ? new Date(o.created_at).toISOString().split('T')[0] : 'N/A',
+              time: o.created_at ? new Date(o.created_at).toLocaleTimeString() : 'N/A',
+              rating: o.rating,
+              review: o.notes
+            }))
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch pengayuh detail:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
   }, [id]);
 
   const formatCurrency = (amount: number) => {

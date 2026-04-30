@@ -38,7 +38,7 @@ interface PengayuhStatus {
 const Dashboard: React.FC = () => {
   const location = useLocation();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [drivers, setPengayuhs] = useState<PengayuhStatus[]>([]);
+  const [pengayuhs, setPengayuhs] = useState<PengayuhStatus[]>([]);
   const [dashboardOrders, setDashboardOrders] = useState<any[]>([]);
   const [isLoadingPengayuhs, setIsLoadingPengayuhs] = useState(true);
 
@@ -95,10 +95,10 @@ const Dashboard: React.FC = () => {
   
   const activeOrders = dashboardOrders.filter(order => order.status === 'accepted' || order.status === 'ongoing');
   const completedOrders = dashboardOrders.filter(order => order.status === 'completed');
-  const onlinePengayuhs = drivers.filter(driver => driver.status === 'online');
+  const onlinePengayuhs = pengayuhs.filter(driver => driver.status === 'online');
   
-  const totalSystemEarnings = drivers.reduce((sum, driver) => sum + driver.totalEarnings, 0);
-  const totalSystemTrips = drivers.reduce((sum, driver) => sum + driver.totalTrips, 0);
+  const totalSystemEarnings = pengayuhs.reduce((sum, driver) => sum + driver.totalEarnings, 0);
+  const totalSystemTrips = pengayuhs.reduce((sum, driver) => sum + driver.totalTrips, 0);
   
   return (
     <div className="p-6">
@@ -206,7 +206,7 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {drivers.map((driver) => (
+                {pengayuhs.map((driver) => (
                   <tr key={driver.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {driver.id}
@@ -408,15 +408,15 @@ const AdminDashboard: React.FC = () => {
                 User Management
               </Link>
               {/* <Link 
-                to="/admin/driver-performance" 
+                to="/admin/pengayuh-performance" 
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                  location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/')
+                  location.pathname === '/admin/pengayuh-performance' || location.pathname.startsWith('/admin/pengayuh-detail/')
                     ? 'text-white bg-gray-900' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}
               >
                 <TrendingUp className={`mr-3 h-6 w-6 ${
-                  location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/') ? 'text-gray-300' : 'text-gray-400'
+                  location.pathname === '/admin/pengayuh-performance' || location.pathname.startsWith('/admin/pengayuh-detail/') ? 'text-gray-300' : 'text-gray-400'
                 }`} />
                 Pengayuh Performance
               </Link> */}
@@ -568,9 +568,9 @@ const AdminDashboard: React.FC = () => {
                 User Management
               </Link>
               {/* <Link 
-                to="/admin/driver-performance" 
+                to="/admin/pengayuh-performance" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/')
+                  location.pathname === '/admin/pengayuh-performance' || location.pathname.startsWith('/admin/pengayuh-detail/')
                     ? 'text-white bg-gray-900' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}
@@ -683,9 +683,9 @@ const AdminDashboard: React.FC = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="create-user" element={<CreateUser />} />
             <Route path="edit-user/:userId" element={<EditUser />} />
-            <Route path="create-driver" element={<CreatePengayuh />} />
-            <Route path="driver-performance" element={<PengayuhPerformance />} />
-            <Route path="driver-detail/:id" element={<PengayuhDetail />} />
+            <Route path="create-pengayuh" element={<CreatePengayuh />} />
+            <Route path="pengayuh-performance" element={<PengayuhPerformance />} />
+            <Route path="pengayuh-detail/:id" element={<PengayuhDetail />} />
             <Route path="customers" element={<CustomerManagement />} />
             <Route path="customer-detail/:id" element={<CustomerDetail />} />
             <Route path="analytics" element={<Analytics />} />

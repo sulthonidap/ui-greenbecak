@@ -19,7 +19,7 @@ const Login: React.FC = () => {
       if (userType === 'admin') {
         navigate('/admin');
       } else if (userType === 'driver') {
-        navigate('/driver');
+        navigate('/pengayuh');
       }
     }
   }, [isAuthenticated, userType, navigate]);
@@ -67,7 +67,7 @@ const Login: React.FC = () => {
       if (role === 'admin') {
         navigate('/admin');
       } else if (role === 'driver') {
-        navigate('/driver');
+        navigate('/pengayuh');
       } else {
         navigate('/');
       }

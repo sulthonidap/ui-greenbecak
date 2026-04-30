@@ -10,8 +10,8 @@ interface Order {
   customerPhone: string;
   customerAddress: string;
   destination: string;
-  driverName: string;
-  driverPhone: string;
+  pengayuhName: string;
+  pengayuhPhone: string;
   vehicleType: 'becak-listrik' | 'delman';
   vehicleCode: string;
   distance: string;
@@ -63,8 +63,8 @@ const OrderManagement: React.FC = () => {
         customerAddress: o.pickup_location || 'N/A',
         destination: o.drop_location || o.tariff?.destinations || 'N/A',
         tariffName: o.tariff?.name || 'N/A',
-        driverName: o.driver?.name || 'Unknown Driver',
-        driverPhone: o.driver?.phone || 'N/A',
+        pengayuhName: o.driver?.name || 'Unknown Pengayuh',
+        pengayuhPhone: o.driver?.phone || 'N/A',
         vehicleType: o.driver?.vehicle_type === 'andong' ? 'delman' :
           o.driver?.vehicle_type === 'becak_listrik' ? 'becak-listrik' :
             o.driver?.vehicle_type === 'becak_motor' ? 'becak-listrik' :
@@ -130,7 +130,7 @@ const OrderManagement: React.FC = () => {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.pengayuhName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerPhone.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || order.paymentStatus === paymentFilter;
@@ -331,7 +331,7 @@ const OrderManagement: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Cari nomor order, nama customer, atau driver..."
+                    placeholder="Cari nomor order, nama customer, atau pengayuh..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -425,7 +425,7 @@ const OrderManagement: React.FC = () => {
                     Order Info
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer & Driver
+                    Customer & Pengayuh
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Trip Details
@@ -471,7 +471,7 @@ const OrderManagement: React.FC = () => {
 
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{order.driverName} - {order.vehicleCode}</div>
+                          <div className="text-sm font-medium text-gray-900">{order.pengayuhName} - {order.vehicleCode}</div>
                 
                           
                         </div>

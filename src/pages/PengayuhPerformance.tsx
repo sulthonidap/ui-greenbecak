@@ -58,15 +58,15 @@ const PengayuhPerformance: React.FC = () => {
 
       const response = await adminAPI.getPengayuhs();
 
-      const normalized = (response.pengayuhs || [])
+      const normalized = (response.drivers || response.pengayuhs || [])
         .filter((d: any) => !d.deleted_at) // Filter out soft deleted pengayuhs
         .map((d: any) => ({
-          id: d.id?.toString() || d.pengayuh_code,
+          id: d.id?.toString() || d.driver_code,
           name: d.name,
           email: d.email,
           phone: d.phone,
           vehicleType: d.vehicle_type === 'andong' ? 'Delman' : 'Becak Listrik',
-          vehicleNumber: d.pengayuh_code,
+          vehicleNumber: d.driver_code,
           status: d.is_active ? 'active' : 'inactive',
           rating: d.rating || 4.5, // fallback rating
           totalTrips: d.total_trips || 0,

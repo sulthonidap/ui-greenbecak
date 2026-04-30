@@ -78,7 +78,7 @@ const AppContent: React.FC = () => {
             } 
           />
           <Route 
-            path="/driver/*" 
+            path="/pengayuh/*" 
             element={
               <ProtectedRoute userType="driver">
                 <PengayuhDashboard />

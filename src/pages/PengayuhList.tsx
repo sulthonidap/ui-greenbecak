@@ -39,13 +39,13 @@ const PengayuhList: React.FC = () => {
       setError(null);
       
       const response = await adminAPI.getPengayuhs();
-      const normalized = (response.pengayuhs || []).map((d: any) => ({
-        id: d.id?.toString() || d.pengayuh_code,
+      const normalized = (response.drivers || response.pengayuhs || []).map((d: any) => ({
+        id: d.id?.toString() || d.driver_code,
         name: d.name,
         email: d.email,
         phone: d.phone,
         vehicleType: d.vehicle_type || 'becak-listrik', // fallback
-        vehicleCode: d.pengayuh_code,
+        vehicleCode: d.driver_code,
         licenseNumber: d.license_number || '',
         address: d.address || '',
         emergencyContact: d.id_card || '',
