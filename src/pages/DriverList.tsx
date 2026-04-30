@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare } from 'lucide-react';
 import { adminAPI } from '../services/api';
 
-interface Pengayuh {
+interface Driver {
   id: string;
   name: string;
   email: string;
@@ -21,10 +21,10 @@ interface Pengayuh {
 }
 
 
-const PengayuhList: React.FC = () => {
+const DriverList: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [drivers, setPengayuhs] = useState<Pengayuh[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,12 +33,12 @@ const PengayuhList: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   
   // Fetch drivers from backend
-  const fetchPengayuhs = async () => {
+  const fetchDrivers = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await adminAPI.getPengayuhs();
+      const response = await adminAPI.getDrivers();
       const normalized = (response.drivers || []).map((d: any) => ({
         id: d.id?.toString() || d.driver_code,
         name: d.name,
@@ -55,7 +55,7 @@ const PengayuhList: React.FC = () => {
         totalTrips: d.total_trips || 0,
         totalEarnings: d.total_earnings || 0,
       }));
-      setPengayuhs(normalized);
+      setDrivers(normalized);
       
     } catch (error: any) {
       console.error('Failed to fetch drivers:', error);
@@ -77,7 +77,7 @@ const PengayuhList: React.FC = () => {
   
   // Load drivers on component mount
   useEffect(() => {
-    fetchPengayuhs();
+    fetchDrivers();
   }, []);
   
   // Check for success message from navigation state
@@ -91,7 +91,7 @@ const PengayuhList: React.FC = () => {
     }
   }, [location.state]);
 
-  const filteredPengayuhs = drivers.filter(driver => {
+  const filteredDrivers = drivers.filter(driver => {
     const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          driver.vehicleCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          driver.phone.includes(searchTerm);
@@ -108,10 +108,10 @@ const PengayuhList: React.FC = () => {
   const handleDelete = async (driverId: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus driver ini?')) {
       try {
-        await adminAPI.deletePengayuh(driverId);
+        await adminAPI.deleteDriver(driverId);
         
         // Remove from local state
-        setPengayuhs(prev => prev.filter(driver => driver.id !== driverId));
+        setDrivers(prev => prev.filter(driver => driver.id !== driverId));
         
         // Show success message
         setShowSuccessMessage(true);
@@ -140,13 +140,13 @@ const PengayuhList: React.FC = () => {
       
       const newStatus = driver.status === 'active' ? 'inactive' : 'active';
       
-      await adminAPI.updatePengayuh(driverId, { 
+      await adminAPI.updateDriver(driverId, { 
         status: newStatus,
         is_active: newStatus === 'active'
       });
       
       // Update local state
-      setPengayuhs(prev => prev.map(driver => 
+      setDrivers(prev => prev.map(driver => 
         driver.id === driverId 
           ? { ...driver, status: newStatus }
           : driver
@@ -167,7 +167,7 @@ const PengayuhList: React.FC = () => {
     }
   };
 
-  const activePengayuhs = drivers.filter(driver => driver.status === 'active');
+  const activeDrivers = drivers.filter(driver => driver.status === 'active');
   const totalEarnings = drivers.reduce((sum, driver) => sum + driver.totalEarnings, 0);
   const totalTrips = drivers.reduce((sum, driver) => sum + driver.totalTrips, 0);
 
@@ -197,7 +197,7 @@ const PengayuhList: React.FC = () => {
                 Error: {error}
               </p>
               <button
-                onClick={fetchPengayuhs}
+                onClick={fetchDrivers}
                 className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
               >
                 Coba lagi
@@ -219,7 +219,7 @@ const PengayuhList: React.FC = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                {location.state?.message || 'Pengayuh berhasil ditambahkan!'}
+                {location.state?.message || 'Driver berhasil ditambahkan!'}
               </p>
             </div>
             <div className="ml-auto pl-3">
@@ -241,7 +241,7 @@ const PengayuhList: React.FC = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Kembali ke Dashboard
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Daftar Pengayuh</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Daftar Driver</h1>
         <p className="text-gray-600 mt-2">Kelola semua driver GreenBecak</p>
       </div>
 
@@ -251,7 +251,7 @@ const PengayuhList: React.FC = () => {
           <div className="flex items-center">
             <Users className="w-8 h-8 text-blue-600 mr-3" />
             <div>
-              <p className="text-sm text-blue-600">Total Pengayuh</p>
+              <p className="text-sm text-blue-600">Total Driver</p>
               <p className="text-2xl font-bold text-blue-700">{drivers.length}</p>
             </div>
           </div>
@@ -261,8 +261,8 @@ const PengayuhList: React.FC = () => {
           <div className="flex items-center">
             <Users className="w-8 h-8 text-green-600 mr-3" />
             <div>
-              <p className="text-sm text-green-600">Pengayuh Aktif</p>
-              <p className="text-2xl font-bold text-green-700">{activePengayuhs.length}</p>
+              <p className="text-sm text-green-600">Driver Aktif</p>
+              <p className="text-2xl font-bold text-green-700">{activeDrivers.length}</p>
             </div>
           </div>
         </div>
@@ -293,14 +293,14 @@ const PengayuhList: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div className="flex items-center">
               <Users className="w-6 h-6 text-green-600 mr-3" />
-              <h2 className="text-lg font-semibold text-gray-900">Daftar Pengayuh</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Daftar Driver</h2>
             </div>
             <button
               onClick={() => navigate('/admin/create-user')}
               className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Tambah Pengayuh
+              Tambah Driver
             </button>
           </div>
         </div>
@@ -341,13 +341,13 @@ const PengayuhList: React.FC = () => {
             </div>
           </div>
 
-          {/* Tabel Pengayuh */}
+          {/* Tabel Driver */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Pengayuh
+                    Driver
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Kendaraan
@@ -367,7 +367,7 @@ const PengayuhList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPengayuhs.map((driver) => (
+                {filteredDrivers.map((driver) => (
                   <tr key={driver.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -420,14 +420,14 @@ const PengayuhList: React.FC = () => {
                         <button
                           onClick={() => handleEdit(driver.id)}
                           className="text-blue-600 hover:text-blue-900"
-                          title="Edit Pengayuh"
+                          title="Edit Driver"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(driver.id)}
                           className="text-red-600 hover:text-red-900"
-                          title="Hapus Pengayuh"
+                          title="Hapus Driver"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -439,7 +439,7 @@ const PengayuhList: React.FC = () => {
             </table>
           </div>
 
-          {filteredPengayuhs.length === 0 && (
+          {filteredDrivers.length === 0 && (
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">Tidak ada driver yang ditemukan</p>
@@ -451,4 +451,4 @@ const PengayuhList: React.FC = () => {
   );
 };
 
-export default PengayuhList;
+export default DriverList;

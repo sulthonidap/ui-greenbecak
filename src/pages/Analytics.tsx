@@ -5,19 +5,19 @@ import { ArrowLeft, TrendingUp, Users, Car, DollarSign, Calendar, BarChart3, Pie
 interface AnalyticsData {
   totalRevenue: number;
   totalOrders: number;
-  activePengayuhs: number;
+  activeDrivers: number;
   averageRating: number;
   completionRate: number;
   monthlyRevenue: { month: string; revenue: number }[];
   orderStatus: { status: string; count: number }[];
-  topPengayuhs: { name: string; earnings: number; trips: number; rating: number }[];
+  topDrivers: { name: string; earnings: number; trips: number; rating: number }[];
   vehiclePerformance: { type: string; orders: number; revenue: number }[];
 }
 
 const mockAnalyticsData: AnalyticsData = {
   totalRevenue: 15420000,
   totalOrders: 1247,
-  activePengayuhs: 23,
+  activeDrivers: 23,
   averageRating: 4.6,
   completionRate: 94.2,
   monthlyRevenue: [
@@ -40,7 +40,7 @@ const mockAnalyticsData: AnalyticsData = {
     { status: 'Pending', count: 89 },
     { status: 'Cancelled', count: 110 }
   ],
-  topPengayuhs: [
+  topDrivers: [
     { name: 'Budi Santoso', earnings: 3120000, trips: 156, rating: 4.8 },
     { name: 'Siti Rahma', earnings: 3340000, trips: 167, rating: 4.7 },
     { name: 'Ahmad Reza', earnings: 2860000, trips: 143, rating: 4.6 },
@@ -147,8 +147,8 @@ const Analytics: React.FC = () => {
               <Users className="w-6 h-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pengayuh Aktif</p>
-              <p className="text-2xl font-bold text-gray-900">{data.activePengayuhs}</p>
+              <p className="text-sm font-medium text-gray-600">Driver Aktif</p>
+              <p className="text-2xl font-bold text-gray-900">{data.activeDrivers}</p>
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-purple-600">
@@ -222,14 +222,14 @@ const Analytics: React.FC = () => {
 
       {/* Top Performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Top Pengayuhs */}
+        {/* Top Drivers */}
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Top 5 Pengayuh</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Top 5 Driver</h3>
             <Award className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-4">
-            {data.topPengayuhs.map((pengayuh, index) => (
+            {data.topDrivers.map((driver, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -291,13 +291,13 @@ const Analytics: React.FC = () => {
           </button>
           
           <button
-            onClick={() => navigate('/admin/pengayuh-performance')}
+            onClick={() => navigate('/admin/users')}
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Users className="w-5 h-5 text-green-600 mr-3" />
             <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">Kelola Pengayuh</p>
-              <p className="text-xs text-gray-500">Lihat performa pengayuh</p>
+              <p className="text-sm font-medium text-gray-900">Kelola Driver</p>
+              <p className="text-xs text-gray-500">Lihat performa driver</p>
             </div>
           </button>
           

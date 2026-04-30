@@ -175,7 +175,7 @@ const DriverHome: React.FC = () => {
         data: error.response?.data,
         config: error.config
       });
-      setError(`Gagal memuat data pengayuh: ${error.message || 'Silakan coba lagi.'}`);
+      setError(`Gagal memuat data driver: ${error.message || 'Silakan coba lagi.'}`);
       
       // Try fallback to direct driver ID if auth fails
       try {
@@ -433,7 +433,7 @@ const DriverHome: React.FC = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Memuat data pengayuh...</p>
+            <p className="mt-4 text-gray-600">Memuat data driver...</p>
           </div>
         </div>
       </div>
@@ -485,7 +485,7 @@ const DriverHome: React.FC = () => {
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-2xl font-bold mb-2 sm:mb-0">Dashboard Pengayuh</h1>
+        <h1 className="text-2xl font-bold mb-2 sm:mb-0">Dashboard Driver</h1>
         <div className="flex items-center space-x-3">
           <div className="flex items-center">
             <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
@@ -917,7 +917,7 @@ const Profile: React.FC = () => {
         }
         
         setDriverProfile({
-          name: userData.name || 'Pengayuh',
+          name: userData.name || 'Driver',
           email: userData.email || 'N/A',
           phone: userData.phone || 'N/A',
           driver_code: userData.driver_code || 'N/A',
@@ -938,7 +938,7 @@ const Profile: React.FC = () => {
         status: error.response?.status,
         data: error.response?.data
       });
-      setError(`Gagal memuat profil pengayuh: ${error.message || 'Silakan coba lagi.'}`);
+      setError(`Gagal memuat profil driver: ${error.message || 'Silakan coba lagi.'}`);
       
       // Fallback to mock data for development
       setDriverProfile({
@@ -992,7 +992,7 @@ const Profile: React.FC = () => {
             <User size={32} className="text-gray-600" />
           </div>
           <div className="ml-6">
-            <h2 className="text-xl font-semibold">{driverProfile?.name || 'Pengayuh'}</h2>
+            <h2 className="text-xl font-semibold">{driverProfile?.name || 'Driver'}</h2>
             <p className="text-gray-500">ID: {driverProfile?.driver_code || 'N/A'}</p>
           </div>
         </div>
@@ -1619,7 +1619,7 @@ const DriverDashboard: React.FC = () => {
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">GT</span>
               </div>
-              <span className="ml-2 text-white text-lg font-semibold">Pengayuh</span>
+              <span className="ml-2 text-white text-lg font-semibold">Driver Panel</span>
             </div>
           </div>
           <div className="flex flex-col flex-grow pt-5 overflow-y-auto">
@@ -1656,7 +1656,7 @@ const DriverDashboard: React.FC = () => {
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">GT</span>
               </div>
-              <span className="ml-2 text-white text-lg font-semibold">Pengayuh</span>
+              <span className="ml-2 text-white text-lg font-semibold">Driver</span>
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

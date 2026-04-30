@@ -237,12 +237,12 @@ export const ordersAPI = {
 // Tariffs API
 export const tariffsAPI = {
   getTariffs: async (params?: any) => {
-    const response = await api.get('/tariffs/', { params });
+    const response = await api.get('/tariffs', { params });
     return response.data;
   },
   
   getTariff: async (id: string) => {
-    const response = await api.get(`/tariffs/${id}/`);
+    const response = await api.get(`/tariffs/${id}`);
     return response.data;
   },
   
@@ -251,7 +251,7 @@ export const tariffsAPI = {
     // Try to fetch from API first, fallback to static data if CORS fails
     try {
       console.log('Attempting to fetch tariffs from API...', params ? `with params: ${JSON.stringify(params)}` : '');
-      const response = await fetch('https://api.becakjogja.id/api/tariffs/public/', {
+      const response = await fetch('https://api.becakjogja.id/api/tariffs/public', {
         method: 'GET',
         mode: 'cors',
         headers: {
@@ -313,7 +313,7 @@ export const tariffsAPI = {
   
   getTariffPublic: async (id: string) => {
     try {
-      const response = await publicApi.get(`/tariffs/public/${id}/`);
+      const response = await publicApi.get(`/tariffs/public/${id}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch public tariff, using fallback data:', error);
@@ -341,17 +341,17 @@ export const tariffsAPI = {
   },
   
   updateTariff: async (id: string, tariffData: any) => {
-    const response = await api.put(`/admin/tariffs/${id}/`, tariffData);
+    const response = await api.put(`/admin/tariffs/${id}`, tariffData);
     return response.data;
   },
   
   deleteTariff: async (id: string) => {
-    const response = await api.delete(`/admin/tariffs/${id}/`);
+    const response = await api.delete(`/admin/tariffs/${id}`);
     return response.data;
   },
   
   toggleTariffStatus: async (id: string, isActive: boolean) => {
-    const response = await api.put(`/admin/tariffs/${id}/active/`, { IsActive: isActive });
+    const response = await api.put(`/admin/tariffs/${id}/active`, { IsActive: isActive });
     return response.data;
   },
 };
@@ -458,39 +458,39 @@ export const adminAPI = {
     return response.data;
   },
   
-  // Pengayuhs
-  createPengayuh: async (pengayuhData: any) => {
-    const response = await api.post('/admin/drivers/', pengayuhData);
+  // Drivers
+  createDriver: async (driverData: any) => {
+    const response = await api.post('/admin/drivers/', driverData);
     return response.data;
   },
   
-  getPengayuhs: async (params?: any) => {
+  getDrivers: async (params?: any) => {
     const response = await api.get('/admin/drivers/', { params });
     return response.data;
   },
   
-  getPengayuh: async (id: string) => {
-    const response = await api.get(`/admin/drivers/${id}/`);
+  getDriver: async (id: string) => {
+    const response = await api.get(`/admin/drivers/${id}`);
     return response.data;
   },
   
-  updatePengayuh: async (id: string, pengayuhData: any) => {
-    const response = await api.put(`/admin/drivers/${id}/`, pengayuhData);
+  updateDriver: async (id: string, driverData: any) => {
+    const response = await api.put(`/admin/drivers/${id}`, driverData);
     return response.data;
   },
   
-  deletePengayuh: async (id: string) => {
-    const response = await api.delete(`/admin/drivers/${id}/`);
+  deleteDriver: async (id: string) => {
+    const response = await api.delete(`/admin/drivers/${id}`);
     return response.data;
   },
   
-  getPengayuhPerformance: async (id: string) => {
-    const response = await api.get(`/admin/drivers/${id}/performance/`);
+  getDriverPerformance: async (id: string) => {
+    const response = await api.get(`/admin/drivers/${id}/performance`);
     return response.data;
   },
   
-  // Pengayuh Financial Data
-  getPengayuhFinancialData: async (params?: any) => {
+  // Driver Financial Data
+  getDriverFinancialData: async (params?: any) => {
     const response = await api.get('/admin/drivers/financial-data/', { params });
     return response.data;
   },
@@ -502,18 +502,18 @@ export const adminAPI = {
   },
   
   updateTariff: async (id: string, tariffData: any) => {
-    const response = await api.put(`/admin/tariffs/${id}/`, tariffData);
+    const response = await api.put(`/admin/tariffs/${id}`, tariffData);
     return response.data;
   },
   
   deleteTariff: async (id: string) => {
-    const response = await api.delete(`/admin/tariffs/${id}/`);
+    const response = await api.delete(`/admin/tariffs/${id}`);
     return response.data;
   },
   
   // Analytics
   getAnalytics: async () => {
-    const response = await api.get('/admin/analytics/');
+    const response = await api.get('/admin/analytics');
     return response.data;
   },
   
@@ -524,27 +524,27 @@ export const adminAPI = {
   },
   
   getWithdrawal: async (id: string) => {
-    const response = await api.get(`/admin/withdrawals/${id}/`);
+    const response = await api.get(`/admin/withdrawals/${id}`);
     return response.data;
   },
   
   updateWithdrawal: async (id: string, withdrawalData: any) => {
-    const response = await api.put(`/admin/withdrawals/${id}/`, withdrawalData);
+    const response = await api.put(`/admin/withdrawals/${id}`, withdrawalData);
     return response.data;
   },
   
   deleteWithdrawal: async (id: string) => {
-    const response = await api.delete(`/admin/withdrawals/${id}/`);
+    const response = await api.delete(`/admin/withdrawals/${id}`);
     return response.data;
   },
   
   getRevenueAnalytics: async () => {
-    const response = await api.get('/admin/analytics/revenue/');
+    const response = await api.get('/admin/analytics/revenue');
     return response.data;
   },
   
   getOrderAnalytics: async () => {
-    const response = await api.get('/admin/analytics/orders/');
+    const response = await api.get('/admin/analytics/orders');
     return response.data;
   },
   
@@ -555,90 +555,90 @@ export const adminAPI = {
   },
 };
 
-// Pengayuh API
-export const pengayuhAPI = {
+// Driver API
+export const driverAPI = {
   // Orders
-  getPengayuhOrders: async (params?: any) => {
-    const response = await api.get('/driver/orders/', { params });
+  getDriverOrders: async (params?: any) => {
+    const response = await api.get('/driver/orders', { params });
     return response.data;
   },
   
-  // Get orders by pengayuh ID (for testing)
-  getOrdersByPengayuhID: async (pengayuhId: string, params?: any) => {
-    console.log('API call: getOrdersByPengayuhID with pengayuhId:', pengayuhId);
-    const response = await api.get(`/driver/${pengayuhId}/orders/`, { params });
+  // Get orders by driver ID (for testing)
+  getOrdersByDriverID: async (driverId: string, params?: any) => {
+    console.log('API call: getOrdersByDriverID with driverId:', driverId);
+    const response = await api.get(`/driver/${driverId}/orders`, { params });
     console.log('API response:', response);
     return response.data;
   },
   
   acceptOrder: async (id: string) => {
-    const response = await api.put(`/driver/orders/${id}/accept/`);
+    const response = await api.put(`/driver/orders/${id}/accept`);
     return response.data;
   },
   
   completeOrder: async (id: string) => {
-    const response = await api.put(`/driver/orders/${id}/complete/`);
+    const response = await api.put(`/driver/orders/${id}/complete`);
     return response.data;
   },
   
   // Earnings
-  getPengayuhEarnings: async (params?: any) => {
-    const response = await api.get('/driver/earnings/', { params });
+  getDriverEarnings: async (params?: any) => {
+    const response = await api.get('/driver/earnings', { params });
     return response.data;
   },
   
   // Withdrawals
   createWithdrawal: async (withdrawalData: any) => {
-    const response = await api.post('/driver/withdrawals/', withdrawalData);
+    const response = await api.post('/driver/withdrawals', withdrawalData);
     return response.data;
   },
   
-  getPengayuhWithdrawals: async (params?: any) => {
-    const response = await api.get('/driver/withdrawals/', { params });
+  getDriverWithdrawals: async (params?: any) => {
+    const response = await api.get('/driver/withdrawals', { params });
     return response.data;
   },
   
   // Location
   updateLocation: async (locationData: any) => {
-    const response = await api.post('/driver/location/', locationData);
+    const response = await api.post('/driver/location', locationData);
     return response.data;
   },
   
   getLocation: async () => {
-    const response = await api.get('/driver/location/');
+    const response = await api.get('/driver/location');
     return response.data;
   },
   
   setOnlineStatus: async (status: boolean) => {
-    const response = await api.put('/driver/online-status/', { is_online: status });
+    const response = await api.put('/driver/online-status', { is_online: status });
     return response.data;
   },
   
   getOnlineStatus: async () => {
-    const response = await api.get('/driver/location/');
+    const response = await api.get('/driver/location');
     return response.data;
   },
   
   getLocationHistory: async (params?: any) => {
-    const response = await api.get('/driver/location/history/', { params });
+    const response = await api.get('/driver/location/history', { params });
     return response.data;
   },
 };
 
 // Location API (public)
 export const locationAPI = {
-  getNearbyPengayuhs: async (params: any) => {
-    const response = await publicApi.get('/location/drivers/nearby/', { params });
+  getNearbyDrivers: async (params: any) => {
+    const response = await publicApi.get('/location/drivers/nearby', { params });
     return response.data;
   },
   
-  getPengayuhLocation: async (id: string) => {
-    const response = await publicApi.get(`/location/drivers/${id}/`);
+  getDriverLocation: async (id: string) => {
+    const response = await publicApi.get(`/location/drivers/${id}`);
     return response.data;
   },
   
-  getPengayuhRoute: async (orderId: string) => {
-    const response = await publicApi.get(`/location/routes/${orderId}/`);
+  getDriverRoute: async (orderId: string) => {
+    const response = await publicApi.get(`/location/routes/${orderId}`);
     return response.data;
   },
 };

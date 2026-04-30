@@ -14,7 +14,7 @@ import {
   DollarSign
 } from 'lucide-react';
 
-interface Pengayuh {
+interface Driver {
   id: string;
   name: string;
   email: string;
@@ -36,10 +36,10 @@ interface Pengayuh {
 }
 
 
-const PengayuhPerformance: React.FC = () => {
+const DriverPerformance: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [drivers, setPengayuhs] = useState<Pengayuh[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,12 +51,12 @@ const PengayuhPerformance: React.FC = () => {
   const [itemsPerPage] = useState(6);
 
   // Fetch drivers from backend
-  const fetchPengayuhs = async () => {
+  const fetchDrivers = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await adminAPI.getPengayuhs();
+      const response = await adminAPI.getDrivers();
 
       const normalized = (response.drivers || [])
         .filter((d: any) => !d.deleted_at) // Filter out soft deleted drivers
@@ -78,7 +78,7 @@ const PengayuhPerformance: React.FC = () => {
           isOnline: d.is_active,
         }));
 
-      setPengayuhs(normalized);
+      setDrivers(normalized);
 
     } catch (error: any) {
       console.error('Failed to fetch drivers:', error);
@@ -100,7 +100,7 @@ const PengayuhPerformance: React.FC = () => {
 
   // Load drivers on component mount
   useEffect(() => {
-    fetchPengayuhs();
+    fetchDrivers();
   }, []);
 
   // Filter data when selected date changes
@@ -118,7 +118,7 @@ const PengayuhPerformance: React.FC = () => {
     }
   }, [location.state?.message]);
 
-  const filteredPengayuhs = drivers.filter(driver => {
+  const filteredDrivers = drivers.filter(driver => {
     const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       driver.phone.includes(searchTerm) ||
@@ -130,18 +130,18 @@ const PengayuhPerformance: React.FC = () => {
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredPengayuhs.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentPengayuhs = filteredPengayuhs.slice(startIndex, endIndex);
+  const currentDrivers = filteredDrivers.slice(startIndex, endIndex);
 
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, vehicleFilter]);
 
-  const totalPengayuhs = drivers.length;
-  const activePengayuhs = drivers.filter(d => d.status === 'active').length;
+  const totalDrivers = drivers.length;
+  const activeDrivers = drivers.filter(d => d.status === 'active').length;
   const totalSelectedDateTrips = drivers.reduce((sum, d) => sum + d.selectedDateTrips, 0);
   const totalSelectedDateEarnings = drivers.reduce((sum, d) => sum + d.selectedDateEarnings, 0);
   const averageEarningsPerTrip = totalSelectedDateTrips > 0 ? totalSelectedDateEarnings / totalSelectedDateTrips : 0;
@@ -199,7 +199,7 @@ const PengayuhPerformance: React.FC = () => {
                 Error: {error}
               </p>
               <button
-                onClick={fetchPengayuhs}
+                onClick={fetchDrivers}
                 className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
               >
                 Coba lagi
@@ -231,7 +231,7 @@ const PengayuhPerformance: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Pengayuh Performance</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Driver Performance</h1>
               <p className="text-gray-600">
                 Monitor performa driver pada tanggal{' '}
                 <span className="font-semibold text-green-600">
@@ -246,7 +246,7 @@ const PengayuhPerformance: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={fetchPengayuhs}
+            onClick={fetchDrivers}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <span>Refresh Data</span>
@@ -258,9 +258,9 @@ const PengayuhPerformance: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Pengayuh</p>
-                <p className="text-2xl font-bold text-gray-900">{totalPengayuhs}</p>
-                <p className="text-xs text-gray-500 mt-1">{activePengayuhs} aktif hari ini</p>
+                <p className="text-sm font-medium text-gray-600">Total Driver</p>
+                <p className="text-2xl font-bold text-gray-900">{totalDrivers}</p>
+                <p className="text-xs text-gray-500 mt-1">{activeDrivers} aktif hari ini</p>
               </div>
               <Users className="w-8 h-8 text-blue-500" />
             </div>
@@ -362,15 +362,15 @@ const PengayuhPerformance: React.FC = () => {
            </div>
          </div>
 
-        {/* Pengayuh List */}
+        {/* Driver List */}
         <div className="bg-white rounded-lg shadow">
                      <div className="p-6 border-b border-gray-200">
-             <h2 className="text-lg font-semibold text-gray-900">Daftar Pengayuh Performance</h2>
+             <h2 className="text-lg font-semibold text-gray-900">Daftar Driver Performance</h2>
              <p className="text-gray-600">
-               Total {filteredPengayuhs.length} driver ditemukan
-               {filteredPengayuhs.length > 0 && (
+               Total {filteredDrivers.length} driver ditemukan
+               {filteredDrivers.length > 0 && (
                  <span className="ml-2 text-sm text-gray-500">
-                   (Menampilkan {startIndex + 1} - {Math.min(endIndex, filteredPengayuhs.length)} dari {filteredPengayuhs.length})
+                   (Menampilkan {startIndex + 1} - {Math.min(endIndex, filteredDrivers.length)} dari {filteredDrivers.length})
                  </span>
                )}
              </p>
@@ -381,7 +381,7 @@ const PengayuhPerformance: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Pengayuh
+                    Driver
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Kendaraan
@@ -404,7 +404,7 @@ const PengayuhPerformance: React.FC = () => {
                 </tr>
               </thead>
                              <tbody className="bg-white divide-y divide-gray-200">
-                 {currentPengayuhs.map((driver) => (
+                 {currentDrivers.map((driver) => (
                   <tr
                     key={driver.id}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
@@ -500,10 +500,10 @@ const PengayuhPerformance: React.FC = () => {
             </table>
           </div>
 
-                     {currentPengayuhs.length === 0 && (
+                     {currentDrivers.length === 0 && (
              <div className="text-center py-12">
                <div className="text-gray-500">
-                 {filteredPengayuhs.length === 0 ? 'Tidak ada driver ditemukan' : 'Tidak ada data untuk halaman ini'}
+                 {filteredDrivers.length === 0 ? 'Tidak ada driver ditemukan' : 'Tidak ada data untuk halaman ini'}
                </div>
              </div>
            )}
@@ -513,7 +513,7 @@ const PengayuhPerformance: React.FC = () => {
              <div className="px-6 py-4 border-t border-gray-200">
                <div className="flex items-center justify-between">
                  <div className="text-sm text-gray-700">
-                   Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredPengayuhs.length)} dari {filteredPengayuhs.length} hasil
+                   Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredDrivers.length)} dari {filteredDrivers.length} hasil
                  </div>
                  <div className="flex items-center space-x-2">
                    <button
@@ -565,4 +565,4 @@ const PengayuhPerformance: React.FC = () => {
   );
 };
 
-export default PengayuhPerformance;
+export default DriverPerformance;

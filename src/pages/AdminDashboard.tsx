@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOrder, Order } from '../context/OrderContext';
-import CreatePengayuh from './CreatePengayuh';
+import CreateDriver from './CreateDriver';
 import CreateUser from './CreateUser';
 import EditUser from './EditUser';
 import UserManagement from './UserManagement';
@@ -16,14 +16,14 @@ import OrderManagement from './OrderManagement';
 import FinanceManagement from './FinanceManagement';
 import WithdrawalManagement from './WithdrawalManagement';
 import TariffSettings from './TariffSettings';
-import PengayuhPerformance from './PengayuhPerformance';
-import PengayuhDetail from './PengayuhDetail';
+import DriverPerformance from './DriverPerformance';
+import DriverDetail from './DriverDetail';
 import CustomerManagement from './CustomerManagement';
 import CustomerDetail from './CustomerDetail';
 import StandManagement from './StandManagement';
 import { adminAPI } from '../services/api';
 
-interface PengayuhStatus {
+interface DriverStatus {
   id: string;
   name: string;
   status: 'online' | 'offline';
@@ -38,17 +38,17 @@ interface PengayuhStatus {
 const Dashboard: React.FC = () => {
   const location = useLocation();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [pengayuhs, setPengayuhs] = useState<PengayuhStatus[]>([]);
+  const [drivers, setDrivers] = useState<DriverStatus[]>([]);
   const [dashboardOrders, setDashboardOrders] = useState<any[]>([]);
-  const [isLoadingPengayuhs, setIsLoadingPengayuhs] = useState(true);
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoadingPengayuhs(true);
+        setIsLoadingDrivers(true);
         // Fetch drivers
-        const response = await adminAPI.getPengayuhs();
+        const response = await adminAPI.getDrivers();
         const normalized = (response.drivers || []).map((d: any) => ({
           id: d.id?.toString() || d.driver_code || '',
           name: d.name || '',
@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
           totalTrips: d.total_trips || 0,
           totalEarnings: d.total_earnings || 0
         }));
-        setPengayuhs(normalized);
+        setDrivers(normalized);
         
         // Fetch orders
         const orderResponse = await adminAPI.getAdminOrders();
@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
-        setIsLoadingPengayuhs(false);
+        setIsLoadingDrivers(false);
       }
     };
     
@@ -95,10 +95,10 @@ const Dashboard: React.FC = () => {
   
   const activeOrders = dashboardOrders.filter(order => order.status === 'accepted' || order.status === 'ongoing');
   const completedOrders = dashboardOrders.filter(order => order.status === 'completed');
-  const onlinePengayuhs = pengayuhs.filter(driver => driver.status === 'online');
+  const onlineDrivers = drivers.filter(driver => driver.status === 'online');
   
-  const totalSystemEarnings = pengayuhs.reduce((sum, driver) => sum + driver.totalEarnings, 0);
-  const totalSystemTrips = pengayuhs.reduce((sum, driver) => sum + driver.totalTrips, 0);
+  const totalSystemEarnings = drivers.reduce((sum, driver) => sum + driver.totalEarnings, 0);
+  const totalSystemTrips = drivers.reduce((sum, driver) => sum + driver.totalTrips, 0);
   
   return (
     <div className="p-6">
@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                {location.state?.message || 'Pengayuh berhasil ditambahkan!'}
+                {location.state?.message || 'Driver berhasil ditambahkan!'}
               </p>
             </div>
             <div className="ml-auto pl-3">
@@ -133,8 +133,8 @@ const Dashboard: React.FC = () => {
               <Users size={24} className="text-blue-500" />
             </div>
             <div>
-              <p className="text-sm text-blue-500">Pengayuh Online</p>
-              <h3 className="text-2xl font-bold text-blue-700">{onlinePengayuhs.length}</h3>
+              <p className="text-sm text-blue-500">Driver Online</p>
+              <h3 className="text-2xl font-bold text-blue-700">{onlineDrivers.length}</h3>
             </div>
           </div>
         </div>
@@ -179,14 +179,14 @@ const Dashboard: React.FC = () => {
       </div>
       
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Pendapatan Pengayuh</h2>
+        <h2 className="text-xl font-semibold mb-4">Pendapatan Driver</h2>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID Pengayuh
+                    ID Driver
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nama
@@ -206,7 +206,7 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {pengayuhs.map((driver) => (
+                {drivers.map((driver) => (
                   <tr key={driver.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {driver.id}
@@ -408,17 +408,17 @@ const AdminDashboard: React.FC = () => {
                 User Management
               </Link>
               {/* <Link 
-                to="/admin/pengayuh-performance" 
+                to="/admin/driver-performance" 
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                  location.pathname === '/admin/pengayuh-performance' || location.pathname.startsWith('/admin/pengayuh-detail/')
+                  location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/')
                     ? 'text-white bg-gray-900' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}
               >
                 <TrendingUp className={`mr-3 h-6 w-6 ${
-                  location.pathname === '/admin/pengayuh-performance' || location.pathname.startsWith('/admin/pengayuh-detail/') ? 'text-gray-300' : 'text-gray-400'
+                  location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/') ? 'text-gray-300' : 'text-gray-400'
                 }`} />
-                Pengayuh Performance
+                Driver Performance
               </Link> */}
               {/* <Link 
                 to="/admin/customers" 
@@ -568,15 +568,15 @@ const AdminDashboard: React.FC = () => {
                 User Management
               </Link>
               {/* <Link 
-                to="/admin/pengayuh-performance" 
+                to="/admin/driver-performance" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  location.pathname === '/admin/pengayuh-performance' || location.pathname.startsWith('/admin/pengayuh-detail/')
+                  location.pathname === '/admin/driver-performance' || location.pathname.startsWith('/admin/driver-detail/')
                     ? 'text-white bg-gray-900' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Pengayuh Performance
+                Driver Performance
               </Link> */}
               {/* <Link 
                 to="/admin/customers" 
@@ -683,9 +683,9 @@ const AdminDashboard: React.FC = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="create-user" element={<CreateUser />} />
             <Route path="edit-user/:userId" element={<EditUser />} />
-            <Route path="create-pengayuh" element={<CreatePengayuh />} />
-            <Route path="pengayuh-performance" element={<PengayuhPerformance />} />
-            <Route path="pengayuh-detail/:id" element={<PengayuhDetail />} />
+            <Route path="create-driver" element={<CreateDriver />} />
+            <Route path="driver-performance" element={<DriverPerformance />} />
+            <Route path="driver-detail/:id" element={<DriverDetail />} />
             <Route path="customers" element={<CustomerManagement />} />
             <Route path="customer-detail/:id" element={<CustomerDetail />} />
             <Route path="analytics" element={<Analytics />} />

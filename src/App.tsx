@@ -8,7 +8,7 @@ import OrderPage from './pages/OrderPage';
 import PaymentPage from './pages/PaymentPage';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
-import PengayuhDashboard from './pages/PengayuhDashboard';
+import DriverDashboard from './pages/DriverDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -78,10 +78,10 @@ const AppContent: React.FC = () => {
             } 
           />
           <Route 
-            path="/pengayuh/*" 
+            path="/driver/*" 
             element={
               <ProtectedRoute userType="driver">
-                <PengayuhDashboard />
+                <DriverDashboard />
               </ProtectedRoute>
             } 
           />

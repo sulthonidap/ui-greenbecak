@@ -51,8 +51,8 @@ const UserManagement: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<'delete' | 'resetPassword' | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [selectedPengayuhCode, setSelectedPengayuhCode] = useState<string>('');
-  const [selectedPengayuhName, setSelectedPengayuhName] = useState<string>('');
+  const [selectedDriverCode, setSelectedDriverCode] = useState<string>('');
+  const [selectedDriverName, setSelectedDriverName] = useState<string>('');
   
   // Helper untuk format tanggal yang aman terhadap undefined/string
   const formatDate = (date: any) => {
@@ -242,15 +242,19 @@ const UserManagement: React.FC = () => {
 
   // Generate QR Code for driver
   const handleGenerateQR = (driverCode: string, driverName: string) => {
-    setSelectedPengayuhCode(driverCode);
-    setSelectedPengayuhName(driverName);
+    if (!driverCode) {
+      showError('Driver code tidak tersedia');
+      return;
+    }
+    setSelectedDriverCode(driverCode);
+    setSelectedDriverName(driverName);
     setShowQRModal(true);
   };
 
-  // Generate QR code value - link ke halaman pesan dengan pengayuh_code
+  // Generate QR code value - link ke halaman pesan dengan driver_code
   const generateQRValue = () => {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/pesan?code=${selectedPengayuhCode}`;
+    return `${baseUrl}/pesan?code=${selectedDriverCode}`;
   };
 
   // Download QR code as image
@@ -269,7 +273,7 @@ const UserManagement: React.FC = () => {
       ctx?.drawImage(img, 0, 0);
       const pngFile = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
-      downloadLink.download = `qrcode-${selectedPengayuhCode}.png`;
+      downloadLink.download = `qrcode-${selectedDriverCode}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
@@ -295,7 +299,7 @@ const UserManagement: React.FC = () => {
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'admin': return 'Admin';
-      case 'driver': return 'Pengayuh';
+      case 'driver': return 'Driver';
       case 'customer': return 'Customer';
       default: return role;
     }
@@ -395,7 +399,7 @@ const UserManagement: React.FC = () => {
           <div className="flex items-center">
             <Car className="w-8 h-8 text-purple-600 mr-3" />
             <div>
-              <p className="text-sm text-purple-600">Total Pengayuh</p>
+              <p className="text-sm text-purple-600">Total Driver</p>
               <p className="text-2xl font-bold text-purple-700">{drivers.length}</p>
             </div>
           </div>
@@ -460,7 +464,7 @@ const UserManagement: React.FC = () => {
               >
                 <option value="all">Semua Role</option>
                 <option value="admin">Admin</option>
-                <option value="driver">Pengayuh</option>
+                <option value="driver">Driver</option>
                 <option value="customer">Customer</option>
               </select>
             </div>
@@ -702,7 +706,7 @@ const UserManagement: React.FC = () => {
            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
              <div className="mt-3">
                <div className="flex items-center justify-between mb-4">
-                 <h3 className="text-lg font-medium text-gray-900">QR Code Pengayuh</h3>
+                 <h3 className="text-lg font-medium text-gray-900">QR Code Driver</h3>
                  <button
                    onClick={() => setShowQRModal(false)}
                    className="text-gray-400 hover:text-gray-600"
@@ -711,8 +715,8 @@ const UserManagement: React.FC = () => {
                  </button>
                </div>
                <div className="text-center">
-                 <p className="text-sm text-gray-600 mb-2">{selectedPengayuhName}</p>
-                 <p className="text-xs text-gray-500 mb-4">Kode Pengayuh: <span className="font-semibold">{selectedPengayuhCode}</span></p>
+                 <p className="text-sm text-gray-600 mb-2">{selectedDriverName}</p>
+                 <p className="text-xs text-gray-500 mb-4">Driver Code: <span className="font-semibold">{selectedDriverCode}</span></p>
                  <div className="flex justify-center mb-4 p-4 bg-white rounded-lg border-2 border-gray-200">
                    <QRCodeSVG
                      className="qr-code-svg"
@@ -723,7 +727,7 @@ const UserManagement: React.FC = () => {
                    />
                  </div>
                  <p className="text-xs text-gray-500 mb-4">
-                   Scan QR code ini untuk langsung ke halaman pesan dengan pengayuh code: <span className="font-semibold">{selectedPengayuhCode}</span>
+                   Scan QR code ini untuk langsung ke halaman pesan dengan driver code: <span className="font-semibold">{selectedDriverCode}</span>
                  </p>
                  <button
                    onClick={downloadQRCode}

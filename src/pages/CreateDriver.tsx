@@ -59,7 +59,7 @@ const CreateDriver: React.FC = () => {
       });
       
              // Redirect ke driver list dengan pesan sukses
-       navigate('/admin/drivers', { state: { message: 'Pengayuh berhasil ditambahkan!' } });
+       navigate('/admin/drivers', { state: { message: 'Driver berhasil ditambahkan!' } });
     } catch (error) {
       console.error('Error creating driver:', error);
     } finally {
@@ -79,17 +79,17 @@ const CreateDriver: React.FC = () => {
           className="flex items-center text-gray-600 hover:text-gray-800 mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Daftar Pengayuh
+          Kembali ke Daftar Driver
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Tambah Pengayuh Baru</h1>
-        <p className="text-gray-600 mt-2">Isi informasi lengkap pengayuh baru untuk sistem GreenBecak</p>
+        <h1 className="text-2xl font-bold text-gray-900">Tambah Driver Baru</h1>
+        <p className="text-gray-600 mt-2">Isi informasi lengkap driver baru untuk sistem GreenBecak</p>
       </div>
 
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center">
             <UserPlus className="w-6 h-6 text-green-600 mr-3" />
-            <h2 className="text-lg font-semibold text-gray-900">Informasi Pengayuh</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Informasi Driver</h2>
           </div>
         </div>
 
@@ -246,7 +246,7 @@ const CreateDriver: React.FC = () => {
               className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4 mr-2" />
-              {isSubmitting ? 'Menyimpan...' : 'Simpan Pengayuh'}
+              {isSubmitting ? 'Menyimpan...' : 'Simpan Driver'}
             </button>
           </div>
         </form>

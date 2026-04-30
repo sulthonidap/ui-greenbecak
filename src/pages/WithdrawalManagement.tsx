@@ -6,8 +6,8 @@ import { showSuccess, showError } from '../utils/toast';
 
 interface WithdrawalRequest {
   id: string;
-  pengayuhId: string;
-  pengayuhName: string;
+  driverId: string;
+  driverName: string;
   amount: number;
   requestDate: Date;
   status: 'pending' | 'approved' | 'rejected' | 'completed';
@@ -21,7 +21,7 @@ interface WithdrawalRequest {
     accountNumber: string;
     accountName: string;
   };
-  pengayuhBalance: number;
+  driverBalance: number;
   totalEarnings: number;
   previousWithdrawals: number;
 }
@@ -29,8 +29,8 @@ interface WithdrawalRequest {
 const mockWithdrawalRequests: WithdrawalRequest[] = [
   {
     id: 'W001',
-    pengayuhId: 'D001',
-    pengayuhName: 'Budi Santoso',
+    driverId: 'D001',
+    driverName: 'Budi Santoso',
     amount: 500000,
     requestDate: new Date('2024-12-19T10:30:00'),
     status: 'pending',
@@ -39,14 +39,14 @@ const mockWithdrawalRequests: WithdrawalRequest[] = [
       accountNumber: '1234567890',
       accountName: 'Budi Santoso'
     },
-    pengayuhBalance: 2450000,
+    driverBalance: 2450000,
     totalEarnings: 3120000,
     previousWithdrawals: 1200000
   },
   {
     id: 'W002',
-    pengayuhId: 'D002',
-    pengayuhName: 'Siti Rahma',
+    driverId: 'D002',
+    driverName: 'Siti Rahma',
     amount: 300000,
     requestDate: new Date('2024-12-18T14:20:00'),
     status: 'approved',
@@ -57,14 +57,14 @@ const mockWithdrawalRequests: WithdrawalRequest[] = [
       accountNumber: '081234567890',
       accountName: 'Siti Rahma'
     },
-    pengayuhBalance: 1890000,
+    driverBalance: 1890000,
     totalEarnings: 3340000,
     previousWithdrawals: 1500000
   },
   {
     id: 'W003',
-    pengayuhId: 'D003',
-    pengayuhName: 'Ahmad Reza',
+    driverId: 'D003',
+    driverName: 'Ahmad Reza',
     amount: 750000,
     requestDate: new Date('2024-12-17T16:45:00'),
     status: 'rejected',
@@ -76,14 +76,14 @@ const mockWithdrawalRequests: WithdrawalRequest[] = [
       accountNumber: '0987654321',
       accountName: 'Ahmad Reza'
     },
-    pengayuhBalance: 3200000,
+    driverBalance: 3200000,
     totalEarnings: 2860000,
     previousWithdrawals: 800000
   },
   {
     id: 'W004',
-    pengayuhId: 'D004',
-    pengayuhName: 'Dewi Lestari',
+    driverId: 'D004',
+    driverName: 'Dewi Lestari',
     amount: 400000,
     requestDate: new Date('2024-12-19T08:15:00'),
     status: 'pending',
@@ -92,14 +92,14 @@ const mockWithdrawalRequests: WithdrawalRequest[] = [
       accountNumber: '081234567891',
       accountName: 'Dewi Lestari'
     },
-    pengayuhBalance: 1800000,
+    driverBalance: 1800000,
     totalEarnings: 2680000,
     previousWithdrawals: 900000
   },
   {
     id: 'W005',
-    pengayuhId: 'D005',
-    pengayuhName: 'Joko Widodo',
+    driverId: 'D005',
+    driverName: 'Joko Widodo',
     amount: 250000,
     requestDate: new Date('2024-12-16T12:00:00'),
     status: 'approved',
@@ -110,7 +110,7 @@ const mockWithdrawalRequests: WithdrawalRequest[] = [
       accountNumber: '1122334455',
       accountName: 'Joko Widodo'
     },
-    pengayuhBalance: 950000,
+    driverBalance: 950000,
     totalEarnings: 1960000,
     previousWithdrawals: 1000000
   }
@@ -145,8 +145,8 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
       // Transform API response to match interface
       const transformedData: WithdrawalRequest[] = (response.withdrawals || []).map((w: any) => ({
         id: w.id?.toString() || `withdrawal-${Date.now()}`,
-        pengayuhId: w.pengayuh_id?.toString() || 'N/A',
-        pengayuhName: w.pengayuh?.name || w.pengayuh_name || 'Unknown Pengayuh',
+        driverId: w.driver_id?.toString() || 'N/A',
+        driverName: w.driver?.name || w.driver_name || 'Unknown Driver',
         amount: w.amount || 0,
         requestDate: w.created_at ? new Date(w.created_at) : new Date(),
         status: w.status || 'pending',
@@ -160,9 +160,9 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
           accountNumber: w.account_number || 'N/A',
           accountName: w.account_name || 'N/A'
         },
-        pengayuhBalance: w.pengayuh?.available_balance || w.pengayuh?.total_earnings || 0,
-        totalEarnings: w.pengayuh?.total_earnings || 0,
-        previousWithdrawals: w.pengayuh?.completed_withdrawals || 0
+        driverBalance: w.driver?.available_balance || w.driver?.total_earnings || 0,
+        totalEarnings: w.driver?.total_earnings || 0,
+        previousWithdrawals: w.driver?.completed_withdrawals || 0
       }));
 
       setRequests(transformedData);
@@ -254,7 +254,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
 
   const filteredRequests = requests.filter(request => {
     const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
-    const matchesSearch = request.pengayuhName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = request.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.id.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
@@ -294,7 +294,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
           : req
       ));
 
-      showSuccess('Withdrawal berhasil disetujui! Saldo pengayuh telah terpotong.');
+      showSuccess('Withdrawal berhasil disetujui! Saldo driver telah terpotong.');
     } catch (error: any) {
       console.error('Failed to approve withdrawal:', error);
       if (error.response?.status === 401) {
@@ -416,7 +416,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
             Kembali ke Financial Management
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Manajemen Penarikan</h1>
-          <p className="text-gray-600 mt-2">Kelola permintaan penarikan saldo pengayuh</p>
+          <p className="text-gray-600 mt-2">Kelola permintaan penarikan saldo driver</p>
         </div>
       )}
 
@@ -530,7 +530,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cari pengayuh atau ID..."
+                placeholder="Cari driver atau ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -584,7 +584,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pengayuh
+                  Driver
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Jumlah
@@ -612,14 +612,14 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
                         <Users className="w-4 h-4 text-green-600" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{request.pengayuhName}</div>
-                        <div className="text-sm text-gray-500">ID: {request.pengayuhId}</div>
+                        <div className="text-sm font-medium text-gray-900">{request.driverName}</div>
+                        <div className="text-sm text-gray-500">ID: {request.driverId}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{formatCurrency(request.amount)}</div>
-                    <div className="text-sm text-gray-500">Saldo: {formatCurrency(request.pengayuhBalance)}</div>
+                    <div className="text-sm text-gray-500">Saldo: {formatCurrency(request.driverBalance)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{request.bankAccount.bankName}</div>
@@ -806,11 +806,11 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Informasi Pengayuh</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">Informasi Driver</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Nama:</span> {selectedRequest.pengayuhName}</div>
-                    <div><span className="font-medium">ID Pengayuh:</span> {selectedRequest.pengayuhId}</div>
-                    <div><span className="font-medium">Saldo Saat Ini:</span> {formatCurrency(selectedRequest.pengayuhBalance)}</div>
+                    <div><span className="font-medium">Nama:</span> {selectedRequest.driverName}</div>
+                    <div><span className="font-medium">ID Driver:</span> {selectedRequest.driverId}</div>
+                    <div><span className="font-medium">Saldo Saat Ini:</span> {formatCurrency(selectedRequest.driverBalance)}</div>
                     <div><span className="font-medium">Total Pendapatan:</span> {formatCurrency(selectedRequest.totalEarnings)}</div>
                     <div><span className="font-medium">Penarikan Sebelumnya:</span> {formatCurrency(selectedRequest.previousWithdrawals)}</div>
                     <div><span className="font-medium">Persentase Penarikan:</span> {((selectedRequest.amount / selectedRequest.totalEarnings) * 100).toFixed(1)}%</div>
@@ -863,7 +863,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
                 <div className="space-y-2 text-sm">
                   <div><span className="font-medium">Total Pendapatan:</span> {formatCurrency(selectedRequest.totalEarnings)}</div>
                   <div><span className="font-medium">Penarikan Sebelumnya:</span> {formatCurrency(selectedRequest.previousWithdrawals)}</div>
-                  <div><span className="font-medium">Saldo Setelah Penarikan:</span> {formatCurrency(selectedRequest.pengayuhBalance - selectedRequest.amount)}</div>
+                  <div><span className="font-medium">Saldo Setelah Penarikan:</span> {formatCurrency(selectedRequest.driverBalance - selectedRequest.amount)}</div>
                 </div>
               </div>
 
@@ -890,7 +890,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
                        <CheckCircle className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                        <div>
                          <p className="font-medium mb-1">Transfer Dana Selesai</p>
-                         <p>Dana telah berhasil ditransfer ke rekening pengayuh. Proses withdrawal telah selesai.</p>
+                         <p>Dana telah berhasil ditransfer ke rekening driver. Proses withdrawal telah selesai.</p>
                        </div>
                      </div>
                    </div>
@@ -949,7 +949,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-600 mb-2">
-                  <strong>Pengayuh:</strong> {confirmRequest.pengayuhName}
+                  <strong>Driver:</strong> {confirmRequest.driverName}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   <strong>Jumlah:</strong> {formatCurrency(confirmRequest.amount)}
@@ -965,7 +965,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
                     <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
                     <div className="text-sm text-green-800">
                       <strong>Konfirmasi Persetujuan</strong>
-                      <p className="mt-1">Dengan menyetujui withdrawal ini, saldo pengayuh akan terpotong sebesar {formatCurrency(confirmRequest.amount)}.</p>
+                      <p className="mt-1">Dengan menyetujui withdrawal ini, saldo driver akan terpotong sebesar {formatCurrency(confirmRequest.amount)}.</p>
                     </div>
                   </div>
                 </div>
@@ -978,7 +978,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
                       <XCircle className="w-5 h-5 text-red-400 mr-2" />
                       <div className="text-sm text-red-800">
                         <strong>Konfirmasi Penolakan</strong>
-                        <p className="mt-1">Dengan menolak withdrawal ini, pengayuh akan menerima notifikasi penolakan.</p>
+                        <p className="mt-1">Dengan menolak withdrawal ini, driver akan menerima notifikasi penolakan.</p>
                       </div>
                     </div>
                   </div>
@@ -1003,7 +1003,7 @@ const WithdrawalManagement: React.FC<{ embedded?: boolean }> = ({ embedded = fal
                     <CheckCircle className="w-5 h-5 text-blue-400 mr-2" />
                     <div className="text-sm text-blue-800">
                       <strong>Konfirmasi Penyelesaian</strong>
-                      <p className="mt-1">Dengan menandai sebagai selesai, Anda mengkonfirmasi bahwa transfer dana telah dilakukan ke rekening pengayuh.</p>
+                      <p className="mt-1">Dengan menandai sebagai selesai, Anda mengkonfirmasi bahwa transfer dana telah dilakukan ke rekening driver.</p>
                     </div>
                   </div>
                 </div>

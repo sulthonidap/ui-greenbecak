@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link 
-                  to={userType === 'admin' ? '/admin' : '/pengayuh'} 
+                  to={userType === 'admin' ? '/admin' : '/driver'} 
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#047857] transition-colors"
                 >
                   Dashboard
@@ -93,7 +93,7 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link 
-                  to={userType === 'admin' ? '/admin' : '/pengayuh'} 
+                  to={userType === 'admin' ? '/admin' : '/driver'} 
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#047857] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >

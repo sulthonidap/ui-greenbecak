@@ -4,7 +4,7 @@ import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Users, Car, Calendar, 
 import WithdrawalManagement from './WithdrawalManagement';
 import { adminAPI } from '../services/api';
 
-interface PengayuhFinancialData {
+interface DriverFinancialData {
   id: string;
   name: string;
   currentBalance: number;
@@ -31,23 +31,23 @@ interface PengayuhFinancialData {
 const FinanceManagement: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'withdrawals'>('dashboard');
-  const [selectedPengayuh, setSelectedPengayuh] = useState<string>('');
+  const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('month');
-  const [data, setData] = useState<PengayuhFinancialData[]>([]);
+  const [data, setData] = useState<DriverFinancialData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showWithdrawalAlert, setShowWithdrawalAlert] = useState(false);
-  const [newWithdrawals, setNewWithdrawals] = useState<PengayuhFinancialData[]>([]);
+  const [newWithdrawals, setNewWithdrawals] = useState<DriverFinancialData[]>([]);
 
   // Fetch driver financial data from API
-  const fetchPengayuhFinancialData = async () => {
+  const fetchDriverFinancialData = async () => {
     try {
       setLoading(true);
       setError('');
       
       console.log('Fetching driver financial data...');
-      const response = await adminAPI.getPengayuhFinancialData();
-      console.log('Pengayuh financial data response:', response);
+      const response = await adminAPI.getDriverFinancialData();
+      console.log('Driver financial data response:', response);
       console.log('Response drivers:', response.drivers);
       
       // Validate response
@@ -56,7 +56,7 @@ const FinanceManagement: React.FC = () => {
       }
       
       // Transform API response to match interface
-      const transformedData: PengayuhFinancialData[] = response.drivers.map((driver: any) => ({
+      const transformedData: DriverFinancialData[] = response.drivers.map((driver: any) => ({
         id: driver.id.toString(),
         name: driver.name,
         currentBalance: driver.current_balance || 0,
@@ -107,8 +107,8 @@ const FinanceManagement: React.FC = () => {
       setData(transformedData);
       
       // Set first driver as selected if available
-      if (transformedData.length > 0 && !selectedPengayuh) {
-        setSelectedPengayuh(transformedData[0].id);
+      if (transformedData.length > 0 && !selectedDriver) {
+        setSelectedDriver(transformedData[0].id);
       }
       
     } catch (error: any) {
@@ -139,7 +139,7 @@ const FinanceManagement: React.FC = () => {
       // Fallback to mock data for development
       if (import.meta.env.DEV) {
         console.log('Using mock data as fallback...');
-        const mockData: PengayuhFinancialData[] = [
+        const mockData: DriverFinancialData[] = [
           {
             id: '1',
             name: 'Budi Santoso',
@@ -200,8 +200,8 @@ const FinanceManagement: React.FC = () => {
           }
         ];
         setData(mockData);
-        if (!selectedPengayuh) {
-          setSelectedPengayuh('1');
+        if (!selectedDriver) {
+          setSelectedDriver('1');
         }
       }
     } finally {
@@ -211,17 +211,17 @@ const FinanceManagement: React.FC = () => {
 
   // Load data on component mount
   useEffect(() => {
-    fetchPengayuhFinancialData();
+    fetchDriverFinancialData();
     
     // Auto-refresh every 2 minutes to check for new withdrawals
     const interval = setInterval(() => {
-      fetchPengayuhFinancialData();
+      fetchDriverFinancialData();
     }, 120000); // 2 minutes
     
     return () => clearInterval(interval);
   }, []);
 
-  const currentPengayuh = data.find(driver => driver.id === selectedPengayuh);
+  const currentDriver = data.find(driver => driver.id === selectedDriver);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -292,7 +292,7 @@ const FinanceManagement: React.FC = () => {
             <span className="text-red-800">{error}</span>
           </div>
           <button 
-            onClick={fetchPengayuhFinancialData}
+            onClick={fetchDriverFinancialData}
             className="mt-3 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
           >
             Coba Lagi
@@ -302,7 +302,7 @@ const FinanceManagement: React.FC = () => {
     );
   }
 
-  if (!currentPengayuh) {
+  if (!currentDriver) {
     return (
       <div className="p-6">
         <div className="text-center text-gray-500">
@@ -323,7 +323,7 @@ const FinanceManagement: React.FC = () => {
             <p className="text-gray-600 mt-2">Kelola keuangan dan saldo driver GreenBecak</p>
           </div>
           <button
-            onClick={fetchPengayuhFinancialData}
+            onClick={fetchDriverFinancialData}
             disabled={loading}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 flex items-center"
           >
@@ -386,7 +386,7 @@ const FinanceManagement: React.FC = () => {
             }`}
             onClick={() => setActiveTab('dashboard')}
           >
-            Keuangan & Saldo Pengayuh
+            Keuangan & Saldo Driver
           </button>
           <button
             className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${
@@ -403,13 +403,13 @@ const FinanceManagement: React.FC = () => {
 
       {activeTab === 'dashboard' ? (
         <>
-          {/* Pengayuh Selection */}
+          {/* Driver Selection */}
           <div className="mb-6">
             <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700">Pilih Pengayuh:</span>
+              <span className="text-sm font-medium text-gray-700">Pilih Driver:</span>
               <select
-                value={selectedPengayuh}
-                onChange={(e) => setSelectedPengayuh(e.target.value)}
+                value={selectedDriver}
+                onChange={(e) => setSelectedDriver(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 {data.map(driver => (
@@ -429,7 +429,7 @@ const FinanceManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Pengayuh Info Card */}
+          {/* Driver Info Card */}
           <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -437,20 +437,20 @@ const FinanceManagement: React.FC = () => {
                   <Users className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{currentPengayuh.name}</h2>
+                  <h2 className="text-xl font-bold text-gray-900">{currentDriver.name}</h2>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>ID: {currentPengayuh.id}</span>
+                    <span>ID: {currentDriver.id}</span>
                     <span>•</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      currentPengayuh.status === 'active' 
+                      currentDriver.status === 'active' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {currentPengayuh.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
+                      {currentDriver.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
                     </span>
                     <span>•</span>
                     <div className="flex items-center">
-                      <span>Rating: {currentPengayuh.rating}</span>
+                      <span>Rating: {currentDriver.rating}</span>
                       <Award className="w-4 h-4 text-yellow-500 ml-1" />
                     </div>
                   </div>
@@ -458,7 +458,7 @@ const FinanceManagement: React.FC = () => {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600">Total Perjalanan</p>
-                <p className="text-2xl font-bold text-blue-600">{currentPengayuh.totalTrips}</p>
+                <p className="text-2xl font-bold text-blue-600">{currentDriver.totalTrips}</p>
               </div>
             </div>
           </div>
@@ -472,12 +472,12 @@ const FinanceManagement: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Saldo Saat Ini</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentPengayuh.currentBalance)}</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentDriver.currentBalance)}</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-green-600">
                 <ArrowUpRight className="w-4 h-4 mr-1" />
-                <span>+{formatCurrency(currentPengayuh.thisMonthEarnings)} bulan ini</span>
+                <span>+{formatCurrency(currentDriver.thisMonthEarnings)} bulan ini</span>
               </div>
             </div>
 
@@ -488,16 +488,16 @@ const FinanceManagement: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Pendapatan Bulan Ini</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentPengayuh.thisMonthEarnings)}</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentDriver.thisMonthEarnings)}</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-blue-600">
-                {getGrowthRate(currentPengayuh.thisMonthEarnings, currentPengayuh.lastMonthEarnings) > 0 ? (
+                {getGrowthRate(currentDriver.thisMonthEarnings, currentDriver.lastMonthEarnings) > 0 ? (
                   <ArrowUpRight className="w-4 h-4 mr-1" />
                 ) : (
                   <ArrowDownRight className="w-4 h-4 mr-1" />
                 )}
-                <span>{getGrowthRate(currentPengayuh.thisMonthEarnings, currentPengayuh.lastMonthEarnings).toFixed(1)}% dari bulan lalu</span>
+                <span>{getGrowthRate(currentDriver.thisMonthEarnings, currentDriver.lastMonthEarnings).toFixed(1)}% dari bulan lalu</span>
               </div>
             </div>
 
@@ -508,7 +508,7 @@ const FinanceManagement: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Penarikan Pending</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentPengayuh.pendingWithdrawals)}</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentDriver.pendingWithdrawals)}</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-amber-600">
@@ -524,12 +524,12 @@ const FinanceManagement: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Rata-rata per Trip</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentPengayuh.averagePerTrip)}</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentDriver.averagePerTrip)}</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-purple-600">
                 <Zap className="w-4 h-4 mr-1" />
-                <span>{currentPengayuh.totalTrips} perjalanan total</span>
+                <span>{currentDriver.totalTrips} perjalanan total</span>
               </div>
             </div>
           </div>
@@ -543,7 +543,7 @@ const FinanceManagement: React.FC = () => {
                 <BarChart3 className="w-5 h-5 text-gray-400" />
               </div>
               <div className="space-y-3">
-                {currentPengayuh.monthlyEarnings.slice(-6).map((item, index) => (
+                {currentDriver.monthlyEarnings.slice(-6).map((item, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">{item.month}</span>
                     <div className="flex items-center space-x-4">
@@ -567,26 +567,26 @@ const FinanceManagement: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    {getWithdrawalStatusIcon(currentPengayuh.lastWithdrawal.status)}
+                    {getWithdrawalStatusIcon(currentDriver.lastWithdrawal.status)}
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {formatCurrency(currentPengayuh.lastWithdrawal.amount)}
+                        {formatCurrency(currentDriver.lastWithdrawal.amount)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {formatDate(currentPengayuh.lastWithdrawal.date)}
+                        {formatDate(currentDriver.lastWithdrawal.date)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      currentPengayuh.lastWithdrawal.status === 'approved' 
+                      currentDriver.lastWithdrawal.status === 'approved' 
                         ? 'bg-green-100 text-green-800'
-                        : currentPengayuh.lastWithdrawal.status === 'pending'
+                        : currentDriver.lastWithdrawal.status === 'pending'
                         ? 'bg-amber-100 text-amber-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {currentPengayuh.lastWithdrawal.status === 'approved' ? 'Disetujui' :
-                       currentPengayuh.lastWithdrawal.status === 'pending' ? 'Menunggu' : 'Ditolak'}
+                      {currentDriver.lastWithdrawal.status === 'approved' ? 'Disetujui' :
+                       currentDriver.lastWithdrawal.status === 'pending' ? 'Menunggu' : 'Ditolak'}
                     </span>
                   </div>
                 </div>
@@ -595,13 +595,13 @@ const FinanceManagement: React.FC = () => {
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <p className="text-sm text-green-600">Total Penarikan</p>
                     <p className="text-lg font-bold text-green-700">
-                      {formatCurrency(currentPengayuh.completedWithdrawals)}
+                      {formatCurrency(currentDriver.completedWithdrawals)}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-amber-50 rounded-lg">
                     <p className="text-sm text-amber-600">Pending</p>
                     <p className="text-lg font-bold text-amber-700">
-                      {formatCurrency(currentPengayuh.pendingWithdrawals)}
+                      {formatCurrency(currentDriver.pendingWithdrawals)}
                     </p>
                   </div>
                 </div>
@@ -618,7 +618,7 @@ const FinanceManagement: React.FC = () => {
               </button>
             </div>
             <div className="space-y-3">
-              {currentPengayuh.recentTransactions.map((transaction, index) => (
+              {currentDriver.recentTransactions.map((transaction, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     {getTransactionIcon(transaction.type)}

@@ -139,67 +139,15 @@ const mockPengayuhDetail: PengayuhDetail = {
 const PengayuhDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [pengayuh, setPengayuh] = useState<PengayuhDetail | null>(null);
+  const location = useLocation();
+  const [driver, setPengayuh] = useState<PengayuhDetail | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'trips' | 'customers'>('overview');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDetail = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-        const response = await adminAPI.getPengayuh(id);
-        const d = response.driver || response.pengayuh;
-        
-        if (d) {
-          // Fetch performance data for earnings etc
-          let performance = { total_earnings: 0, completed_orders: 0, rating: 0 };
-          try {
-            const perfResponse = await adminAPI.getPengayuhPerformance(id);
-            performance = perfResponse.performance || performance;
-          } catch (e) {
-            console.error('Failed to fetch performance:', e);
-          }
-
-          setPengayuh({
-            id: d.id?.toString() || d.driver_code,
-            name: d.name,
-            email: d.email,
-            phone: d.phone,
-            vehicleType: d.vehicle_type === 'andong' ? 'Delman' : 'Becak Listrik',
-            vehicleNumber: d.driver_code,
-            status: d.is_active ? 'active' : 'inactive',
-            rating: d.rating || performance.rating || 4.5,
-            totalTrips: d.total_trips || performance.completed_orders || 0,
-            totalEarnings: d.total_earnings || performance.total_earnings || 0,
-            joinDate: d.created_at,
-            lastActive: d.updated_at ? new Date(d.updated_at).toLocaleTimeString() : 'N/A',
-            location: d.address || 'Unknown',
-            isOnline: d.is_active,
-            trips: (d.orders || []).map((o: any) => ({
-              id: o.id?.toString(),
-              customerName: o.customer_name || 'Customer',
-              customerPhone: o.customer_phone || 'N/A',
-              pickupLocation: o.pickup_location,
-              destination: o.drop_location,
-              distance: `${o.distance || 0} km`,
-              price: o.price || 0,
-              status: o.status === 'completed' ? 'completed' : o.status === 'cancelled' ? 'cancelled' : 'ongoing',
-              date: o.created_at ? new Date(o.created_at).toISOString().split('T')[0] : 'N/A',
-              time: o.created_at ? new Date(o.created_at).toLocaleTimeString() : 'N/A',
-              rating: o.rating,
-              review: o.notes
-            }))
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch pengayuh detail:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDetail();
+    // Simulate API call to get driver detail
+    setTimeout(() => {
+      setPengayuh(mockPengayuhDetail);
+    }, 500);
   }, [id]);
 
   const formatCurrency = (amount: number) => {
@@ -253,21 +201,21 @@ const PengayuhDetail: React.FC = () => {
     );
   };
 
-  if (!pengayuh) {
+  if (!driver) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data pengayuh...</p>
+          <p className="mt-4 text-gray-600">Memuat data driver...</p>
         </div>
       </div>
     );
   }
 
-  const completedTrips = pengayuh.trips.filter(trip => trip.status === 'completed');
-  const ongoingTrips = pengayuh.trips.filter(trip => trip.status === 'ongoing');
-  const cancelledTrips = pengayuh.trips.filter(trip => trip.status === 'cancelled');
-  const uniqueCustomers = new Set(pengayuh.trips.map(trip => trip.customerName)).size;
+  const completedTrips = driver.trips.filter(trip => trip.status === 'completed');
+  const ongoingTrips = driver.trips.filter(trip => trip.status === 'ongoing');
+  const cancelledTrips = driver.trips.filter(trip => trip.status === 'cancelled');
+  const uniqueCustomers = new Set(driver.trips.map(trip => trip.customerName)).size;
   const averageRating = completedTrips.reduce((sum, trip) => sum + (trip.rating || 0), 0) / completedTrips.length;
 
   return (
@@ -277,7 +225,7 @@ const PengayuhDetail: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate('/admin/pengayuh-performance')}
+              onClick={() => navigate('/admin/driver-performance')}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -285,7 +233,7 @@ const PengayuhDetail: React.FC = () => {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Detail Pengayuh</h1>
-              <p className="text-gray-600">Informasi lengkap pengayuh dan riwayat perjalanan</p>
+              <p className="text-gray-600">Informasi lengkap driver dan riwayat perjalanan</p>
             </div>
           </div>
         </div>
@@ -297,31 +245,31 @@ const PengayuhDetail: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-2xl font-bold text-blue-600">
-                    {pengayuh.name.split(' ').map(n => n[0]).join('')}
+                    {driver.name.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{pengayuh.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{driver.name}</h2>
                   <div className="flex items-center space-x-2 mt-1">
-                    {getOnlineStatus(pengayuh.isOnline)}
-                    {getStatusBadge(pengayuh.status)}
-                    <span className="text-sm text-gray-500">• {pengayuh.lastActive}</span>
+                    {getOnlineStatus(driver.isOnline)}
+                    {getStatusBadge(driver.status)}
+                    <span className="text-sm text-gray-500">• {driver.lastActive}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{pengayuh.totalTrips}</div>
+                  <div className="text-2xl font-bold text-blue-600">{driver.totalTrips}</div>
                   <div className="text-sm text-gray-500">Total Trip</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{formatCurrency(pengayuh.totalEarnings)}</div>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(driver.totalEarnings)}</div>
                   <div className="text-sm text-gray-500">Total Pendapatan</div>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center space-x-1">
                     <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                    <span className="text-2xl font-bold text-gray-900">{pengayuh.rating}</span>
+                    <span className="text-2xl font-bold text-gray-900">{driver.rating}</span>
                   </div>
                   <div className="text-sm text-gray-500">Rating</div>
                 </div>
@@ -335,7 +283,7 @@ const PengayuhDetail: React.FC = () => {
                 <Mail className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Email</p>
-                  <p className="text-sm text-gray-500">{pengayuh.email}</p>
+                  <p className="text-sm text-gray-500">{driver.email}</p>
                 </div>
               </div>
               
@@ -343,7 +291,7 @@ const PengayuhDetail: React.FC = () => {
                 <Phone className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Telepon</p>
-                  <p className="text-sm text-gray-500">{pengayuh.phone}</p>
+                  <p className="text-sm text-gray-500">{driver.phone}</p>
                 </div>
               </div>
               
@@ -351,7 +299,7 @@ const PengayuhDetail: React.FC = () => {
                 <Car className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Kendaraan</p>
-                  <p className="text-sm text-gray-500">{pengayuh.vehicleType} - {pengayuh.vehicleNumber}</p>
+                  <p className="text-sm text-gray-500">{driver.vehicleType} - {driver.vehicleNumber}</p>
                 </div>
               </div>
               
@@ -359,7 +307,7 @@ const PengayuhDetail: React.FC = () => {
                 <MapPin className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Lokasi</p>
-                  <p className="text-sm text-gray-500">{pengayuh.location}</p>
+                  <p className="text-sm text-gray-500">{driver.location}</p>
                 </div>
               </div>
             </div>
@@ -410,7 +358,7 @@ const PengayuhDetail: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-blue-600">Total Trip</p>
-                      <p className="text-2xl font-bold text-blue-900">{pengayuh.totalTrips}</p>
+                      <p className="text-2xl font-bold text-blue-900">{driver.totalTrips}</p>
                     </div>
                     <Route className="w-8 h-8 text-blue-500" />
                   </div>
@@ -466,7 +414,7 @@ const PengayuhDetail: React.FC = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  {pengayuh.trips.map((trip) => (
+                  {driver.trips.map((trip) => (
                     <div key={trip.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -523,8 +471,8 @@ const PengayuhDetail: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Daftar Customer</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from(new Set(pengayuh.trips.map(trip => trip.customerName))).map((customerName, index) => {
-                    const customerTrips = pengayuh.trips.filter(trip => trip.customerName === customerName);
+                  {Array.from(new Set(driver.trips.map(trip => trip.customerName))).map((customerName, index) => {
+                    const customerTrips = driver.trips.filter(trip => trip.customerName === customerName);
                     const totalSpent = customerTrips.reduce((sum, trip) => sum + trip.price, 0);
                     const lastTrip = customerTrips[customerTrips.length - 1];
                     
