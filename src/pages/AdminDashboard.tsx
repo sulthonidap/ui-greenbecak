@@ -41,6 +41,11 @@ const Dashboard: React.FC = () => {
   const [drivers, setDrivers] = useState<DriverStatus[]>([]);
   const [dashboardOrders, setDashboardOrders] = useState<any[]>([]);
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
+  
+  // Pagination states
+  const [driverPage, setDriverPage] = useState(1);
+  const [orderPage, setOrderPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Fetch data from API
   useEffect(() => {
@@ -206,7 +211,7 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {drivers.map((driver) => (
+                {drivers.slice((driverPage - 1) * itemsPerPage, driverPage * itemsPerPage).map((driver) => (
                   <tr key={driver.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {driver.id}
@@ -249,6 +254,31 @@ const Dashboard: React.FC = () => {
               </tfoot>
             </table>
           </div>
+          
+          {/* Driver Pagination */}
+          {drivers.length > itemsPerPage && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="flex-1 flex justify-between items-center">
+                <button
+                  onClick={() => setDriverPage(p => Math.max(1, p - 1))}
+                  disabled={driverPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Sebelumnya
+                </button>
+                <span className="text-sm text-gray-700">
+                  Halaman <span className="font-medium">{driverPage}</span> dari <span className="font-medium">{Math.ceil(drivers.length / itemsPerPage)}</span>
+                </span>
+                <button
+                  onClick={() => setDriverPage(p => Math.min(Math.ceil(drivers.length / itemsPerPage), p + 1))}
+                  disabled={driverPage === Math.ceil(drivers.length / itemsPerPage)}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -280,7 +310,7 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {(dashboardOrders || []).slice(0, 5).map((order) => (
+                {(dashboardOrders || []).slice((orderPage - 1) * itemsPerPage, orderPage * itemsPerPage).map((order) => (
                   <tr key={order.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {order.orderNumber}
@@ -316,6 +346,31 @@ const Dashboard: React.FC = () => {
                 ))}
               </tbody>
             </table>
+
+            {/* Order Pagination */}
+            {dashboardOrders.length > itemsPerPage && (
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div className="flex-1 flex justify-between items-center">
+                  <button
+                    onClick={() => setOrderPage(p => Math.max(1, p - 1))}
+                    disabled={orderPage === 1}
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Sebelumnya
+                  </button>
+                  <span className="text-sm text-gray-700">
+                    Halaman <span className="font-medium">{orderPage}</span> dari <span className="font-medium">{Math.ceil(dashboardOrders.length / itemsPerPage)}</span>
+                  </span>
+                  <button
+                    onClick={() => setOrderPage(p => Math.min(Math.ceil(dashboardOrders.length / itemsPerPage), p + 1))}
+                    disabled={orderPage === Math.ceil(dashboardOrders.length / itemsPerPage)}
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Selanjutnya
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
