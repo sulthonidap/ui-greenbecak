@@ -123,6 +123,7 @@ const DriverHome: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showNewOrderNotification, setShowNewOrderNotification] = useState(false);
   const [updatingOnlineStatus, setUpdatingOnlineStatus] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
   const notifiedOrderIds = useRef<Set<string>>(new Set());
 
 
@@ -275,6 +276,14 @@ const DriverHome: React.FC = () => {
   const pendingOrders = driverOrders.filter(order => order.status === 'pending');
   const myActiveOrders = driverOrders.filter(order => order.status === 'accepted');
   const completedOrders = driverOrders.filter(order => order.status === 'completed');
+  
+  // Pagination for history
+  const historyItemsPerPage = 5;
+  const historyTotalPages = Math.ceil(completedOrders.length / historyItemsPerPage);
+  const paginatedHistory = completedOrders.slice(
+    (historyPage - 1) * historyItemsPerPage,
+    historyPage * historyItemsPerPage
+  );
 
   // Show notification when new orders arrive
   useEffect(() => {
@@ -750,7 +759,7 @@ const DriverHome: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {completedOrders.map((order) => (
+                    {paginatedHistory.map((order) => (
                       <tr key={order.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(order.completed_at).toLocaleString('id-ID')}
@@ -782,6 +791,29 @@ const DriverHome: React.FC = () => {
                   </tfoot>
                 </table>
               </div>
+              {completedOrders.length > 0 && historyTotalPages > 1 && (
+                <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 flex items-center justify-between">
+                  <div className="flex-1 flex justify-between items-center">
+                    <button
+                      onClick={() => setHistoryPage(prev => Math.max(prev - 1, 1))}
+                      disabled={historyPage === 1}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Sebelumnya
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      Halaman <span className="font-medium">{historyPage}</span> dari <span className="font-medium">{historyTotalPages}</span>
+                    </span>
+                    <button
+                      onClick={() => setHistoryPage(prev => Math.min(prev + 1, historyTotalPages))}
+                      disabled={historyPage === historyTotalPages}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Selanjutnya
+                    </button>
+                  </div>
+                </div>
+              )}
               {completedOrders.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   Belum ada perjalanan yang diselesaikan
