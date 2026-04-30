@@ -94,7 +94,7 @@ const playSuccessSound = () => {
 const DriverHome: React.FC = () => {
   const { orders, acceptOrder, completeOrder, cancelOrder } = useOrder();
   const { user } = useAuth();
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const [driverId, setDriverId] = useState<string>('1');
   
   console.log('Auth user data:', user);
@@ -131,9 +131,17 @@ const DriverHome: React.FC = () => {
   const fetchOnlineStatus = async () => {
     try {
       const locationResponse = await driverAPI.getOnlineStatus();
-      setIsOnline(locationResponse.is_online || false);
+      const currentStatus = locationResponse.is_online || false;
+      
+      // Force online if offline
+      if (!currentStatus) {
+        await driverAPI.setOnlineStatus(true);
+      }
+      setIsOnline(true);
     } catch (error) {
       console.log('Could not fetch online status:', error);
+      // Tetap anggap online meskipun gagal fetch
+      setIsOnline(true);
     }
   };
 
@@ -270,10 +278,12 @@ const DriverHome: React.FC = () => {
 
   // Show notification when new orders arrive
   useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
     if (pendingOrders.length > 0 && isOnline) {
       setShowNewOrderNotification(true);
       // Auto hide after 5 seconds
-      setTimeout(() => setShowNewOrderNotification(false), 5000);
+      timer = setTimeout(() => setShowNewOrderNotification(false), 5000);
 
         // Find orders that haven't been notified yet
         const newOrders = pendingOrders.filter(order => !notifiedOrderIds.current.has(order.id));
@@ -306,7 +316,11 @@ const DriverHome: React.FC = () => {
           newOrders.forEach(order => notifiedOrderIds.current.add(order.id));
         }
     }
-  }, [pendingOrders, isOnline]);
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [pendingOrders.length, isOnline]);
   
   console.log('Filtered orders:', {
     total: driverOrders.length,
@@ -472,8 +486,8 @@ const DriverHome: React.FC = () => {
 
       {/* New Order Notification */}
       {showNewOrderNotification && (
-        <div className="mb-6 p-4 bg-blue-50 text-blue-700 rounded-md flex items-center animate-pulse">
-          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-ping"></div>
+        <div className="mb-6 p-4 bg-blue-50 text-blue-700 rounded-md flex items-center shadow-sm border border-blue-200">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
           <span className="font-medium">Ada {pendingOrders.length} pesanan baru tersedia!</span>
           <button 
             onClick={() => setShowNewOrderNotification(false)}
@@ -485,31 +499,17 @@ const DriverHome: React.FC = () => {
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-2xl font-bold mb-2 sm:mb-0">Dashboard Driver</h1>
+        <h1 className="text-2xl font-bold mb-2 sm:mb-0">Dashboard Pengayuh</h1>
         <div className="flex items-center space-x-3">
           <div className="flex items-center">
             <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
-            <button
-              onClick={toggleOnlineStatus}
-              disabled={updatingOnlineStatus}
-              className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${
-                isOnline 
-                  ? 'bg-green-800 text-white hover:bg-green-600 disabled:bg-green-600' 
-                  : 'bg-gray-500 text-white hover:bg-gray-600 disabled:bg-gray-400'
-              }`}
+            <div
+              className="px-4 py-2 rounded-md text-sm font-medium flex items-center bg-green-800 text-white cursor-default"
+              title="Status Anda selalu Online"
             >
-              {updatingOnlineStatus ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <div className={`w-2 h-2 rounded-full mr-2 ${isOnline ? 'bg-green-300' : 'bg-gray-300'}`}></div>
-                  {isOnline ? 'Online' : 'Offline'}
-                </>
-              )}
-            </button>
+              <div className="w-2 h-2 rounded-full mr-2 bg-green-300"></div>
+              Online
+            </div>
           </div>
           <button
             onClick={fetchDriverData}
@@ -1619,7 +1619,7 @@ const DriverDashboard: React.FC = () => {
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">GT</span>
               </div>
-              <span className="ml-2 text-white text-lg font-semibold">Driver Panel</span>
+              <span className="ml-2 text-white text-lg font-semibold">Pengayuh Panel</span>
             </div>
           </div>
           <div className="flex flex-col flex-grow pt-5 overflow-y-auto">
