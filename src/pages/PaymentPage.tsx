@@ -25,6 +25,13 @@ const PaymentPage: React.FC = () => {
     return null;
   }
 
+  // Set default payment method based on tariff settings
+  React.useEffect(() => {
+    if (currentOrder && currentOrder.distanceOption.isNonTunai === false) {
+      setPaymentMethod('cash');
+    }
+  }, [currentOrder]);
+
   const handlePayment = async () => {
     // If orderId exists, call the API to update status in backend
     if (orderId) {
@@ -190,7 +197,9 @@ const PaymentPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-200">
                     <span className="text-gray-600">Metode Pembayaran</span>
-                    <span className="font-medium">QRIS (E-Wallet)</span>
+                    <span className="font-medium">
+                      {currentOrder.distanceOption.isNonTunai === false ? 'Tunai (Bayar di Tempat)' : 'QRIS (E-Wallet)'}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 mt-2">
                     <span className="text-gray-800 font-semibold">Total Pembayaran</span>
@@ -216,19 +225,21 @@ const PaymentPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center mb-4">
-                      <input
-                        id="qris"
-                        type="radio"
-                        name="payment-method"
-                        checked={paymentMethod === 'qris'}
-                        onChange={() => setPaymentMethod('qris')}
-                        className="w-4 h-4 text-green-800 focus:ring-green-400"
-                      />
-                      <label htmlFor="qris" className="ml-2 block text-sm font-medium text-gray-700">
-                        QRIS (OVO, GoPay, Dana, LinkAja, dll)
-                      </label>
-                    </div>
+                    {currentOrder.distanceOption.isNonTunai !== false && (
+                      <div className="flex items-center mb-4">
+                        <input
+                          id="qris"
+                          type="radio"
+                          name="payment-method"
+                          checked={paymentMethod === 'qris'}
+                          onChange={() => setPaymentMethod('qris')}
+                          className="w-4 h-4 text-green-800 focus:ring-green-400"
+                        />
+                        <label htmlFor="qris" className="ml-2 block text-sm font-medium text-gray-700">
+                          QRIS (OVO, GoPay, Dana, LinkAja, dll)
+                        </label>
+                      </div>
+                    )}
 
                     <div className="flex items-center mb-4">
                       <input

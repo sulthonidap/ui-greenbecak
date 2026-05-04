@@ -12,6 +12,7 @@ interface TariffFormData {
   destinations: string;
   isGojek: boolean;
   isSubsidi: boolean;
+  isNonTunai: boolean;
 }
 
 interface TariffOption {
@@ -25,6 +26,7 @@ interface TariffOption {
   isActive: boolean;
   isGojek: boolean;
   isSubsidi: boolean;
+  isNonTunai: boolean;
 }
 
 const TariffSettings: React.FC = () => {
@@ -44,7 +46,8 @@ const TariffSettings: React.FC = () => {
     price: '',
     destinations: '',
     isGojek: false,
-    isSubsidi: false
+    isSubsidi: false,
+    isNonTunai: false
   });
 
   // Auto hide success message after 3 seconds
@@ -83,6 +86,7 @@ const TariffSettings: React.FC = () => {
         isActive: t.is_active,
         isGojek: t.is_gojek,
         isSubsidi: t.is_subsidi,
+        isNonTunai: t.is_non_tunai !== undefined ? t.is_non_tunai : true,
       }));
       setTariffs(normalized);
       
@@ -107,6 +111,7 @@ const TariffSettings: React.FC = () => {
         isActive: true,
         isGojek: false,
         isSubsidi: false,
+        isNonTunai: true,
       })));
     } finally {
       setLoading(false);
@@ -135,7 +140,8 @@ const TariffSettings: React.FC = () => {
       price: tariff.price,
       destinations: tariff.destination,
       isGojek: tariff.isGojek,
-      isSubsidi: tariff.isSubsidi || false
+      isSubsidi: tariff.isSubsidi || false,
+      isNonTunai: tariff.isNonTunai !== undefined ? tariff.isNonTunai : true
     });
   };
 
@@ -148,7 +154,8 @@ const TariffSettings: React.FC = () => {
       price: '',
       destinations: '',
       isGojek: false,
-      isSubsidi: false
+      isSubsidi: false,
+      isNonTunai: false
     });
   };
 
@@ -162,7 +169,8 @@ const TariffSettings: React.FC = () => {
       price: '',
       destinations: '',
       isGojek: false,
-      isSubsidi: false
+      isSubsidi: false,
+      isNonTunai: false
     });
   };
 
@@ -181,6 +189,7 @@ const TariffSettings: React.FC = () => {
         is_active: true,
         is_gojek: formData.isGojek,
         is_subsidi: formData.isSubsidi,
+        is_non_tunai: formData.isNonTunai,
       };
       
       if (isEditing) {
@@ -200,6 +209,7 @@ const TariffSettings: React.FC = () => {
                 maxDistance: formData.maxDistance === '' ? 0 : formData.maxDistance,
                 isGojek: formData.isGojek,
                 isSubsidi: formData.isSubsidi,
+                isNonTunai: formData.isNonTunai,
               }
             : tariff
         ));
@@ -213,6 +223,7 @@ const TariffSettings: React.FC = () => {
           destination: formData.destinations,
           isGojek: formData.isGojek,
           isSubsidi: formData.isSubsidi,
+          isNonTunai: formData.isNonTunai,
         });
         
         setSuccessMessage('Tarif berhasil diperbarui!');
@@ -231,6 +242,7 @@ const TariffSettings: React.FC = () => {
           isActive: true,
           isGojek: formData.isGojek,
           isSubsidi: formData.isSubsidi,
+          isNonTunai: formData.isNonTunai,
         };
         
         // Update local state
@@ -250,7 +262,8 @@ const TariffSettings: React.FC = () => {
         price: '',
         destinations: '',
         isGojek: false,
-        isSubsidi: false
+        isSubsidi: false,
+        isNonTunai: false
       });
       
       setIsEditing(null);
@@ -539,6 +552,20 @@ const TariffSettings: React.FC = () => {
                       Subsidi (Dishub)
                     </label>
                   </div>
+
+                  <div className="flex items-center space-x-3 p-2 bg-white rounded-md border border-gray-300">
+                    <input
+                      type="checkbox"
+                      id="isNonTunai"
+                      name="isNonTunai"
+                      checked={formData.isNonTunai}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <label htmlFor="isNonTunai" className="text-sm font-medium text-gray-700">
+                      Aktifkan Pembayaran Non-Tunai
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3">
@@ -584,6 +611,9 @@ const TariffSettings: React.FC = () => {
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Subsidi?
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Non-Tunai?
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -634,6 +664,19 @@ const TariffSettings: React.FC = () => {
                         </span>
                       ) : (
                         <span className="text-gray-400">Tidak</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {tariff.isNonTunai ? (
+                        <span className="text-green-600 font-medium flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-600 rounded-full"></span>
+                          Ya
+                        </span>
+                      ) : (
+                        <span className="text-red-600 font-medium flex items-center gap-1">
+                          <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+                          Tidak
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

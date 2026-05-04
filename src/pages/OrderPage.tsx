@@ -15,6 +15,7 @@ interface TariffOption {
   isActive: boolean;
   isGojek: boolean;
   isSubsidi: boolean;
+  isNonTunai: boolean;
 }
 
 const OrderPage: React.FC = () => {
@@ -65,6 +66,7 @@ const OrderPage: React.FC = () => {
         isActive: t.is_active,
         isGojek: t.is_gojek,
         isSubsidi: t.is_subsidi,
+        isNonTunai: t.is_non_tunai !== undefined ? t.is_non_tunai : true,
       }));
       console.log('Normalized tariffs:', normalized);
       setTariffs(normalized);
@@ -84,6 +86,7 @@ const OrderPage: React.FC = () => {
         isActive: true,
         isGojek: false,
         isSubsidi: false,
+        isNonTunai: true,
       }));
 
       console.log('Using fallback tariffs from context:', fallbackTariffs);
@@ -186,6 +189,7 @@ const OrderPage: React.FC = () => {
         price: selectedOption.price,
         destination: selectedOption.destination,
         isSubsidi: selectedOption.isSubsidi,
+        isNonTunai: selectedOption.isNonTunai,
       };
 
       setOrder(pedicabCode, distanceOption, whatsappNumber);

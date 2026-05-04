@@ -9,6 +9,7 @@ export interface DistanceOption {
   destination: string;
   isGojek?: boolean;
   isSubsidi?: boolean;
+  isNonTunai?: boolean;
 }
 
 export interface Order {
