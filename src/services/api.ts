@@ -370,7 +370,7 @@ export const tariffsAPI = {
   },
   
   toggleTariffStatus: async (id: string, isActive: boolean) => {
-    const response = await api.put(`/admin/tariffs/${id}/active`, { IsActive: isActive });
+    const response = await api.put(`/admin/tariffs/${id}/active`, { is_active: isActive });
     return response.data;
   },
 };
