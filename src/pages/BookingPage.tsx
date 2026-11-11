@@ -181,8 +181,11 @@ const BookingPage: React.FC = () => {
 
   const requireCode = config ? !config.dispatch_enabled : true;
   const usingCode = codeStatus === 'found';
+  // Kode belum terdaftar tetap boleh dipakai (sama seperti /pesan), booking dicatat dengan kode itu
+  const unregisteredCode = codeStatus === 'not_found' && !!becakCode.trim();
+  const codeReady = usingCode || unregisteredCode;
   // Harga baru bisa dihitung kalau kode becak valid (atau boleh tanpa kode saat pencarian driver aktif)
-  const canQuote = usingCode || (!requireCode && !becakCode.trim());
+  const canQuote = codeReady || (!requireCode && !becakCode.trim());
 
   // ---------- Hitung harga ----------
   useEffect(() => {
@@ -196,7 +199,7 @@ const BookingPage: React.FC = () => {
     setQuoteError(null);
     const timer = setTimeout(async () => {
       try {
-        const q = await bookingAPI.getQuote(pickup, drop, vehicleType || undefined, usingCode ? becakCode.trim() : undefined);
+        const q = await bookingAPI.getQuote(pickup, drop, vehicleType || undefined, codeReady ? becakCode.trim() : undefined);
         if (id === quoteRequestId.current) setQuote(q);
       } catch (err) {
         if (id === quoteRequestId.current) {
@@ -208,14 +211,14 @@ const BookingPage: React.FC = () => {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [pickup, drop, vehicleType, canQuote, usingCode, becakCode]);
+  }, [pickup, drop, vehicleType, canQuote, codeReady, becakCode]);
 
   // ---------- Kirim ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
-    if (requireCode && !usingCode) return setSubmitError('Masukkan kode becak yang terdaftar (lihat stiker QR di becak)');
-    if (becakCode.trim() && codeStatus === 'not_found') return setSubmitError('Kode becak tidak terdaftar');
+    if (codeStatus === 'checking') return setSubmitError('Tunggu sebentar, kode becak sedang dicek');
+    if (requireCode && !codeReady) return setSubmitError('Masukkan kode becak (lihat stiker QR di becak)');
     if (!pickup || !drop) return setSubmitError('Pilih titik jemput dan tujuan terlebih dahulu');
     if (!quote) return setSubmitError(quoteError || 'Tunggu harga selesai dihitung');
     if (!name.trim()) return setSubmitError('Nama wajib diisi');
@@ -233,7 +236,7 @@ const BookingPage: React.FC = () => {
         customer_lat: customerPos?.lat,
         customer_lng: customerPos?.lng,
         expected_price: quote.price,
-        becak_code: usingCode ? becakCode.trim() : undefined,
+        becak_code: codeReady ? becakCode.trim() : undefined,
       });
       lastBookingStore.set(res.tracking_token);
       navigate(`/booking/status/${res.tracking_token}`);
@@ -481,7 +484,7 @@ const BookingPage: React.FC = () => {
                       codeStatus === 'found'
                         ? 'border-green-500 bg-green-50 focus:ring-green-600'
                         : codeStatus === 'not_found'
-                          ? 'border-red-400 bg-red-50 focus:ring-red-400'
+                          ? 'border-amber-400 bg-amber-50 focus:ring-amber-400'
                           : 'border-gray-300 focus:ring-green-600'
                     }`}
                   />
@@ -491,7 +494,9 @@ const BookingPage: React.FC = () => {
                 {codeStatus === 'found' ? (
                   <p className="mt-1 text-xs text-green-800">Becak milik <span className="font-semibold">{codeDriverName}</span> — pesanan langsung dikirim ke driver ini.</p>
                 ) : codeStatus === 'not_found' ? (
-                  <p className="mt-1 text-xs text-red-700">Kode becak tidak terdaftar. Periksa kembali kode pada stiker becak.</p>
+                  <p className="mt-1 text-xs text-amber-800">
+                    Kode ini belum terdaftar di sistem. Pesanan tetap dicatat untuk becak <span className="font-semibold">{becakCode.trim()}</span>, pilih jenis kendaraannya di bawah.
+                  </p>
                 ) : (
                   <p className="mt-1 text-xs text-gray-500">
                     {requireCode ? 'Lihat kode pada stiker QR di becak.' : 'Kosongkan untuk dicarikan becak terdekat.'}
@@ -521,7 +526,8 @@ const BookingPage: React.FC = () => {
                 </div>
               )}
 
-              {config.rates.length > 1 && !usingCode && !requireCode && (
+              {/* Pilih kendaraan: saat kode belum terdaftar (jenisnya tidak diketahui) atau tanpa kode */}
+              {config.rates.length > 1 && !usingCode && (unregisteredCode || !requireCode) && (
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Kendaraan</label>
                   <div className="grid grid-cols-2 gap-2">

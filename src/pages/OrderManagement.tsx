@@ -138,7 +138,8 @@ const OrderManagement: React.FC = () => {
         customerAddress: o.pickup_location || 'N/A',
         destination: o.drop_location || o.tariff?.destinations || 'N/A',
         tariffName: o.tariff?.name || 'N/A',
-        driverName: o.driver?.name || (o.order_type === 'booking' ? 'Belum ada driver' : 'Unknown Driver'),
+        // Kode becak belum terdaftar → "Unknown Driver" (sama seperti order langsung)
+        driverName: o.driver?.name || (o.order_type === 'booking' && !o.becak_code ? 'Belum ada driver' : 'Unknown Driver'),
         driverPhone: o.driver?.phone || 'N/A',
         vehicleType: o.driver?.vehicle_type === 'andong' ? 'delman' :
           o.driver?.vehicle_type === 'becak_listrik' ? 'becak-listrik' :

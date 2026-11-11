@@ -175,7 +175,7 @@ const BookingStatusPage: React.FC = () => {
               <li key={s.key} className="flex flex-col gap-1.5">
                 <span className={`h-1.5 rounded-full ${i <= stepIndex ? 'bg-green-600' : 'bg-gray-200'}`} />
                 <span className={`text-[11px] sm:text-xs ${i <= stepIndex ? 'text-green-800 font-medium' : 'text-gray-400'}`}>
-                  {s.key === 'pending' && booking.becak_code ? 'Menunggu driver' : s.label}
+                  {s.key === 'pending' && booking.becak_code ? (driver ? 'Menunggu driver' : 'Tercatat') : s.label}
                 </span>
               </li>
             ))}
@@ -214,7 +214,22 @@ const BookingStatusPage: React.FC = () => {
 
           <div className="md:col-span-2 space-y-4">
             {/* Kartu status */}
-            {booking.status === 'pending' && !driver && (
+            {booking.status === 'pending' && !driver && booking.becak_code && (
+              <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-xl">🛺</span>
+                  <div>
+                    <p className="font-semibold text-gray-900">Becak {booking.becak_code}</p>
+                    <p className="text-sm text-gray-500">Pesanan sudah tercatat</p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-gray-700">
+                  Tunjukkan halaman ini ke pengemudi becak. Bayar <span className="font-semibold">{formatRupiah(booking.price)}</span> langsung ke pengemudi setelah sampai.
+                </p>
+              </div>
+            )}
+
+            {booking.status === 'pending' && !driver && !booking.becak_code && (
               <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
                 <div className="flex items-center gap-3">
                   <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
