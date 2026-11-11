@@ -174,7 +174,9 @@ const BookingStatusPage: React.FC = () => {
             {STEPS.map((s, i) => (
               <li key={s.key} className="flex flex-col gap-1.5">
                 <span className={`h-1.5 rounded-full ${i <= stepIndex ? 'bg-green-600' : 'bg-gray-200'}`} />
-                <span className={`text-[11px] sm:text-xs ${i <= stepIndex ? 'text-green-800 font-medium' : 'text-gray-400'}`}>{s.label}</span>
+                <span className={`text-[11px] sm:text-xs ${i <= stepIndex ? 'text-green-800 font-medium' : 'text-gray-400'}`}>
+                  {s.key === 'pending' && booking.becak_code ? 'Menunggu driver' : s.label}
+                </span>
               </li>
             ))}
           </ol>
@@ -212,7 +214,7 @@ const BookingStatusPage: React.FC = () => {
 
           <div className="md:col-span-2 space-y-4">
             {/* Kartu status */}
-            {booking.status === 'pending' && (
+            {booking.status === 'pending' && !driver && (
               <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
                 <div className="flex items-center gap-3">
                   <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
@@ -239,6 +241,11 @@ const BookingStatusPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
+                {booking.status === 'pending' && (
+                  <p className="mt-3 flex items-center gap-1.5 text-sm text-amber-800">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Pesanan sudah dikirim ke driver, menunggu konfirmasi
+                  </p>
+                )}
                 {booking.status === 'accepted' && (
                   <p className="mt-3 flex items-center gap-1.5 text-sm text-green-800">
                     <Navigation className="w-4 h-4" />

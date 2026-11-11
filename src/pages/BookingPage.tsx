@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import {
   MapPin, Flag, Crosshair, Hand, Loader2, Building2, Star, Clock, Route, AlertCircle, ChevronRight, Pencil,
+  Bike, CheckCircle2,
 } from 'lucide-react';
 import PlaceSearch from '../components/booking/PlaceSearch';
 import {
@@ -37,7 +38,8 @@ const BookingPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hotelSlug = searchParams.get('hotel') || '';
-  const srcParam = searchParams.get('src') || '';
+  const codeParam = searchParams.get('code') || '';
+  const srcParam = searchParams.get('src') || (codeParam ? 'qr_becak' : '');
   const refParam = searchParams.get('ref') || '';
 
   const [config, setConfig] = useState<BookingConfig | null>(null);
@@ -49,6 +51,11 @@ const BookingPage: React.FC = () => {
   const [pinMode, setPinMode] = useState<Field | null>(null);
   const [locating, setLocating] = useState(false);
   const [customerPos, setCustomerPos] = useState<LatLng | null>(null);
+
+  // Kode becak (stiker QR): order langsung ke driver tersebut
+  const [becakCode, setBecakCode] = useState(codeParam);
+  const [codeStatus, setCodeStatus] = useState<'idle' | 'checking' | 'found' | 'not_found'>('idle');
+  const [codeDriverName, setCodeDriverName] = useState('');
 
   const [vehicleType, setVehicleType] = useState('');
   const [quote, setQuote] = useState<BookingQuote | null>(null);
@@ -149,10 +156,42 @@ const BookingPage: React.FC = () => {
     setPinMode(null);
   };
 
+  // ---------- Cek kode becak ----------
+  useEffect(() => {
+    const code = becakCode.trim();
+    if (!code) {
+      setCodeStatus('idle');
+      setCodeDriverName('');
+      return;
+    }
+    setCodeStatus('checking');
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await bookingAPI.checkBecakCode(code);
+        if (cancelled) return;
+        setCodeStatus(res.exists ? 'found' : 'not_found');
+        setCodeDriverName(res.exists ? res.name || '' : '');
+      } catch {
+        if (!cancelled) setCodeStatus('idle');
+      }
+    }, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [becakCode]);
+
+  const requireCode = config ? !config.dispatch_enabled : true;
+  const usingCode = codeStatus === 'found';
+  // Harga baru bisa dihitung kalau kode becak valid (atau boleh tanpa kode saat pencarian driver aktif)
+  const canQuote = usingCode || (!requireCode && !becakCode.trim());
+
   // ---------- Hitung harga ----------
   useEffect(() => {
-    if (!pickup || !drop || pickup.name === 'Memuat alamat...' || drop.name === 'Memuat alamat...') {
+    if (!canQuote || !pickup || !drop || pickup.name === 'Memuat alamat...' || drop.name === 'Memuat alamat...') {
       setQuote(null);
+      setQuoteLoading(false);
       return;
     }
     const id = ++quoteRequestId.current;
@@ -160,7 +199,7 @@ const BookingPage: React.FC = () => {
     setQuoteError(null);
     const timer = setTimeout(async () => {
       try {
-        const q = await bookingAPI.getQuote(pickup, drop, vehicleType || undefined);
+        const q = await bookingAPI.getQuote(pickup, drop, vehicleType || undefined, usingCode ? becakCode.trim() : undefined);
         if (id === quoteRequestId.current) setQuote(q);
       } catch (err) {
         if (id === quoteRequestId.current) {
@@ -172,12 +211,14 @@ const BookingPage: React.FC = () => {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [pickup, drop, vehicleType]);
+  }, [pickup, drop, vehicleType, canQuote, usingCode, becakCode]);
 
   // ---------- Kirim ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    if (requireCode && !usingCode) return setSubmitError('Masukkan kode becak yang terdaftar (lihat stiker QR di becak)');
+    if (becakCode.trim() && codeStatus === 'not_found') return setSubmitError('Kode becak tidak terdaftar');
     if (!pickup || !drop) return setSubmitError('Pilih titik jemput dan tujuan terlebih dahulu');
     if (!quote) return setSubmitError(quoteError || 'Tunggu harga selesai dihitung');
     if (!name.trim()) return setSubmitError('Nama wajib diisi');
@@ -198,6 +239,7 @@ const BookingPage: React.FC = () => {
         customer_lat: customerPos?.lat,
         customer_lng: customerPos?.lng,
         expected_price: quote.price,
+        becak_code: usingCode ? becakCode.trim() : undefined,
       });
       lastBookingStore.set(res.tracking_token);
       navigate(`/booking/status/${res.tracking_token}`);
@@ -334,7 +376,9 @@ const BookingPage: React.FC = () => {
         <div className="mb-5">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Booking Becak</h1>
           <p className="text-gray-600 mt-1 text-sm md:text-base">
-            Pilih titik jemput dan tujuan, becak terdekat akan datang menjemputmu.
+            {requireCode
+              ? 'Masukkan kode becak, pilih tujuan, dan harga dihitung per km sesuai rute.'
+              : 'Pilih titik jemput dan tujuan, becak terdekat akan datang menjemputmu.'}
           </p>
         </div>
 
@@ -426,6 +470,41 @@ const BookingPage: React.FC = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="md:col-span-2 md:order-2 space-y-4">
             <div className="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-4">
+              <div>
+                <label htmlFor="bk-code" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                  Kode becak {!requireCode && <span className="normal-case font-normal text-gray-400">(opsional)</span>}
+                </label>
+                <div className="relative">
+                  <Bike className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id="bk-code"
+                    value={becakCode}
+                    onChange={e => setBecakCode(e.target.value.toUpperCase())}
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    placeholder="Mis. BL001"
+                    className={`w-full pl-10 pr-10 py-2.5 border rounded-lg text-sm font-medium tracking-wide focus:outline-none focus:ring-2 focus:border-transparent ${
+                      codeStatus === 'found'
+                        ? 'border-green-500 bg-green-50 focus:ring-green-600'
+                        : codeStatus === 'not_found'
+                          ? 'border-red-400 bg-red-50 focus:ring-red-400'
+                          : 'border-gray-300 focus:ring-green-600'
+                    }`}
+                  />
+                  {codeStatus === 'checking' && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />}
+                  {codeStatus === 'found' && <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-600" />}
+                </div>
+                {codeStatus === 'found' ? (
+                  <p className="mt-1 text-xs text-green-800">Becak milik <span className="font-semibold">{codeDriverName}</span> — pesanan langsung dikirim ke driver ini.</p>
+                ) : codeStatus === 'not_found' ? (
+                  <p className="mt-1 text-xs text-red-700">Kode becak tidak terdaftar. Periksa kembali kode pada stiker becak.</p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {requireCode ? 'Lihat kode pada stiker QR di becak.' : 'Kosongkan untuk dicarikan becak terdekat.'}
+                  </p>
+                )}
+              </div>
+
               {renderField('pickup')}
               {renderField('drop')}
 
@@ -448,7 +527,7 @@ const BookingPage: React.FC = () => {
                 </div>
               )}
 
-              {config.rates.length > 1 && (
+              {config.rates.length > 1 && !usingCode && !requireCode && (
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Kendaraan</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -471,7 +550,12 @@ const BookingPage: React.FC = () => {
             </div>
 
             {/* Harga */}
-            {(quoteLoading || quote || quoteError) && (
+            {!canQuote && pickup && drop && (
+              <div className="bg-white rounded-xl shadow border border-gray-200 p-4 text-sm text-gray-600">
+                Masukkan kode becak untuk melihat harga.
+              </div>
+            )}
+            {canQuote && (quoteLoading || quote || quoteError) && (
               <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
                 {quoteLoading ? (
                   <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -501,6 +585,11 @@ const BookingPage: React.FC = () => {
                       {formatRupiah(quote.base_fare)} + {formatRupiah(quote.per_km)}/km · minimal {formatRupiah(quote.min_fare)}
                       {quote.distance_source === 'estimate' && ' · jarak perkiraan'}
                     </p>
+                    {quote.driver && (
+                      <p className="mt-2 text-xs text-gray-700">
+                        🛺 {quote.driver.name}{quote.driver.vehicle_number ? ` · ${quote.driver.vehicle_number}` : ''}
+                      </p>
+                    )}
                     {quote.nearby_drivers > 0 && (
                       <p className="mt-1 text-xs text-green-700">{quote.nearby_drivers} becak online di sekitar titik jemput</p>
                     )}

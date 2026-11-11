@@ -82,7 +82,16 @@ export interface BookingConfig {
   destinations: Destination[];
   service_area: ServiceArea;
   expiry_minutes: number;
+  /** false = kode becak wajib diisi (order langsung ke driver itu) */
+  dispatch_enabled: boolean;
   hotel?: Hotel;
+}
+
+export interface QuoteDriver {
+  code: string;
+  name: string;
+  vehicle_number: string;
+  vehicle_type: string;
 }
 
 export interface BookingQuote {
@@ -96,6 +105,8 @@ export interface BookingQuote {
   per_km: number;
   min_fare: number;
   nearby_drivers: number;
+  /** Ada kalau harga dihitung untuk kode becak tertentu */
+  driver?: QuoteDriver;
   /** Jalur sepanjang jalan [[lat, lng], ...]; tidak ada kalau jarak hanya perkiraan */
   route?: [number, number][];
 }
@@ -106,6 +117,7 @@ export interface BookingView {
   order_number: string;
   status: BookingStatus;
   status_label: string;
+  becak_code: string;
   pickup: { name: string; lat: number | null; lng: number | null };
   drop: { name: string; lat: number | null; lng: number | null };
   distance_km: number;
@@ -149,6 +161,8 @@ export interface CreateBookingPayload {
   customer_lat?: number;
   customer_lng?: number;
   expected_price?: number;
+  /** Kode becak: order langsung ke driver ini */
+  becak_code?: string;
 }
 
 /** Ambil pesan error dari respons API */
@@ -168,9 +182,17 @@ export const bookingAPI = {
     return res.data;
   },
 
-  getQuote: async (pickup: LatLng, drop: LatLng, vehicleType?: string): Promise<BookingQuote> => {
-    const res = await publicApi.post('/booking/quote', { pickup, drop, vehicle_type: vehicleType });
+  getQuote: async (pickup: LatLng, drop: LatLng, vehicleType?: string, becakCode?: string): Promise<BookingQuote> => {
+    const res = await publicApi.post('/booking/quote', {
+      pickup, drop, vehicle_type: vehicleType, becak_code: becakCode || undefined,
+    });
     return res.data.quote;
+  },
+
+  /** Cek kode becak (stiker QR) terdaftar atau tidak */
+  checkBecakCode: async (code: string): Promise<{ exists: boolean; name?: string; message?: string }> => {
+    const res = await publicApi.get(`/drivers/public/check/${encodeURIComponent(code)}`);
+    return res.data;
   },
 
   create: async (payload: CreateBookingPayload): Promise<{ tracking_token: string; booking: BookingView }> => {

@@ -73,7 +73,7 @@ const LandingPage: React.FC = () => {
                     Booking Becak
                     <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <span className="text-xs font-normal text-gray-500">Becak datang menjemput</span>
+                  <span className="text-xs font-normal text-gray-500">Pilih tujuan, harga per km</span>
                 </Link>
                 <Link
                   to="/pesan"

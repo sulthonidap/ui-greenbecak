@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useOrder, DistanceOption } from '../context/OrderContext';
 import { tariffsAPI, ordersAPI, driverAPI } from '../services/api';
 import { MapPin, CheckCircle, Phone, AlertCircle } from 'lucide-react';
@@ -331,6 +331,14 @@ const OrderPage: React.FC = () => {
                   {driverInfo.message}
                 </p>
               </div>
+            )}
+            {driverCheckStatus === 'found' && (
+              <Link
+                to={`/booking?code=${encodeURIComponent(pedicabCode)}&src=${encodeURIComponent(orderSource)}`}
+                className="mt-2 block text-xs text-green-700 underline"
+              >
+                Mau harga sesuai jarak tujuan? Pesan per km dengan becak ini →
+              </Link>
             )}
 
             {driverCheckStatus === 'not_found' && driverInfo && (
