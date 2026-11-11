@@ -682,4 +682,146 @@ export const locationAPI = {
   },
 };
 
+// ===== Order Jemput (harga per-km) =====
+
+export interface PricingSettings {
+  id?: number;
+  enabled: boolean;
+  base_fare: number;
+  per_km: number;
+  min_fare: number;
+  max_distance_km: number;
+  round_to: number;
+  night_surcharge_percent: number;
+  night_start: string;
+  night_end: string;
+  service_center_lat: number;
+  service_center_lng: number;
+  service_radius_km: number;
+}
+
+export interface LatLngPoint {
+  lat: number;
+  lng: number;
+}
+
+export interface PickupRoute {
+  distance_km: number;
+  duration_min: number;
+  geometry: [number, number][];
+  estimated?: boolean;
+}
+
+export interface PickupQuote {
+  price: number;
+  route: PickupRoute;
+  breakdown: {
+    base_fare: number;
+    distance_fare: number;
+    night_surcharge: number;
+    subtotal: number;
+    min_fare_applied: boolean;
+    total: number;
+    is_night: boolean;
+    distance_km: number;
+    per_km: number;
+    night_percentage: number;
+  };
+}
+
+export interface CreatePickupOrderPayload {
+  pickup_lat: number;
+  pickup_lng: number;
+  drop_lat: number;
+  drop_lng: number;
+  pickup_address: string;
+  drop_address: string;
+  pickup_note?: string;
+  customer_name: string;
+  customer_phone: string;
+  notes?: string;
+}
+
+export interface PickupTracking {
+  order_number: string;
+  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  payment_status: string;
+  price: number;
+  distance_km: number;
+  duration_min: number;
+  pickup_location: string;
+  pickup_note: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  drop_location: string;
+  drop_lat: number | null;
+  drop_lng: number | null;
+  customer_name: string;
+  created_at: string;
+  accepted_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  driver?: {
+    name: string;
+    phone: string;
+    driver_code: string;
+    lat?: number;
+    lng?: number;
+    last_seen?: string;
+  };
+}
+
+/** Ambil pesan error dari response API (axios) */
+export const apiErrorMessage = (error: unknown, fallback: string): string => {
+  const e = error as { response?: { data?: { error?: string; message?: string } }; code?: string };
+  if (e?.response?.data?.error) return e.response.data.error;
+  if (e?.response?.data?.message) return e.response.data.message;
+  if (e?.code === 'ERR_NETWORK') return 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
+  return fallback;
+};
+
+export const pickupAPI = {
+  getPricing: async (): Promise<PricingSettings> => {
+    const response = await publicApi.get('/pricing/public');
+    return response.data.pricing;
+  },
+
+  quote: async (pickup: LatLngPoint, drop: LatLngPoint): Promise<PickupQuote> => {
+    const response = await publicApi.post('/orders/pickup/quote', {
+      pickup_lat: pickup.lat,
+      pickup_lng: pickup.lng,
+      drop_lat: drop.lat,
+      drop_lng: drop.lng,
+    });
+    return response.data;
+  },
+
+  createOrder: async (payload: CreatePickupOrderPayload): Promise<{ order_number: string; tracking_token: string; price: number; distance_km: number }> => {
+    const response = await publicApi.post('/orders/pickup', payload);
+    return response.data;
+  },
+
+  track: async (token: string): Promise<PickupTracking> => {
+    const response = await publicApi.get(`/orders/pickup/${token}`);
+    return response.data.order;
+  },
+
+  cancel: async (token: string) => {
+    const response = await publicApi.post(`/orders/pickup/${token}/cancel`, {});
+    return response.data;
+  },
+};
+
+export const pricingAdminAPI = {
+  get: async (): Promise<PricingSettings> => {
+    const response = await api.get('/admin/pricing');
+    return response.data.pricing;
+  },
+
+  update: async (settings: PricingSettings): Promise<PricingSettings> => {
+    const response = await api.put('/admin/pricing', settings);
+    return response.data.pricing;
+  },
+};
+
 export default api;

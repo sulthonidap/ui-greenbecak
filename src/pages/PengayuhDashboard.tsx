@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useOrder, Order } from '../context/OrderContext';
 import { driverAPI, authAPI } from '../services/api';
+import DriverPickupInfo from '../components/pickup/DriverPickupInfo';
 
 const playNotificationSound = () => {
   try {
@@ -563,6 +564,7 @@ const DriverHome: React.FC = () => {
                       </div>
                       <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded">Menunggu</span>
                     </div>
+                    <DriverPickupInfo order={order} />
                     <div className="mb-4 space-y-2">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
@@ -650,6 +652,7 @@ const DriverHome: React.FC = () => {
                       <p className="text-gray-700"><span className="font-medium">Jarak:</span> {order.distance || 0} km</p>
                       <p className="text-gray-700"><span className="font-medium">Biaya:</span> Rp {(order.price || 0).toLocaleString('id-ID')}</p>
                     </div>
+                    <DriverPickupInfo order={order} active />
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleCompleteConfirmation(order.id)}

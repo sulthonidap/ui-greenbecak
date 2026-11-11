@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useOrder, DistanceOption } from '../context/OrderContext';
-import { tariffsAPI, ordersAPI, driverAPI } from '../services/api';
-import { MapPin, CheckCircle, Phone, AlertCircle } from 'lucide-react';
+import { tariffsAPI, ordersAPI, driverAPI, pickupAPI, PricingSettings } from '../services/api';
+import { MapPin, CheckCircle, Phone, AlertCircle, QrCode, Navigation, ChevronRight } from 'lucide-react';
+import PickupOrderForm, { ACTIVE_PICKUP_KEY } from '../components/pickup/PickupOrderForm';
+
+type OrderMode = 'scan' | 'jemput';
 
 interface TariffOption {
   id: string;
@@ -33,6 +36,35 @@ const OrderPage: React.FC = () => {
   const [driverCheckStatus, setDriverCheckStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
   const [driverInfo, setDriverInfo] = useState<{ name: string; message: string } | null>(null);
   const navigate = useNavigate();
+  const [pricing, setPricing] = useState<PricingSettings | null>(null);
+  const [mode, setMode] = useState<OrderMode>(() =>
+    searchParams.get('mode') === 'jemput' && !searchParams.get('code') ? 'jemput' : 'scan'
+  );
+  const [activePickupToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(ACTIVE_PICKUP_KEY);
+    } catch {
+      return null;
+    }
+  });
+
+  // Pengaturan mode jemput (harga per-km). Kalau gagal / nonaktif, hanya mode scan yang tampil.
+  useEffect(() => {
+    pickupAPI
+      .getPricing()
+      .then(setPricing)
+      .catch(() => setPricing(null));
+  }, []);
+  const pickupEnabled = !!pricing?.enabled;
+
+  const switchMode = (next: OrderMode) => {
+    setMode(next);
+    setError('');
+    const params = new URLSearchParams(searchParams);
+    if (next === 'jemput') params.set('mode', 'jemput');
+    else params.delete('mode');
+    navigate({ search: params.toString() }, { replace: true });
+  };
 
   // Read code parameter from URL and auto-fill pedicab code
   useEffect(() => {
@@ -252,9 +284,50 @@ const OrderPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6 text-white relative" style={{ backgroundColor: themeColor }}>
           <h1 className="text-2xl font-bold">Pesan Becak</h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Isi formulir di bawah untuk memesan perjalanan Anda</p>
+          <p style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            {mode === 'jemput' && pickupEnabled
+              ? 'Tentukan lokasi jemput dan tujuan, pengayuh akan datang menjemput'
+              : 'Isi formulir di bawah untuk memesan perjalanan Anda'}
+          </p>
         </div>
 
+        {activePickupToken && (
+          <Link
+            to={`/pesanan/${activePickupToken}`}
+            className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 bg-emerald-50 border-b border-emerald-100 text-sm text-emerald-800"
+          >
+            <span>Anda punya pesanan jemput yang sedang berjalan</span>
+            <span className="flex items-center font-medium whitespace-nowrap">Lihat <ChevronRight size={16} /></span>
+          </Link>
+        )}
+
+        {pickupEnabled && (
+          <div className="px-4 sm:px-6 pt-5">
+            <div className="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-lg" role="tablist" aria-label="Cara pesan">
+              {([
+                { key: 'scan', label: 'Sudah di becak', icon: QrCode },
+                { key: 'jemput', label: 'Jemput saya', icon: Navigation },
+              ] as const).map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === key}
+                  onClick={() => switchMode(key)}
+                  className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-colors ${
+                    mode === key ? 'bg-white shadow text-emerald-800' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon size={16} /> {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {mode === 'jemput' && pricing && pickupEnabled ? (
+          <PickupOrderForm pricing={pricing} />
+        ) : (
         <form onSubmit={handleSubmit} className="p-6">
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-500 rounded-md">
@@ -433,6 +506,7 @@ const OrderPage: React.FC = () => {
             )}
           </button>
         </form>
+        )}
       </div>
     </div>
   );

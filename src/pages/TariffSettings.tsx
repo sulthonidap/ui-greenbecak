@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DollarSign, Save, Plus, Trash2, Edit3 } from 'lucide-react';
 import { tariffsAPI } from '../services/api';
 import { useOrder } from '../context/OrderContext';
+import PerKmPricingSettings from '../components/pickup/PerKmPricingSettings';
 
 interface TariffFormData {
   name: string;
@@ -405,6 +406,8 @@ const TariffSettings: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">Pengaturan Tarif</h1>
         <p className="text-gray-600 mt-2">Kelola tarif untuk berbagai jarak perjalanan GreenBecak</p>
       </div>
+
+      <PerKmPricingSettings />
 
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
