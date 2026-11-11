@@ -13,6 +13,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import NotFound from './pages/NotFound';
+import BookingPage from './pages/BookingPage';
+import BookingStatusPage from './pages/BookingStatusPage';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -68,6 +70,8 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/pesan" element={<OrderPage />} />
           <Route path="/pembayaran" element={<PaymentPage />} />
+          <Route path="/booking" element={<BookingPage />} />
+          <Route path="/booking/status/:token" element={<BookingStatusPage />} />
           <Route path="/login" element={<Login />} />
           <Route 
             path="/admin/*" 

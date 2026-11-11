@@ -427,7 +427,8 @@ const UserManagement: React.FC = () => {
 
   const downloadStaticQR = async () => {
     try {
-      const staticUrl = "https://becakjogja.id/pesan";
+      // ?src=qr-statis supaya order dari QR ini tercatat sumbernya
+      const staticUrl = "https://becakjogja.id/pesan?src=qr-statis";
       setBulkQRValue(staticUrl);
       
       showSuccess('Menyiapkan QR Statis...');

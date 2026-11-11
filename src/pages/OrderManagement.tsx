@@ -74,7 +74,22 @@ interface Order {
   becakCode?: string;
   tariffId?: number;
   tariffName?: string;
+  orderType: 'langsung' | 'booking';
+  source: string; // qr_becak, qr_hotel, qr_statis, web, ...
+  sourceRef?: string;
+  hotelName?: string;
+  pickupName?: string;
 }
+
+const SOURCE_LABELS: Record<string, string> = {
+  qr_becak: 'QR Becak',
+  qr_hotel: 'QR Hotel',
+  qr_statis: 'QR Statis',
+  web: 'Website',
+  '': 'Tidak tercatat',
+};
+
+const sourceLabel = (s: string) => SOURCE_LABELS[s] ?? s.replace(/_/g, ' ');
 
 
 const OrderManagement: React.FC = () => {
@@ -87,6 +102,8 @@ const OrderManagement: React.FC = () => {
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending' | 'paid' | 'failed'>('all');
   const [vehicleFilter, setVehicleFilter] = useState<'all' | 'becak-listrik' | 'delman'>('all');
   const [tariffFilter, setTariffFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'langsung' | 'booking'>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [datePreset, setDatePreset] = useState<DatePreset>('today');
   const [dateFrom, setDateFrom] = useState<string>(() => getPresetRange('today').from);
@@ -121,7 +138,7 @@ const OrderManagement: React.FC = () => {
         customerAddress: o.pickup_location || 'N/A',
         destination: o.drop_location || o.tariff?.destinations || 'N/A',
         tariffName: o.tariff?.name || 'N/A',
-        driverName: o.driver?.name || 'Unknown Driver',
+        driverName: o.driver?.name || (o.order_type === 'booking' ? 'Belum ada driver' : 'Unknown Driver'),
         driverPhone: o.driver?.phone || 'N/A',
         vehicleType: o.driver?.vehicle_type === 'andong' ? 'delman' :
           o.driver?.vehicle_type === 'becak_listrik' ? 'becak-listrik' :
@@ -130,7 +147,13 @@ const OrderManagement: React.FC = () => {
         vehicleCode: o.becak_code || o.driver?.vehicle_number || o.driver?.driver_code || 'N/A',
         distance: o.distance ? `${o.distance} km` : 'N/A',
         price: o.price || 0,
-        status: o.status || 'pending',
+        // picked_up (booking: penumpang sudah dijemput) ditampilkan sebagai "Sedang Berjalan"
+        status: o.status === 'picked_up' ? 'ongoing' : (o.status || 'pending'),
+        orderType: o.order_type === 'booking' ? 'booking' : 'langsung',
+        source: o.source || '',
+        sourceRef: o.source_ref || undefined,
+        hotelName: o.hotel?.name || undefined,
+        pickupName: o.pickup_location || undefined,
         paymentStatus: o.payment_status || 'pending',
         orderDate,
         orderDateKey: toWibDateKey(orderDate),
@@ -194,7 +217,10 @@ const OrderManagement: React.FC = () => {
     const matchesVehicle = vehicleFilter === 'all' || order.vehicleType === vehicleFilter;
     const matchesTariff = tariffFilter === 'all' || order.tariffName === tariffFilter;
     
-    return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesTariff;
+    const matchesType = typeFilter === 'all' || order.orderType === typeFilter;
+    const matchesSource = sourceFilter === 'all' || order.source === sourceFilter;
+
+    return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesTariff && matchesType && matchesSource;
   });
 
   // Pagination logic
@@ -206,7 +232,10 @@ const OrderManagement: React.FC = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, paymentFilter, vehicleFilter, tariffFilter, dateFrom, dateTo, itemsPerPage]);
+  }, [searchTerm, statusFilter, paymentFilter, vehicleFilter, tariffFilter, typeFilter, sourceFilter, dateFrom, dateTo, itemsPerPage]);
+
+  // Pilihan sumber diambil dari data yang ada
+  const sourceOptions = Array.from(new Set(orders.map(o => o.source))).sort();
 
   const periodLabel = !dateFrom && !dateTo
     ? 'Semua tanggal'
@@ -275,16 +304,20 @@ const OrderManagement: React.FC = () => {
       14, 38
     );
 
-    const tableColumn = ['No', 'No Order', 'Waktu Order (WIB)', 'Customer', 'No HP', 'Driver', 'Kode Becak', 'Tarif/Jarak', 'Status', 'Pembayaran', 'Total (Rp)'];
+    const tableColumn = ['No', 'No Order', 'Waktu Order (WIB)', 'Tipe', 'Sumber', 'Customer', 'No HP', 'Driver', 'Kode Becak', 'Tarif / Rute', 'Status', 'Pembayaran', 'Total (Rp)'];
     const tableRows = filteredOrders.map((order, i) => [
       i + 1,
       order.orderNumber,
       formatDate(order.orderDate),
+      order.orderType === 'booking' ? 'Booking' : 'Langsung',
+      order.hotelName ? `${sourceLabel(order.source)} (${order.hotelName})` : sourceLabel(order.source),
       order.customerName,
       order.customerPhone,
       order.driverName,
       order.vehicleCode,
-      order.tariffName && order.tariffName !== 'N/A' ? order.tariffName : order.distance,
+      order.orderType === 'booking'
+        ? `${order.pickupName || '-'} → ${order.destination} (${order.distance})`
+        : order.tariffName && order.tariffName !== 'N/A' ? order.tariffName : order.distance,
       getStatusBadge(order.status).text,
       getPaymentBadge(order.paymentStatus).text,
       order.price.toLocaleString('id-ID'),
@@ -293,13 +326,13 @@ const OrderManagement: React.FC = () => {
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      foot: [['', '', '', '', '', '', '', '', '', 'TOTAL', filteredTotal.toLocaleString('id-ID')]],
+      foot: [['', '', '', '', '', '', '', '', '', '', '', 'TOTAL', filteredTotal.toLocaleString('id-ID')]],
       startY: 44,
       theme: 'grid',
       styles: { fontSize: 7 },
       headStyles: { fillColor: [21, 128, 61] }, // bg-green-700
       footStyles: { fillColor: [240, 253, 244], textColor: [20, 83, 45], fontStyle: 'bold' },
-      columnStyles: { 0: { halign: 'right' }, 10: { halign: 'right' } },
+      columnStyles: { 0: { halign: 'right' }, 12: { halign: 'right' } },
     });
 
     doc.save(`Rekap_Order_GreenBecak_${exportFileSuffix}.pdf`);
@@ -307,7 +340,7 @@ const OrderManagement: React.FC = () => {
 
   // CSV dengan pemisah ";" + BOM UTF-8 supaya langsung rapi saat dibuka di Excel (locale Indonesia)
   const exportToExcel = () => {
-    const header = ['No', 'No Order', 'Tanggal (WIB)', 'Jam (WIB)', 'Customer', 'No HP', 'Driver', 'No HP Driver', 'Kode Becak', 'Tarif', 'Jarak (km)', 'Tujuan', 'Status', 'Pembayaran', 'Harga (Rp)', 'Waktu Diterima', 'Waktu Selesai'];
+    const header = ['No', 'No Order', 'Tanggal (WIB)', 'Jam (WIB)', 'Tipe', 'Sumber', 'Ref Sumber', 'Hotel', 'Customer', 'No HP', 'Driver', 'No HP Driver', 'Kode Becak', 'Tarif', 'Jarak (km)', 'Jemput', 'Tujuan', 'Status', 'Pembayaran', 'Harga (Rp)', 'Waktu Diterima', 'Waktu Selesai'];
     const timeFormatter = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: WIB_TZ });
     // Bungkus nomor HP sebagai teks agar angka 0 di depan tidak hilang di Excel
     const asText = (v: string) => (v && v !== 'N/A' ? `="${v}"` : '');
@@ -317,6 +350,10 @@ const OrderManagement: React.FC = () => {
       order.orderNumber,
       order.orderDateKey,
       timeFormatter.format(order.orderDate),
+      order.orderType === 'booking' ? 'Booking' : 'Langsung',
+      sourceLabel(order.source),
+      order.sourceRef || '',
+      order.hotelName || '',
       order.customerName,
       asText(order.customerPhone),
       order.driverName,
@@ -324,6 +361,7 @@ const OrderManagement: React.FC = () => {
       order.vehicleCode,
       order.tariffName && order.tariffName !== 'N/A' ? order.tariffName : '',
       order.distance.replace(' km', '').replace('N/A', ''),
+      order.pickupName && order.pickupName !== 'N/A' ? order.pickupName : '',
       order.destination !== 'N/A' ? order.destination : '',
       getStatusBadge(order.status).text,
       getPaymentBadge(order.paymentStatus).text,
@@ -551,8 +589,33 @@ const OrderManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
-              <div className="md:col-span-2 lg:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as 'all' | 'langsung' | 'booking')}
+                  aria-label="Tipe order"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="all">Semua Tipe</option>
+                  <option value="langsung">Langsung (QR becak)</option>
+                  <option value="booking">Booking</option>
+                </select>
+              </div>
+              <div>
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  aria-label="Sumber order"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="all">Semua Sumber</option>
+                  {sourceOptions.map(s => (
+                    <option key={s || 'none'} value={s}>{sourceLabel(s)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
@@ -621,6 +684,8 @@ const OrderManagement: React.FC = () => {
                     setPaymentFilter('all');
                     setVehicleFilter('all');
                     setTariffFilter('all');
+                    setTypeFilter('all');
+                    setSourceFilter('all');
                     applyPreset('all');
                   }}
                   className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
@@ -659,6 +724,18 @@ const OrderManagement: React.FC = () => {
                       <div>
                         <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
                         <div className="text-sm text-gray-500">{formatDate(order.orderDate)}</div>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                            order.orderType === 'booking' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {order.orderType === 'booking' ? 'Booking' : 'Langsung'}
+                          </span>
+                          {order.source && (
+                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-amber-50 text-amber-800" title={order.sourceRef || undefined}>
+                              {sourceLabel(order.source)}{order.hotelName ? ` · ${order.hotelName}` : ''}
+                            </span>
+                          )}
+                        </div>
                         {order.pickupTime && (
                           <div className="text-xs text-gray-400">
                             Pickup: {formatDate(order.pickupTime)}
@@ -686,7 +763,9 @@ const OrderManagement: React.FC = () => {
 
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{order.driverName} - {order.vehicleCode}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {order.driverName}{order.vehicleCode && order.vehicleCode !== 'N/A' ? ` - ${order.vehicleCode}` : ''}
+                          </div>
                 
                           
                         </div>
@@ -695,7 +774,13 @@ const OrderManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm text-gray-900">{order.distance}</div>
-                        <div className="text-sm text-gray-500">{order.destination}</div>
+                        {order.orderType === 'booking' ? (
+                          <div className="text-sm text-gray-500 max-w-xs whitespace-normal">
+                            {order.pickupName || '-'} <span className="text-gray-400">→</span> {order.destination}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">{order.destination}</div>
+                        )}
                         <div className="text-sm font-medium text-gray-900">{formatCurrency(order.price)}</div>
                         {order.tariffName && order.tariffName !== 'N/A' && (
                           <div className="text-xs text-blue-600 mt-1 font-medium">{order.tariffName}</div>

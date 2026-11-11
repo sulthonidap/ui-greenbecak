@@ -64,13 +64,26 @@ const LandingPage: React.FC = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center md:justify-start animate-fade-in-up animation-delay-600">
-                <Link 
-                  to="/pesan" 
-                  className="group inline-flex items-center justify-center bg-white font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-3xl hover:scale-105 text-sm sm:text-base"
+                <Link
+                  to="/booking"
+                  className="group inline-flex flex-col items-start justify-center bg-white font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-3xl hover:scale-105 text-sm sm:text-base"
                   style={{ color: themeColor }}
                 >
-                  Pesan Sekarang
-                  <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="inline-flex items-center">
+                    Booking Becak
+                    <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="text-xs font-normal text-gray-500">Becak datang menjemput</span>
+                </Link>
+                <Link
+                  to="/pesan"
+                  className="group inline-flex flex-col items-start justify-center bg-white/15 border border-white/60 text-white font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl shadow-2xl backdrop-blur-sm transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/25 text-sm sm:text-base"
+                >
+                  <span className="inline-flex items-center">
+                    Pesan Langsung
+                    <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="text-xs font-normal text-white/80">Sudah di dekat becak, scan QR</span>
                 </Link>
                 <Link 
                   to="/login" 

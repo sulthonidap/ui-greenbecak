@@ -32,7 +32,21 @@ const OrderPage: React.FC = () => {
   const [isGojek, setIsGojek] = useState(false);
   const [driverCheckStatus, setDriverCheckStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
   const [driverInfo, setDriverInfo] = useState<{ name: string; message: string } | null>(null);
+  const [customerPos, setCustomerPos] = useState<{ lat: number; lng: number } | null>(null);
   const navigate = useNavigate();
+
+  // Asal order: ?src=... (mis. qr-statis), atau qr_becak kalau dibuka dari QR di becak (?code=...)
+  const orderSource = searchParams.get('src') || (searchParams.get('code') ? 'qr_becak' : 'web');
+
+  // GPS penumpang (opsional): kalau ditolak / gagal, order tetap jalan seperti biasa
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => setCustomerPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => { /* abaikan */ },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    );
+  }, []);
 
   // Read code parameter from URL and auto-fill pedicab code
   useEffect(() => {
@@ -169,7 +183,9 @@ const OrderPage: React.FC = () => {
       customer_phone: isGojek ? whatsappNumber : '08123456789', // Default phone if not Gojek
       customer_name: isGojek ? `Gojek-${whatsappNumber}` : `Customer ${pedicabCode}`,
       tariff_id: tariffId,
-      notes: isGojek ? `Transport: Gojek Order` : `Transport: Becak`
+      notes: isGojek ? `Transport: Gojek Order` : `Transport: Becak`,
+      source: orderSource,
+      ...(customerPos ? { customer_lat: customerPos.lat, customer_lng: customerPos.lng } : {}),
     };
 
     try {

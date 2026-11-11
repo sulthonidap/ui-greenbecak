@@ -21,6 +21,7 @@ import DriverDetail from './DriverDetail';
 import CustomerManagement from './CustomerManagement';
 import CustomerDetail from './CustomerDetail';
 import StandManagement from './StandManagement';
+import BookingSettings from './BookingSettings';
 import { adminAPI } from '../services/api';
 
 interface DriverStatus {
@@ -550,8 +551,21 @@ const AdminDashboard: React.FC = () => {
                 }`} />
                 Pengaturan Tarif
               </Link>
-              {/* <Link 
-                to="/admin/settings" 
+              <Link
+                to="/admin/booking"
+                className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                  location.pathname === '/admin/booking'
+                    ? 'text-white bg-gray-900'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <MapPin className={`mr-3 h-6 w-6 ${
+                  location.pathname === '/admin/booking' ? 'text-gray-300' : 'text-gray-400'
+                }`} />
+                Pengaturan Booking
+              </Link>
+              {/* <Link
+                to="/admin/settings"
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                   location.pathname === '/admin/settings' 
                     ? 'text-white bg-gray-900' 
@@ -708,8 +722,19 @@ const AdminDashboard: React.FC = () => {
               >
                 Pengaturan Tarif
               </Link>
-              {/* <Link 
-                to="/admin/settings" 
+              <Link
+                to="/admin/booking"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === '/admin/booking'
+                    ? 'text-white bg-gray-900'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Pengaturan Booking
+              </Link>
+              {/* <Link
+                to="/admin/settings"
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   location.pathname === '/admin/settings' 
                     ? 'text-white bg-gray-900' 
@@ -759,6 +784,7 @@ const AdminDashboard: React.FC = () => {
             <Route path="tariff" element={<TariffSettings />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="stands" element={<StandManagement />} />
+            <Route path="booking" element={<BookingSettings />} />
           </Routes>
         </main>
       </div>
