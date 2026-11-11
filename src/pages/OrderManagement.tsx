@@ -4,6 +4,7 @@ import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, Use
 import { adminAPI, tariffsAPI } from '../services/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getPageNumbers, PAGE_SIZE_OPTIONS } from '../utils/pagination';
 
 // Semua tanggal dihitung dalam zona waktu WIB, bukan UTC,
 // supaya order jam 00:00-06:59 tidak terhitung ke hari sebelumnya.
@@ -39,19 +40,6 @@ const getPresetRange = (preset: Exclude<DatePreset, 'custom'>): { from: string; 
     case 'month': return { from: `${today.slice(0, 8)}01`, to: today };
     case 'all': return { from: '', to: '' };
   }
-};
-
-/** Nomor halaman yang ditampilkan, misal: 1 … 4 5 6 … 129 */
-const getPageNumbers = (current: number, total: number): (number | 'ellipsis')[] => {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: (number | 'ellipsis')[] = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  if (start > 2) pages.push('ellipsis');
-  for (let i = start; i <= end; i++) pages.push(i);
-  if (end < total - 1) pages.push('ellipsis');
-  pages.push(total);
-  return pages;
 };
 
 const csvEscape = (value: string | number) => {
@@ -191,7 +179,12 @@ const OrderManagement: React.FC = () => {
     fetchTariffs();
   }, []);
 
-  const filteredOrders = orders.filter(order => {
+  // Order dalam periode tanggal terpilih (WIB) — dipakai untuk kartu statistik
+  const ordersInPeriod = orders.filter(order =>
+    (!dateFrom || order.orderDateKey >= dateFrom) && (!dateTo || order.orderDateKey <= dateTo)
+  );
+
+  const filteredOrders = ordersInPeriod.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -201,11 +194,7 @@ const OrderManagement: React.FC = () => {
     const matchesVehicle = vehicleFilter === 'all' || order.vehicleType === vehicleFilter;
     const matchesTariff = tariffFilter === 'all' || order.tariffName === tariffFilter;
     
-    // Filter by date range (WIB)
-    const matchesDate = (!dateFrom || order.orderDateKey >= dateFrom) &&
-      (!dateTo || order.orderDateKey <= dateTo);
-
-    return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesTariff && matchesDate;
+    return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesTariff;
   });
 
   // Pagination logic
@@ -359,12 +348,13 @@ const OrderManagement: React.FC = () => {
   };
 
   const stats = {
-    total: orders.length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    ongoing: orders.filter(o => o.status === 'ongoing').length,
-    completed: orders.filter(o => o.status === 'completed').length,
-    cancelled: orders.filter(o => o.status === 'cancelled').length,
-    totalRevenue: orders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + o.price, 0)
+    total: ordersInPeriod.length,
+    pending: ordersInPeriod.filter(o => o.status === 'pending').length,
+    // "accepted" juga dihitung sebagai ongoing karena driver sedang menjalankan trip
+    ongoing: ordersInPeriod.filter(o => o.status === 'ongoing' || o.status === 'accepted').length,
+    completed: ordersInPeriod.filter(o => o.status === 'completed').length,
+    cancelled: ordersInPeriod.filter(o => o.status === 'cancelled').length,
+    totalRevenue: ordersInPeriod.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + o.price, 0)
   };
 
   if (loading) {
@@ -409,7 +399,9 @@ const OrderManagement: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
-        <p className="text-gray-600 mt-2">Kelola semua order GreenBecak</p>
+        <p className="text-gray-600 mt-2">
+          Kelola semua order GreenBecak · Statistik periode: <span className="font-medium text-gray-800">{periodLabel}</span>
+        </p>
       </div>
 
       {/* Statistics */}
@@ -785,7 +777,7 @@ const OrderManagement: React.FC = () => {
                     aria-label="Jumlah baris per halaman"
                     className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    {[10, 25, 50, 100].map(n => (
+                    {PAGE_SIZE_OPTIONS.map(n => (
                       <option key={n} value={n}>{n} / halaman</option>
                     ))}
                   </select>

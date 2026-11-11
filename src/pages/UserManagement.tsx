@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserPlus, ArrowLeft, Edit3, Trash2, Plus, Users, MapPin, Phone, Car, X, CheckSquare, Shield, Eye, EyeOff, Key, QrCode, Download } from 'lucide-react';
+import { Edit3, Trash2, Plus, Users, Phone, Car, X, CheckSquare, Shield, Key, QrCode, Download, Copy, AlertTriangle } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
+import { useAuth } from '../context/AuthContext';
+import { getPageNumbers, PAGE_SIZE_OPTIONS } from '../utils/pagination';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -13,10 +15,11 @@ interface User {
   email: string;
   phone: string;
   username: string;
-  password: string;
   role: 'admin' | 'driver' | 'customer';
   vehicleType?: 'becak-listrik' | 'delman';
   vehicleCode?: string;
+  /** Kode driver — dipakai backend untuk mencocokkan order dari QR */
+  driverCode?: string;
   licenseNumber?: string;
   address: string;
   emergencyContact?: string;
@@ -39,6 +42,7 @@ interface User {
 const UserManagement: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,12 +50,13 @@ const UserManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'driver' | 'customer'>('all');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showPassword, setShowPassword] = useState<{[key: string]: boolean}>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'delete' | 'resetPassword' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'delete' | 'resetPassword' | 'toggleStatus' | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [resetResult, setResetResult] = useState<{ name: string; username: string; password: string } | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedDriverCode, setSelectedDriverCode] = useState<string>('');
   const [selectedDriverName, setSelectedDriverName] = useState<string>('');
@@ -75,6 +80,13 @@ const UserManagement: React.FC = () => {
       
              const normalized = (response.users || []).map((u: any) => ({
          ...u,
+         id: String(u.id),
+         name: u.name || '',
+         username: u.username || '',
+         email: u.email || '',
+         phone: u.phone || '',
+         address: u.address || '',
+         driverCode: u.driver?.driver_code,
          // Map status from is_active boolean to status string
          status: u.is_active ? 'active' : 'inactive',
          // Map driver data to user fields
@@ -130,10 +142,9 @@ const UserManagement: React.FC = () => {
   }, [location.state]);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm);
+    const term = searchTerm.trim().toLowerCase();
+    const matchesSearch = !term || [user.name, user.username, user.email, user.phone, user.driverCode, user.vehicleCode]
+      .some(field => (field || '').toLowerCase().includes(term));
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesStatus && matchesRole;
@@ -148,14 +159,14 @@ const UserManagement: React.FC = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, roleFilter]);
+  }, [searchTerm, statusFilter, roleFilter, itemsPerPage]);
 
   const handleEdit = (userId: string) => {
     // Navigate to edit user page
     navigate(`/admin/edit-user/${userId}`);
   };
 
-  const openConfirmModal = (action: 'delete' | 'resetPassword', userId: string) => {
+  const openConfirmModal = (action: 'delete' | 'resetPassword' | 'toggleStatus', userId: string) => {
     setConfirmAction(action);
     setSelectedUserId(userId);
     setShowConfirmModal(true);
@@ -169,19 +180,34 @@ const UserManagement: React.FC = () => {
 
   const handleConfirmAction = async () => {
     if (!selectedUserId || !confirmAction) return;
+    const target = users.find(u => u.id === selectedUserId);
 
     try {
+      setActionLoading(true);
       if (confirmAction === 'delete') {
         await adminAPI.deleteUser(selectedUserId);
         setUsers(prev => prev.filter(user => user.id !== selectedUserId));
         showSuccess('User berhasil dihapus!');
       } else if (confirmAction === 'resetPassword') {
         const response = await adminAPI.resetUserPassword(selectedUserId);
-        showSuccess(`Password berhasil direset! Password baru: ${response.newPassword || 'password123'}`);
+        if (response.newPassword) {
+          setResetResult({
+            name: target?.name || '',
+            username: target?.username || '',
+            password: response.newPassword,
+          });
+        } else {
+          showSuccess('Password berhasil direset');
+        }
+      } else if (confirmAction === 'toggleStatus' && target) {
+        const newStatus = target.status === 'active' ? 'inactive' : 'active';
+        await adminAPI.updateUser(selectedUserId, { is_active: newStatus === 'active' });
+        setUsers(prev => prev.map(u => (u.id === selectedUserId ? { ...u, status: newStatus } : u)));
+        showSuccess(`${target.name} sekarang ${newStatus === 'active' ? 'aktif' : 'tidak aktif'}`);
       }
     } catch (error: any) {
       console.error('Failed to perform action:', error);
-      
+
       if (error.response?.status === 401) {
         showError('Anda harus login sebagai admin untuk melakukan aksi ini');
       } else if (error.response?.status === 403) {
@@ -189,10 +215,23 @@ const UserManagement: React.FC = () => {
       } else if (error.code === 'ERR_NETWORK') {
         showError('Tidak dapat terhubung ke server. Pastikan backend sudah running');
       } else {
-        showError(error.response?.data?.message || 'Gagal melakukan aksi');
+        showError(error.response?.data?.error || error.response?.data?.message || 'Gagal melakukan aksi');
       }
     } finally {
+      setActionLoading(false);
       closeConfirmModal();
+    }
+  };
+
+  const isCurrentUser = (userId: string) => !!currentUser && String(currentUser.id) === userId;
+
+  const copyResetPassword = async () => {
+    if (!resetResult) return;
+    try {
+      await navigator.clipboard.writeText(resetResult.password);
+      showSuccess('Password disalin');
+    } catch {
+      showError('Gagal menyalin, silakan salin manual');
     }
   };
 
@@ -200,48 +239,16 @@ const UserManagement: React.FC = () => {
     openConfirmModal('delete', userId);
   };
 
-  const handleStatusToggle = async (userId: string) => {
-    try {
-      const user = users.find(u => u.id === userId);
-      if (!user) return;
-      
-      const newStatus = user.status === 'active' ? 'inactive' : 'active';
-      const newIsActive = newStatus === 'active';
-      
-      await adminAPI.updateUser(userId, { is_active: newIsActive });
-      
-      // Update local state
-      setUsers(prev => prev.map(user => 
-        user.id === userId 
-          ? { ...user, status: newStatus }
-          : user
-      ));
-      
-    } catch (error: any) {
-      console.error('Failed to update user status:', error);
-      
-      if (error.response?.status === 401) {
-        showError('Anda harus login sebagai admin untuk mengubah status user');
-      } else if (error.response?.status === 403) {
-        showError('Anda tidak memiliki akses untuk mengubah status user');
-      } else if (error.code === 'ERR_NETWORK') {
-        showError('Tidak dapat terhubung ke server. Pastikan backend sudah running');
-      } else {
-        showError(error.response?.data?.message || 'Gagal mengubah status user');
-      }
-    }
+  const handleStatusToggle = (userId: string) => {
+    openConfirmModal('toggleStatus', userId);
   };
 
   const handleResetPassword = (userId: string) => {
     openConfirmModal('resetPassword', userId);
   };
 
-  const togglePasswordVisibility = (userId: string) => {
-    setShowPassword(prev => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }));
-  };
+  /** Kode yang dipakai di QR: driver_code (dicocokkan backend), fallback ke nomor kendaraan */
+  const getQRCode = (user: User) => user.driverCode || user.vehicleCode || '';
 
   // Generate QR Code for driver
   const handleGenerateQR = (driverCode: string, driverName: string) => {
@@ -257,7 +264,7 @@ const UserManagement: React.FC = () => {
   // Generate QR code value - link ke halaman pesan dengan driver_code
   const generateQRValue = () => {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/pesan?code=${selectedDriverCode}`;
+    return `${baseUrl}/pesan?code=${encodeURIComponent(selectedDriverCode)}`;
   };
 
   // Download QR code as image
@@ -350,9 +357,9 @@ const UserManagement: React.FC = () => {
   };
 
   const downloadBulkQR = async () => {
-    const driverList = users.filter(user => user.role === 'driver' && user.vehicleCode);
+    const driverList = users.filter(user => user.role === 'driver' && getQRCode(user));
     if (driverList.length === 0) {
-      showError('Tidak ada driver dengan kode kendaraan yang ditemukan');
+      showError('Tidak ada driver dengan kode driver yang ditemukan');
       return;
     }
 
@@ -382,7 +389,7 @@ const UserManagement: React.FC = () => {
         doc.text('BECAKJOGJA', 50, 15, { align: 'center' });
 
         // Update hidden QR Canvas and wait for it to render
-        const qrValue = `${window.location.origin}/pesan?code=${driver.vehicleCode}`;
+        const qrValue = `${window.location.origin}/pesan?code=${encodeURIComponent(getQRCode(driver))}`;
         setBulkQRValue(qrValue);
         
         // Sedikit delay agar React merender canvas terbaru
@@ -402,7 +409,7 @@ const UserManagement: React.FC = () => {
         
         doc.setTextColor(38, 74, 124);
         doc.setFontSize(16);
-        doc.text(driver.vehicleCode || '', 50, 125, { align: 'center' });
+        doc.text(getQRCode(driver), 50, 125, { align: 'center' });
 
         doc.setTextColor(102, 102, 102);
         doc.setFont('helvetica', 'normal');
@@ -484,7 +491,7 @@ const UserManagement: React.FC = () => {
     doc.setFontSize(10);
     doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 28);
     
-    const tableColumn = ["Nama", "Username", "Role", "Status", "Email", "Telepon", "Kode Kendaraan", "Tgl Gabung"];
+    const tableColumn = ["Nama", "Username", "Role", "Status", "Email", "Telepon", "Kode Driver", "No Kendaraan", "Tgl Gabung"];
     const tableRows: any[] = [];
 
     filteredUsers.forEach(user => {
@@ -494,7 +501,8 @@ const UserManagement: React.FC = () => {
         getRoleDisplayName(user.role),
         user.status === 'active' ? 'Aktif' : 'Tidak Aktif',
         user.email,
-        user.phone,
+        user.phone || '-',
+        user.role === 'driver' ? user.driverCode || '-' : '-',
         user.role === 'driver' ? user.vehicleCode || '-' : '-',
         formatDate(user.created_at)
       ];
@@ -694,7 +702,7 @@ const UserManagement: React.FC = () => {
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Cari user berdasarkan nama, username, email, atau nomor telepon..."
+                placeholder="Cari nama, username, email, telepon, atau kode driver..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -772,17 +780,11 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">@{user.username}</div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span className="mr-2">
-                            {showPassword[user.id] ? user.password : '••••••••'}
-                          </span>
-                          <button
-                            onClick={() => togglePasswordVisibility(user.id)}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            {showPassword[user.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                          </button>
+                        <div className="text-sm font-medium text-gray-900">
+                          @{user.username}
+                          {isCurrentUser(user.id) && (
+                            <span className="ml-2 px-1.5 py-0.5 text-[10px] font-semibold rounded bg-gray-200 text-gray-700 align-middle">Anda</span>
+                          )}
                         </div>
                         {user.lastLogin && (
                           <div className="text-xs text-gray-400">
@@ -798,10 +800,12 @@ const UserManagement: React.FC = () => {
                         </span>
                         <button
                           onClick={() => handleStatusToggle(user.id)}
-                          className={`block px-3 py-1 text-xs font-semibold rounded-full ${
-                            user.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-800'
+                          disabled={isCurrentUser(user.id)}
+                          title={isCurrentUser(user.id) ? 'Tidak dapat menonaktifkan akun sendiri' : 'Klik untuk mengubah status'}
+                          className={`block px-3 py-1 text-xs font-semibold rounded-full disabled:cursor-not-allowed ${
+                            user.status === 'active'
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                           }`}
                         >
                           {user.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
@@ -812,7 +816,7 @@ const UserManagement: React.FC = () => {
                       <div>
                         <div className="flex items-center text-sm text-gray-900">
                           <Phone className="w-4 h-4 mr-1" />
-                          {user.phone}
+                          {user.phone || '-'}
                         </div>
                         <div className="text-sm text-gray-500">{user.address}</div>
                       </div>
@@ -821,8 +825,11 @@ const UserManagement: React.FC = () => {
                       <div>
                         {user.role === 'driver' ? (
                           <>
-                            <div className="text-sm text-gray-900">{user.vehicleCode}</div>
+                            <div className="text-sm text-gray-900">{user.vehicleCode || '-'}</div>
                             <div className="text-sm text-gray-500 capitalize">{user.vehicleType?.replace('-', ' ')}</div>
+                            {user.driverCode && user.driverCode !== user.vehicleCode && (
+                              <div className="text-xs text-gray-400">Kode QR: {user.driverCode}</div>
+                            )}
                           </>
                         ) : (
                           <div className="text-sm text-gray-500">-</div>
@@ -831,9 +838,9 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        {user.role === 'driver' && user.vehicleCode && (
+                        {user.role === 'driver' && getQRCode(user) && (
                           <button
-                            onClick={() => handleGenerateQR(user.vehicleCode || '', user.name)}
+                            onClick={() => handleGenerateQR(getQRCode(user), user.name)}
                             className="text-purple-600 hover:text-purple-900"
                             title="Generate QR Code"
                           >
@@ -854,13 +861,15 @@ const UserManagement: React.FC = () => {
                         >
                           <Key className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Hapus User"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {!isCurrentUser(user.id) && (
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Hapus User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -879,7 +888,7 @@ const UserManagement: React.FC = () => {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {filteredUsers.length > 0 && (
             <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
@@ -897,17 +906,27 @@ const UserManagement: React.FC = () => {
                   Selanjutnya
                 </button>
               </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-gray-700 whitespace-nowrap">
                     Menampilkan{' '}
                     <span className="font-medium">{startIndex + 1}</span>
-                    {' '}sampai{' '}
+                    {' '}–{' '}
                     <span className="font-medium">{Math.min(endIndex, filteredUsers.length)}</span>
                     {' '}dari{' '}
                     <span className="font-medium">{filteredUsers.length}</span>
-                    {' '}hasil
+                    {' '}user
                   </p>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    aria-label="Jumlah baris per halaman"
+                    className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {PAGE_SIZE_OPTIONS.map(n => (
+                      <option key={n} value={n}>{n} / halaman</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
@@ -923,7 +942,14 @@ const UserManagement: React.FC = () => {
                     </button>
                     
                     {/* Page numbers */}
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    {getPageNumbers(currentPage, totalPages).map((page, idx) => page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm text-gray-400"
+                      >
+                        …
+                      </span>
+                    ) : (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
@@ -1014,42 +1040,101 @@ const UserManagement: React.FC = () => {
          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
              <div className="mt-3 text-center">
-               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                 <X className="h-6 w-6 text-red-600" />
-               </div>
-               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                 {confirmAction === 'delete' ? 'Konfirmasi Hapus User' : 'Konfirmasi Reset Password'}
-               </h3>
-               <div className="mt-2 px-7 py-3">
-                 <p className="text-sm text-gray-500">
-                   {confirmAction === 'delete' 
-                     ? 'Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan.'
-                     : 'Apakah Anda yakin ingin mereset password user ini? Password akan diubah menjadi "password123".'
-                   }
-                 </p>
-               </div>
-               <div className="flex justify-center space-x-4 mt-6">
-                 <button
-                   onClick={closeConfirmModal}
-                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                 >
-                   Batal
-                 </button>
-                 <button
-                   onClick={handleConfirmAction}
-                   className={`px-4 py-2 text-white rounded-md transition-colors ${
-                     confirmAction === 'delete' 
-                       ? 'bg-red-600 hover:bg-red-700' 
-                       : 'bg-orange-600 hover:bg-orange-700'
-                   }`}
-                 >
-                   {confirmAction === 'delete' ? 'Hapus' : 'Reset Password'}
-                 </button>
-               </div>
+               {(() => {
+                 const target = users.find(u => u.id === selectedUserId);
+                 const name = target?.name || 'user ini';
+                 const willDeactivate = target?.status === 'active';
+                 const content = {
+                   delete: {
+                     title: 'Hapus User',
+                     message: `Hapus ${name}?${target?.role === 'driver' ? ' Data driver-nya juga ikut dihapus, tapi riwayat order tetap tersimpan.' : ''} Tindakan ini tidak dapat dibatalkan.`,
+                     button: 'Hapus',
+                     color: 'bg-red-600 hover:bg-red-700',
+                   },
+                   resetPassword: {
+                     title: 'Reset Password',
+                     message: `Reset password ${name}? Password baru akan dibuat acak dan hanya ditampilkan sekali.`,
+                     button: 'Reset Password',
+                     color: 'bg-orange-600 hover:bg-orange-700',
+                   },
+                   toggleStatus: {
+                     title: willDeactivate ? 'Nonaktifkan User' : 'Aktifkan User',
+                     message: willDeactivate
+                       ? `Nonaktifkan ${name}? User ini tidak akan bisa login sampai diaktifkan kembali.`
+                       : `Aktifkan kembali ${name}? User ini akan bisa login lagi.`,
+                     button: willDeactivate ? 'Nonaktifkan' : 'Aktifkan',
+                     color: willDeactivate ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700',
+                   },
+                 }[confirmAction || 'delete'];
+
+                 return (
+                   <>
+                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 mb-4">
+                       <AlertTriangle className="h-6 w-6 text-amber-600" />
+                     </div>
+                     <h3 className="text-lg font-medium text-gray-900 mb-4">{content.title}</h3>
+                     <div className="mt-2 px-7 py-3">
+                       <p className="text-sm text-gray-500">{content.message}</p>
+                     </div>
+                     <div className="flex justify-center space-x-4 mt-6">
+                       <button
+                         onClick={closeConfirmModal}
+                         disabled={actionLoading}
+                         className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors disabled:opacity-50"
+                       >
+                         Batal
+                       </button>
+                       <button
+                         onClick={handleConfirmAction}
+                         disabled={actionLoading}
+                         className={`px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50 ${content.color}`}
+                       >
+                         {actionLoading ? 'Memproses...' : content.button}
+                       </button>
+                     </div>
+                   </>
+                 );
+               })()}
              </div>
            </div>
          </div>
        )}
+
+      {/* Reset Password Result Modal */}
+      {resetResult && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border w-96 max-w-[calc(100%-2rem)] shadow-lg rounded-md bg-white">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <Key className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Password Berhasil Direset</h3>
+              <p className="text-sm text-gray-500 mt-1">{resetResult.name} (@{resetResult.username})</p>
+              <div className="mt-4 flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-md">
+                <code className="text-xl font-mono font-semibold tracking-wider text-gray-900 select-all">
+                  {resetResult.password}
+                </code>
+                <button
+                  onClick={copyResetPassword}
+                  className="flex items-center px-3 py-1.5 text-sm text-green-700 border border-green-600 rounded-md hover:bg-green-50"
+                >
+                  <Copy className="w-4 h-4 mr-1" />
+                  Salin
+                </button>
+              </div>
+              <p className="text-xs text-amber-700 mt-3">
+                Catat atau kirim password ini ke user sekarang. Password tidak akan ditampilkan lagi setelah jendela ini ditutup.
+              </p>
+              <button
+                onClick={() => setResetResult(null)}
+                className="mt-5 w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hidden Canvas for Bulk QR Generation */}
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
