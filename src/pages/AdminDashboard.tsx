@@ -23,6 +23,8 @@ import CustomerDetail from './CustomerDetail';
 import StandManagement from './StandManagement';
 import BookingSettings from './BookingSettings';
 import { adminAPI } from '../services/api';
+import { bookingAdminAPI, apiErrorMessage, AdminOrderAction } from '../services/bookingService';
+import { showSuccess, showError } from '../utils/toast';
 
 interface DriverStatus {
   id: string;
@@ -36,6 +38,20 @@ interface DriverStatus {
 
 // Removed mock data
 
+// Langkah berikutnya untuk tiap status (tombol utama di kolom Aksi)
+const NEXT_ORDER_ACTION: Record<string, AdminOrderAction | undefined> = {
+  pending: 'accepted',
+  accepted: 'picked_up',
+  picked_up: 'completed',
+};
+
+const ORDER_ACTION_LABEL: Record<AdminOrderAction, { button: string; done: string }> = {
+  accepted: { button: 'Terima', done: 'Pesanan diterima' },
+  picked_up: { button: 'Jemput', done: 'Penumpang dijemput' },
+  completed: { button: 'Selesai', done: 'Pesanan selesai' },
+  cancelled: { button: 'Batal', done: 'Pesanan dibatalkan' },
+};
+
 const Dashboard: React.FC = () => {
   const location = useLocation();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -46,7 +62,23 @@ const Dashboard: React.FC = () => {
   // Pagination states
   const [driverPage, setDriverPage] = useState(1);
   const [orderPage, setOrderPage] = useState(1);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const itemsPerPage = 5;
+
+  // Admin memajukan / membatalkan status order secara manual
+  const changeOrderStatus = async (orderId: string, status: AdminOrderAction) => {
+    if (status === 'cancelled' && !window.confirm('Batalkan pesanan ini?')) return;
+    setUpdatingOrderId(orderId);
+    try {
+      const res = await bookingAdminAPI.updateOrderStatus(orderId, status);
+      setDashboardOrders(prev => prev.map(o => (o.id === orderId ? { ...o, status: res.order?.status || status } : o)));
+      showSuccess(ORDER_ACTION_LABEL[status].done);
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Gagal mengubah status pesanan'));
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
 
   // Fetch data from API
   useEffect(() => {
@@ -312,6 +344,9 @@ const Dashboard: React.FC = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Waktu
                   </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -338,19 +373,52 @@ const Dashboard: React.FC = () => {
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         order.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'ongoing' ? 'bg-purple-100 text-purple-800' :
+                        order.status === 'ongoing' || order.status === 'picked_up' ? 'bg-purple-100 text-purple-800' :
                         order.status === 'completed' ? 'bg-green-100 text-green-800' :
                         'bg-red-100 text-red-800'
                       }`}>
                         {order.status === 'pending' ? 'Menunggu' :
                          order.status === 'accepted' ? 'Diterima' :
-                         order.status === 'ongoing' ? 'Sedang Jalan' :
+                         order.status === 'ongoing' || order.status === 'picked_up' ? 'Dalam Perjalanan' :
                          order.status === 'completed' ? 'Selesai' :
                          'Dibatalkan'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {order.timestamp?.toLocaleString('id-ID') || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {NEXT_ORDER_ACTION[order.status] ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => changeOrderStatus(order.id, NEXT_ORDER_ACTION[order.status] as AdminOrderAction)}
+                            disabled={updatingOrderId === order.id}
+                            className="px-3 py-1 rounded-md bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {updatingOrderId === order.id ? '...' : ORDER_ACTION_LABEL[NEXT_ORDER_ACTION[order.status] as AdminOrderAction].button}
+                          </button>
+                          {/* Pintasan: langsung selesai tanpa melewati langkah tengah */}
+                          {NEXT_ORDER_ACTION[order.status] !== 'completed' && (
+                            <button
+                              onClick={() => changeOrderStatus(order.id, 'completed')}
+                              disabled={updatingOrderId === order.id}
+                              className="px-2 py-1 rounded-md border border-gray-300 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                              title="Langsung selesaikan"
+                            >
+                              Selesai
+                            </button>
+                          )}
+                          <button
+                            onClick={() => changeOrderStatus(order.id, 'cancelled')}
+                            disabled={updatingOrderId === order.id}
+                            className="px-2 py-1 rounded-md text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}

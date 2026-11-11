@@ -254,7 +254,13 @@ export interface DestinationInput {
 
 export type BookingRateInput = Omit<BookingRate, 'id'>;
 
+export type AdminOrderAction = 'accepted' | 'picked_up' | 'completed' | 'cancelled';
+
 export const bookingAdminAPI = {
+  /** Ubah status order secara manual oleh admin */
+  updateOrderStatus: async (id: string | number, status: AdminOrderAction, reason?: string) =>
+    (await api.put(`/admin/orders/${id}/status`, { status, reason })).data,
+
   getHotels: async (): Promise<Hotel[]> => (await api.get('/admin/hotels/')).data.hotels || [],
   createHotel: async (data: HotelInput) => (await api.post('/admin/hotels/', data)).data,
   updateHotel: async (id: number, data: HotelInput) => (await api.put(`/admin/hotels/${id}`, data)).data,

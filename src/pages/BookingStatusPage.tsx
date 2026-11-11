@@ -214,13 +214,19 @@ const BookingStatusPage: React.FC = () => {
 
           <div className="md:col-span-2 space-y-4">
             {/* Kartu status */}
-            {booking.status === 'pending' && !driver && booking.becak_code && (
+            {isActive && !driver && booking.becak_code && (
               <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-xl">🛺</span>
                   <div>
                     <p className="font-semibold text-gray-900">Becak {booking.becak_code}</p>
-                    <p className="text-sm text-gray-500">Pesanan sudah tercatat</p>
+                    <p className="text-sm text-gray-500">
+                      {booking.status === 'pending'
+                        ? 'Pesanan sudah tercatat'
+                        : booking.status === 'accepted'
+                          ? 'Becak menuju lokasi jemput'
+                          : 'Dalam perjalanan ke tujuan'}
+                    </p>
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-gray-700">
