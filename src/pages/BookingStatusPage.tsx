@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import {
   Loader2, Search, Bike, Navigation, CheckCircle2, XCircle, Phone, MessageCircle, MapPin, Flag, AlertCircle, Copy,
 } from 'lucide-react';
 import {
-  DEFAULT_CENTER, TILE_URL, TILE_ATTRIBUTION, pickupIcon, dropIcon, driverIcon, FitBounds,
+  DEFAULT_CENTER, TILE_URL, TILE_ATTRIBUTION, pickupIcon, dropIcon, driverIcon, FitBounds, RouteLine,
 } from '../components/booking/MapParts';
 import {
   bookingAPI, apiErrorMessage, formatRupiah, lastBookingStore, toWaNumber, VEHICLE_LABELS, BookingView,
@@ -47,12 +47,20 @@ const BookingStatusPage: React.FC = () => {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [route, setRoute] = useState<[number, number][] | null>(null);
+  const routeRequested = useRef(false);
 
   const isActive = booking ? ['pending', 'accepted', 'picked_up'].includes(booking.status) : true;
 
   const load = useCallback(async () => {
     try {
-      const b = await bookingAPI.getStatus(token);
+      // Jalur rute cukup diminta sekali; polling berikutnya tanpa rute agar ringan
+      const withRoute = !routeRequested.current;
+      const b = await bookingAPI.getStatus(token, withRoute);
+      if (withRoute) {
+        routeRequested.current = true;
+        if (b.route) setRoute(b.route);
+      }
       setBooking(b);
       setError(null);
       if (b.status === 'completed' || b.status === 'cancelled') {
@@ -116,8 +124,9 @@ const BookingStatusPage: React.FC = () => {
     if (booking.pickup.lat != null && booking.pickup.lng != null) pts.push([booking.pickup.lat, booking.pickup.lng]);
     if (booking.drop.lat != null && booking.drop.lng != null) pts.push([booking.drop.lat, booking.drop.lng]);
     if (booking.driver?.location) pts.push([booking.driver.location.lat, booking.driver.location.lng]);
+    if (route) pts.push(...route);
     return pts;
-  }, [booking]);
+  }, [booking, route]);
 
   if (notFound) {
     return (
@@ -182,6 +191,13 @@ const BookingStatusPage: React.FC = () => {
             <div className="relative isolate h-64 md:h-[460px] rounded-xl overflow-hidden shadow border border-gray-200 bg-gray-100">
               <MapContainer center={mapPoints[0] || DEFAULT_CENTER} zoom={15} zoomSnap={0.5} className="h-full w-full" scrollWheelZoom>
                 <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+                {booking.status !== 'cancelled' && (
+                  <RouteLine
+                    route={route}
+                    from={booking.pickup.lat != null && booking.pickup.lng != null ? [booking.pickup.lat, booking.pickup.lng] : null}
+                    to={booking.drop.lat != null && booking.drop.lng != null ? [booking.drop.lat, booking.drop.lng] : null}
+                  />
+                )}
                 {booking.pickup.lat != null && booking.pickup.lng != null && (
                   <Marker position={[booking.pickup.lat, booking.pickup.lng]} icon={pickupIcon} />
                 )}

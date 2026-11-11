@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import {
   MapPin, Flag, Crosshair, Hand, Loader2, Building2, Star, Clock, Route, AlertCircle, ChevronRight, Pencil,
 } from 'lucide-react';
 import PlaceSearch from '../components/booking/PlaceSearch';
 import {
-  DEFAULT_CENTER, TILE_URL, TILE_ATTRIBUTION, pickupIcon, dropIcon, MapClickHandler, FitBounds,
+  DEFAULT_CENTER, TILE_URL, TILE_ATTRIBUTION, pickupIcon, dropIcon, MapClickHandler, FitBounds, RouteLine,
 } from '../components/booking/MapParts';
 import {
   bookingAPI, geoAPI, apiErrorMessage, formatRupiah, lastBookingStore,
@@ -218,8 +218,10 @@ const BookingPage: React.FC = () => {
     const pts: [number, number][] = [];
     if (pickup) pts.push([pickup.lat, pickup.lng]);
     if (drop) pts.push([drop.lat, drop.lng]);
+    // Rute bisa melengkung keluar dari kotak jemput–tujuan, ikutkan agar terlihat utuh
+    if (pickup && drop && quote?.route && !quoteLoading) pts.push(...quote.route);
     return pts;
-  }, [pickup, drop]);
+  }, [pickup, drop, quote, quoteLoading]);
 
   // ---------- Render ----------
   if (configError) {
@@ -398,7 +400,12 @@ const BookingPage: React.FC = () => {
                   />
                 )}
                 {pickup && drop && (
-                  <Polyline positions={[[pickup.lat, pickup.lng], [drop.lat, drop.lng]]} pathOptions={{ color: themeColor, weight: 3, dashArray: '6 8' }} />
+                  <RouteLine
+                    route={!quoteLoading ? quote?.route : null}
+                    from={[pickup.lat, pickup.lng]}
+                    to={[drop.lat, drop.lng]}
+                    color={themeColor}
+                  />
                 )}
                 <FitBounds points={mapPoints} />
               </MapContainer>

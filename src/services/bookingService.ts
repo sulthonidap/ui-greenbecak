@@ -96,6 +96,8 @@ export interface BookingQuote {
   per_km: number;
   min_fare: number;
   nearby_drivers: number;
+  /** Jalur sepanjang jalan [[lat, lng], ...]; tidak ada kalau jarak hanya perkiraan */
+  route?: [number, number][];
 }
 
 export type BookingStatus = 'pending' | 'accepted' | 'picked_up' | 'completed' | 'cancelled';
@@ -120,6 +122,8 @@ export interface BookingView {
   cancelled_at: string | null;
   cancel_reason: string;
   can_cancel: boolean;
+  /** Hanya ada kalau diminta dengan withRoute */
+  route?: [number, number][];
   driver?: {
     name: string;
     phone: string;
@@ -174,8 +178,10 @@ export const bookingAPI = {
     return res.data;
   },
 
-  getStatus: async (token: string): Promise<BookingView> => {
-    const res = await publicApi.get(`/booking/status/${encodeURIComponent(token)}`);
+  getStatus: async (token: string, withRoute = false): Promise<BookingView> => {
+    const res = await publicApi.get(`/booking/status/${encodeURIComponent(token)}`, {
+      params: withRoute ? { route: 1 } : {},
+    });
     return res.data.booking;
   },
 

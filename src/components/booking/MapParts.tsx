@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useMap, useMapEvents } from 'react-leaflet';
+import { Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -36,6 +36,30 @@ export const driverIcon = L.divIcon({
   iconAnchor: [18, 18],
 });
 
+/**
+ * Garis rute. Kalau `route` (jalur dari server rute) tersedia, digambar mengikuti jalan;
+ * kalau tidak, garis putus-putus lurus antara dua titik sebagai cadangan.
+ */
+export const RouteLine: React.FC<{
+  route?: [number, number][] | null;
+  from?: [number, number] | null;
+  to?: [number, number] | null;
+  color?: string;
+}> = ({ route, from, to, color = '#047857' }) => {
+  if (route && route.length > 1) {
+    return (
+      <>
+        <Polyline positions={route} pathOptions={{ color: '#ffffff', weight: 8, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} interactive={false} />
+        <Polyline positions={route} pathOptions={{ color, weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }} interactive={false} />
+      </>
+    );
+  }
+  if (from && to) {
+    return <Polyline positions={[from, to]} pathOptions={{ color, weight: 3, opacity: 0.6, dashArray: '6 8' }} interactive={false} />;
+  }
+  return null;
+};
+
 /** Klik di peta → callback koordinat */
 export const MapClickHandler: React.FC<{ onClick: (lat: number, lng: number) => void; enabled?: boolean }> = ({
   onClick,
@@ -52,7 +76,10 @@ export const MapClickHandler: React.FC<{ onClick: (lat: number, lng: number) => 
 /** Sesuaikan zoom agar semua titik terlihat */
 export const FitBounds: React.FC<{ points: [number, number][]; maxZoom?: number }> = ({ points, maxZoom = 16 }) => {
   const map = useMap();
-  const key = points.map(p => p.join(',')).join('|');
+  // Kunci ringkas (jalur rute bisa ratusan titik)
+  const key = points.length
+    ? `${points.length}|${points[0]}|${points[points.length >> 1]}|${points[points.length - 1]}`
+    : '';
   useEffect(() => {
     if (points.length === 0) return;
     // Pastikan ukuran container sudah final sebelum menghitung zoom
