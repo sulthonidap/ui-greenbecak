@@ -39,6 +39,25 @@ interface User {
   };
 }
 
+type QRMode = 'langsung' | 'booking';
+
+const QR_MODES: Record<QRMode, { path: string; label: string; badge: string; tagline: string; file: string }> = {
+  langsung: {
+    path: '/pesan',
+    label: 'Mode Langsung',
+    badge: 'PESAN LANGSUNG',
+    tagline: 'Scan untuk memesan perjalanan',
+    file: 'Langsung',
+  },
+  booking: {
+    path: '/booking',
+    label: 'Booking per km',
+    badge: 'BOOKING PER KM',
+    tagline: 'Scan · pilih tujuan · harga per km',
+    file: 'Booking',
+  },
+};
+
 const UserManagement: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,6 +80,43 @@ const UserManagement: React.FC = () => {
   const [selectedDriverCode, setSelectedDriverCode] = useState<string>('');
   const [selectedDriverName, setSelectedDriverName] = useState<string>('');
   const [bulkQRValue, setBulkQRValue] = useState<string>('');
+  // Jenis QR yang dibuat: mode langsung (/pesan, harga paket) atau booking per km (/booking)
+  const [qrMode, setQrModeState] = useState<QRMode>(() => {
+    try {
+      return localStorage.getItem('admin:qrMode') === 'booking' ? 'booking' : 'langsung';
+    } catch {
+      return 'langsung';
+    }
+  });
+  const setQrMode = (m: QRMode) => {
+    setQrModeState(m);
+    try {
+      localStorage.setItem('admin:qrMode', m);
+    } catch {
+      /* abaikan */
+    }
+  };
+  const qrInfo = QR_MODES[qrMode];
+
+  // Pilihan jenis QR (dipakai di header tabel & jendela QR driver)
+  const renderQRModeToggle = () => (
+    <div className="inline-flex items-center rounded-md border border-gray-300 p-0.5 bg-gray-50" role="group" aria-label="Jenis QR">
+      <span className="px-2 text-xs text-gray-500">Jenis QR:</span>
+      {(Object.keys(QR_MODES) as QRMode[]).map(m => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => setQrMode(m)}
+          aria-pressed={qrMode === m}
+          className={`px-3 py-1.5 text-xs font-medium rounded ${
+            qrMode === m ? 'bg-white shadow text-green-700' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          {QR_MODES[m].label}
+        </button>
+      ))}
+    </div>
+  );
   
   // Helper untuk format tanggal yang aman terhadap undefined/string
   const formatDate = (date: any) => {
@@ -264,7 +320,7 @@ const UserManagement: React.FC = () => {
   // Generate QR code value - link ke halaman pesan dengan driver_code
   const generateQRValue = () => {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/pesan?code=${encodeURIComponent(selectedDriverCode)}`;
+    return `${baseUrl}${qrInfo.path}?code=${encodeURIComponent(selectedDriverCode)}`;
   };
 
   // Download QR code as image
@@ -283,7 +339,7 @@ const UserManagement: React.FC = () => {
       ctx?.drawImage(img, 0, 0);
       const pngFile = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
-      downloadLink.download = `qrcode-${selectedDriverCode}.png`;
+      downloadLink.download = `qrcode-${qrInfo.file}-${selectedDriverCode}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
@@ -343,11 +399,16 @@ const UserManagement: React.FC = () => {
         // Draw Footer info
         ctx.font = '14px Arial';
         ctx.fillStyle = '#666666';
-        ctx.fillText('Scan untuk memesan perjalanan', cardWidth / 2, 550);
-        
+        ctx.fillText(qrInfo.tagline, cardWidth / 2, 550);
+
+        // Label mode supaya kartu langsung & booking tidak tertukar saat dicetak
+        ctx.font = 'bold 13px Arial';
+        ctx.fillStyle = qrMode === 'booking' ? '#047857' : '#264A7C';
+        ctx.fillText(qrInfo.badge, cardWidth / 2, 520);
+
         const pngFile = canvas.toDataURL('image/png');
         const downloadLink = document.createElement('a');
-        downloadLink.download = `QR-Card-${selectedDriverCode}.png`;
+        downloadLink.download = `QR-Card-${qrInfo.file}-${selectedDriverCode}.png`;
         downloadLink.href = pngFile;
         downloadLink.click();
       }
@@ -389,7 +450,7 @@ const UserManagement: React.FC = () => {
         doc.text('BECAKJOGJA', 50, 15, { align: 'center' });
 
         // Update hidden QR Canvas and wait for it to render
-        const qrValue = `${window.location.origin}/pesan?code=${encodeURIComponent(getQRCode(driver))}`;
+        const qrValue = `${window.location.origin}${qrInfo.path}?code=${encodeURIComponent(getQRCode(driver))}`;
         setBulkQRValue(qrValue);
         
         // Sedikit delay agar React merender canvas terbaru
@@ -414,10 +475,15 @@ const UserManagement: React.FC = () => {
         doc.setTextColor(102, 102, 102);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text('Scan untuk memesan perjalanan', 50, 140, { align: 'center' });
+        doc.text(qrInfo.tagline, 50, 140, { align: 'center' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(qrMode === 'booking' ? 4 : 38, qrMode === 'booking' ? 120 : 74, qrMode === 'booking' ? 87 : 124);
+        doc.text(qrInfo.badge, 50, 132, { align: 'center' });
       }
 
-      doc.save(`Bulk_QR_Cards_BecakJogja_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`Bulk_QR_${qrInfo.file}_BecakJogja_${new Date().toISOString().split('T')[0]}.pdf`);
       showSuccess('Bulk QR berhasil diunduh (PDF)');
     } catch (err) {
       console.error(err);
@@ -428,7 +494,7 @@ const UserManagement: React.FC = () => {
   const downloadStaticQR = async () => {
     try {
       // ?src=qr-statis supaya order dari QR ini tercatat sumbernya
-      const staticUrl = "https://becakjogja.id/pesan?src=qr-statis";
+      const staticUrl = `https://becakjogja.id${qrInfo.path}?src=qr-statis`;
       setBulkQRValue(staticUrl);
       
       showSuccess('Menyiapkan QR Statis...');
@@ -464,15 +530,15 @@ const UserManagement: React.FC = () => {
         
         ctx.fillStyle = '#333333';
         ctx.font = 'bold 24px Arial';
-        ctx.fillText('PESAN SEKARANG', cardWidth / 2, 480);
-        
+        ctx.fillText(qrMode === 'booking' ? 'BOOKING BECAK' : 'PESAN SEKARANG', cardWidth / 2, 480);
+
         ctx.font = '14px Arial';
         ctx.fillStyle = '#666666';
-        ctx.fillText('Scan untuk memesan perjalanan', cardWidth / 2, 540);
-        
+        ctx.fillText(qrMode === 'booking' ? 'Scan · masukkan kode becak · pilih tujuan' : 'Scan untuk memesan perjalanan', cardWidth / 2, 540);
+
         const pngFile = cardCanvas.toDataURL('image/png');
         const downloadLink = document.createElement('a');
-        downloadLink.download = `QR-Statis-BecakJogja.png`;
+        downloadLink.download = `QR-Statis-${qrInfo.file}-BecakJogja.png`;
         downloadLink.href = pngFile;
         downloadLink.click();
         showSuccess('QR Statis berhasil diunduh');
@@ -664,7 +730,8 @@ const UserManagement: React.FC = () => {
               <Users className="w-6 h-6 text-green-600 mr-3" />
               <h2 className="text-lg font-semibold text-gray-900">Daftar User</h2>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {renderQRModeToggle()}
               <button
                 onClick={downloadStaticQR}
                 className="flex items-center px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
@@ -998,7 +1065,8 @@ const UserManagement: React.FC = () => {
                </div>
                <div className="text-center">
                  <p className="text-sm text-gray-600 mb-2">{selectedDriverName}</p>
-                 <p className="text-xs text-gray-500 mb-4">Driver Code: <span className="font-semibold">{selectedDriverCode}</span></p>
+                 <p className="text-xs text-gray-500 mb-3">Driver Code: <span className="font-semibold">{selectedDriverCode}</span></p>
+                 <div className="mb-3">{renderQRModeToggle()}</div>
                  <div className="flex justify-center mb-4 p-4 bg-white rounded-lg border-2 border-gray-200">
                    <QRCodeSVG
                      className="qr-code-svg"
@@ -1009,7 +1077,11 @@ const UserManagement: React.FC = () => {
                    />
                  </div>
                  <p className="text-xs text-gray-500 mb-4">
-                   Scan QR code ini untuk langsung ke halaman pesan dengan driver code: <span className="font-semibold">{selectedDriverCode}</span>
+                   {qrMode === 'booking'
+                     ? 'Scan untuk booking per km: penumpang memilih tujuan di peta, harga dihitung sesuai rute, order langsung ke becak '
+                     : 'Scan untuk pesan langsung (harga paket) dengan becak '}
+                   <span className="font-semibold">{selectedDriverCode}</span>
+                   <span className="block mt-1 font-mono text-[11px] text-gray-400 break-all">{generateQRValue()}</span>
                  </p>
                   <div className="flex flex-col space-y-2 mt-4">
                     <button
