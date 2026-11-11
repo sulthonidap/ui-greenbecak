@@ -32,7 +32,6 @@ const getCurrentPosition = (): Promise<LatLng> =>
     );
   });
 
-const isValidPhone = (p: string) => /^(\+?62|0)8\d{7,12}$/.test(p.replace(/[\s-]/g, ''));
 
 const BookingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -63,8 +62,6 @@ const BookingPage: React.FC = () => {
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -222,7 +219,6 @@ const BookingPage: React.FC = () => {
     if (!pickup || !drop) return setSubmitError('Pilih titik jemput dan tujuan terlebih dahulu');
     if (!quote) return setSubmitError(quoteError || 'Tunggu harga selesai dihitung');
     if (!name.trim()) return setSubmitError('Nama wajib diisi');
-    if (!isValidPhone(phone)) return setSubmitError('Nomor WhatsApp tidak valid (contoh: 0812xxxxxxx)');
 
     setSubmitting(true);
     try {
@@ -231,8 +227,6 @@ const BookingPage: React.FC = () => {
         drop: { lat: drop.lat, lng: drop.lng, name: drop.name, address: drop.address },
         vehicle_type: quote.vehicle_type,
         customer_name: name.trim(),
-        customer_phone: phone.trim(),
-        notes: notes.trim() || undefined,
         source: srcParam || undefined,
         source_ref: refParam || undefined,
         hotel_slug: hotel ? hotel.slug : undefined,
@@ -600,45 +594,17 @@ const BookingPage: React.FC = () => {
             )}
 
             {/* Data penumpang */}
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3">
-              <div>
-                <label htmlFor="bk-name" className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                <input
-                  id="bk-name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  maxLength={100}
-                  autoComplete="name"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                  placeholder="Nama kamu"
-                />
-              </div>
-              <div>
-                <label htmlFor="bk-phone" className="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
-                <input
-                  id="bk-phone"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  inputMode="tel"
-                  autoComplete="tel"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                  placeholder="0812xxxxxxxx"
-                />
-                <p className="mt-1 text-xs text-gray-500">Driver akan menghubungi nomor ini saat menjemput.</p>
-              </div>
-              <div>
-                <label htmlFor="bk-notes" className="block text-sm font-medium text-gray-700 mb-1">
-                  Catatan untuk driver <span className="text-gray-400 font-normal">(opsional)</span>
-                </label>
-                <input
-                  id="bk-notes"
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  maxLength={300}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                  placeholder="Mis. tunggu di lobby, 2 orang"
-                />
-              </div>
+            <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
+              <label htmlFor="bk-name" className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+              <input
+                id="bk-name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                maxLength={100}
+                autoComplete="name"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                placeholder="Nama kamu"
+              />
             </div>
 
             {submitError && (

@@ -153,7 +153,7 @@ export interface CreateBookingPayload {
   drop: PlacePoint;
   vehicle_type?: string;
   customer_name: string;
-  customer_phone: string;
+  customer_phone?: string;
   notes?: string;
   source?: string;
   source_ref?: string;
