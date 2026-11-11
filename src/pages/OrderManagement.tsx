@@ -1,9 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, User, DollarSign, Star, CalendarDays, Download } from 'lucide-react';
+import { Search, Plus, Car, Clock, CheckCircle, XCircle, AlertCircle, Phone, User, DollarSign, Star, CalendarDays, Download, FileSpreadsheet } from 'lucide-react';
 import { adminAPI, tariffsAPI } from '../services/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+// Semua tanggal dihitung dalam zona waktu WIB, bukan UTC,
+// supaya order jam 00:00-06:59 tidak terhitung ke hari sebelumnya.
+const WIB_TZ = 'Asia/Jakarta';
+
+const wibDateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: WIB_TZ,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/** Mengembalikan tanggal dalam format YYYY-MM-DD menurut WIB. */
+const toWibDateKey = (date: Date) => wibDateKeyFormatter.format(date);
+
+const shiftDateKey = (key: string, days: number) => {
+  const d = new Date(`${key}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+const formatDateKey = (key: string) =>
+  new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(`${key}T00:00:00Z`));
+
+type DatePreset = 'today' | '7days' | 'month' | 'all' | 'custom';
+
+const getPresetRange = (preset: Exclude<DatePreset, 'custom'>): { from: string; to: string } => {
+  const today = toWibDateKey(new Date());
+  switch (preset) {
+    case 'today': return { from: today, to: today };
+    case '7days': return { from: shiftDateKey(today, -6), to: today };
+    case 'month': return { from: `${today.slice(0, 8)}01`, to: today };
+    case 'all': return { from: '', to: '' };
+  }
+};
+
+/** Nomor halaman yang ditampilkan, misal: 1 … 4 5 6 … 129 */
+const getPageNumbers = (current: number, total: number): (number | 'ellipsis')[] => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | 'ellipsis')[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push('ellipsis');
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push('ellipsis');
+  pages.push(total);
+  return pages;
+};
+
+const csvEscape = (value: string | number) => {
+  const s = String(value ?? '');
+  return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
 
 interface Order {
   id: string;
@@ -21,6 +75,7 @@ interface Order {
   status: 'pending' | 'accepted' | 'ongoing' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed';
   orderDate: Date;
+  orderDateKey: string; // YYYY-MM-DD (WIB)
   pickupTime?: Date;
   completionTime?: Date;
   rating?: number;
@@ -45,9 +100,20 @@ const OrderManagement: React.FC = () => {
   const [vehicleFilter, setVehicleFilter] = useState<'all' | 'becak-listrik' | 'delman'>('all');
   const [tariffFilter, setTariffFilter] = useState<string>('all');
   const [tariffs, setTariffs] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [datePreset, setDatePreset] = useState<DatePreset>('today');
+  const [dateFrom, setDateFrom] = useState<string>(() => getPresetRange('today').from);
+  const [dateTo, setDateTo] = useState<string>(() => getPresetRange('today').to);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const applyPreset = (preset: DatePreset) => {
+    setDatePreset(preset);
+    if (preset !== 'custom') {
+      const range = getPresetRange(preset);
+      setDateFrom(range.from);
+      setDateTo(range.to);
+    }
+  };
 
   // Fetch orders from backend
   const fetchOrders = async () => {
@@ -57,7 +123,9 @@ const OrderManagement: React.FC = () => {
 
       const response = await adminAPI.getAdminOrders();
 
-      const normalized = (response.orders || []).map((o: any) => ({
+      const normalized = (response.orders || []).map((o: any) => {
+        const orderDate = o.created_at ? new Date(o.created_at) : new Date();
+        return {
         id: o.id?.toString() || `order-${Date.now()}`,
         orderNumber: o.order_number || `GB-${Date.now()}`,
         customerName: o.customer_name || o.customer?.name || 'Unknown Customer',
@@ -76,7 +144,8 @@ const OrderManagement: React.FC = () => {
         price: o.price || 0,
         status: o.status || 'pending',
         paymentStatus: o.payment_status || 'pending',
-        orderDate: o.created_at ? new Date(o.created_at) : new Date(),
+        orderDate,
+        orderDateKey: toWibDateKey(orderDate),
         pickupTime: o.accepted_at ? new Date(o.accepted_at) : undefined,
         completionTime: o.completed_at ? new Date(o.completed_at) : undefined,
         rating: o.rating,
@@ -84,7 +153,8 @@ const OrderManagement: React.FC = () => {
         estimatedTime: o.eta ? `${o.eta} menit` : 'N/A',
         actualTime: o.completed_at && o.accepted_at ?
           `${Math.round((new Date(o.completed_at).getTime() - new Date(o.accepted_at).getTime()) / 60000)} menit` : undefined,
-      }));
+        };
+      });
       setOrders(normalized);
 
     } catch (error: any) {
@@ -121,14 +191,6 @@ const OrderManagement: React.FC = () => {
     fetchTariffs();
   }, []);
 
-  // Filter data when selected date changes
-  useEffect(() => {
-    // In a real implementation, you would fetch data for the selected date
-    // For now, we'll just update the mock data to simulate date filtering
-    console.log('Filtering data for date:', selectedDate);
-    setCurrentPage(1); // Reset to first page when date changes
-  }, [selectedDate]);
-
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -139,10 +201,10 @@ const OrderManagement: React.FC = () => {
     const matchesVehicle = vehicleFilter === 'all' || order.vehicleType === vehicleFilter;
     const matchesTariff = tariffFilter === 'all' || order.tariffName === tariffFilter;
     
-    // Filter by date
-    const orderDate = order.orderDate.toISOString().split('T')[0];
-    const matchesDate = selectedDate === '' || orderDate === selectedDate;
-    
+    // Filter by date range (WIB)
+    const matchesDate = (!dateFrom || order.orderDateKey >= dateFrom) &&
+      (!dateTo || order.orderDateKey <= dateTo);
+
     return matchesSearch && matchesStatus && matchesPayment && matchesVehicle && matchesTariff && matchesDate;
   });
 
@@ -155,7 +217,17 @@ const OrderManagement: React.FC = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, paymentFilter, vehicleFilter, tariffFilter]);
+  }, [searchTerm, statusFilter, paymentFilter, vehicleFilter, tariffFilter, dateFrom, dateTo, itemsPerPage]);
+
+  const periodLabel = !dateFrom && !dateTo
+    ? 'Semua tanggal'
+    : dateFrom === dateTo
+      ? formatDateKey(dateFrom)
+      : `${dateFrom ? formatDateKey(dateFrom) : 'Awal'} s/d ${dateTo ? formatDateKey(dateTo) : 'Sekarang'}`;
+
+  const exportFileSuffix = !dateFrom && !dateTo
+    ? 'semua'
+    : dateFrom === dateTo ? dateFrom : `${dateFrom || 'awal'}_sd_${dateTo || 'sekarang'}`;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -192,46 +264,98 @@ const OrderManagement: React.FC = () => {
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: WIB_TZ,
     }).format(date);
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    doc.setFontSize(16);
-    doc.text('Rekapitulasi Order GreenBecak', 14, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 28);
-    
-    const tableColumn = ["No Order", "Tgl Order", "Customer", "Driver", "Tarif/Jarak", "Status", "Pembayaran", "Total (Rp)"];
-    const tableRows: any[] = [];
+  const filteredTotal = filteredOrders.reduce((sum, o) => sum + o.price, 0);
+  const filteredPaidTotal = filteredOrders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + o.price, 0);
 
-    filteredOrders.forEach(order => {
-      const orderData = [
-        order.orderNumber,
-        new Date(order.orderDate).toLocaleDateString('id-ID'),
-        order.customerName,
-        order.driverName,
-        order.tariffName !== 'N/A' ? order.tariffName : order.distance,
-        order.status,
-        order.paymentStatus,
-        order.price.toLocaleString('id-ID')
-      ];
-      tableRows.push(orderData);
-    });
+  const exportToPDF = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+
+    doc.setFontSize(16);
+    doc.text('Rekapitulasi Order GreenBecak', 14, 18);
+
+    doc.setFontSize(10);
+    doc.text(`Periode: ${periodLabel}`, 14, 26);
+    doc.text(`Tanggal Cetak: ${formatDate(new Date())} WIB`, 14, 32);
+    doc.text(
+      `Jumlah Order: ${filteredOrders.length}   |   Total Nilai: ${formatCurrency(filteredTotal)}   |   Lunas: ${formatCurrency(filteredPaidTotal)}`,
+      14, 38
+    );
+
+    const tableColumn = ['No', 'No Order', 'Waktu Order (WIB)', 'Customer', 'No HP', 'Driver', 'Kode Becak', 'Tarif/Jarak', 'Status', 'Pembayaran', 'Total (Rp)'];
+    const tableRows = filteredOrders.map((order, i) => [
+      i + 1,
+      order.orderNumber,
+      formatDate(order.orderDate),
+      order.customerName,
+      order.customerPhone,
+      order.driverName,
+      order.vehicleCode,
+      order.tariffName && order.tariffName !== 'N/A' ? order.tariffName : order.distance,
+      getStatusBadge(order.status).text,
+      getPaymentBadge(order.paymentStatus).text,
+      order.price.toLocaleString('id-ID'),
+    ]);
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 35,
+      foot: [['', '', '', '', '', '', '', '', '', 'TOTAL', filteredTotal.toLocaleString('id-ID')]],
+      startY: 44,
       theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [21, 128, 61] } // bg-green-700
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [21, 128, 61] }, // bg-green-700
+      footStyles: { fillColor: [240, 253, 244], textColor: [20, 83, 45], fontStyle: 'bold' },
+      columnStyles: { 0: { halign: 'right' }, 10: { halign: 'right' } },
     });
 
-    doc.save(`Rekap_Order_GreenBecak_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Rekap_Order_GreenBecak_${exportFileSuffix}.pdf`);
+  };
+
+  // CSV dengan pemisah ";" + BOM UTF-8 supaya langsung rapi saat dibuka di Excel (locale Indonesia)
+  const exportToExcel = () => {
+    const header = ['No', 'No Order', 'Tanggal (WIB)', 'Jam (WIB)', 'Customer', 'No HP', 'Driver', 'No HP Driver', 'Kode Becak', 'Tarif', 'Jarak (km)', 'Tujuan', 'Status', 'Pembayaran', 'Harga (Rp)', 'Waktu Diterima', 'Waktu Selesai'];
+    const timeFormatter = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: WIB_TZ });
+    // Bungkus nomor HP sebagai teks agar angka 0 di depan tidak hilang di Excel
+    const asText = (v: string) => (v && v !== 'N/A' ? `="${v}"` : '');
+
+    const rows = filteredOrders.map((order, i) => [
+      i + 1,
+      order.orderNumber,
+      order.orderDateKey,
+      timeFormatter.format(order.orderDate),
+      order.customerName,
+      asText(order.customerPhone),
+      order.driverName,
+      asText(order.driverPhone),
+      order.vehicleCode,
+      order.tariffName && order.tariffName !== 'N/A' ? order.tariffName : '',
+      order.distance.replace(' km', '').replace('N/A', ''),
+      order.destination !== 'N/A' ? order.destination : '',
+      getStatusBadge(order.status).text,
+      getPaymentBadge(order.paymentStatus).text,
+      order.price,
+      order.pickupTime ? formatDate(order.pickupTime) : '',
+      order.completionTime ? formatDate(order.completionTime) : '',
+    ]);
+
+    const csv = [header, ...rows]
+      .map(row => row.map(cell => (typeof cell === 'string' && cell.startsWith('="') ? cell : csvEscape(cell))).join(';'))
+      .join('\r\n');
+
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Rekap_Order_GreenBecak_${exportFileSuffix}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const stats = {
@@ -358,10 +482,21 @@ const OrderManagement: React.FC = () => {
               <Car className="w-6 h-6 text-green-600 mr-3" />
               <h2 className="text-lg font-semibold text-gray-900">Daftar Order</h2>
             </div>
-            <div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={exportToExcel}
+                disabled={filteredOrders.length === 0}
+                className="flex items-center px-4 py-2 bg-white text-green-700 border border-green-600 rounded-md hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Download ${filteredOrders.length} order (${periodLabel}) sebagai Excel`}
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Download Excel
+              </button>
               <button
                 onClick={exportToPDF}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                disabled={filteredOrders.length === 0}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Download ${filteredOrders.length} order (${periodLabel}) sebagai PDF`}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF
@@ -372,8 +507,59 @@ const OrderManagement: React.FC = () => {
 
         <div className="p-6">
           {/* Filter dan Search */}
-          <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4">
+          <div className="mb-6 space-y-4">
+            {/* Filter tanggal */}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+              <div className="flex items-center text-sm font-medium text-gray-700">
+                <CalendarDays className="w-4 h-4 mr-2 text-gray-500" />
+                Periode:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  ['today', 'Hari ini'],
+                  ['7days', '7 hari terakhir'],
+                  ['month', 'Bulan ini'],
+                  ['all', 'Semua'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => applyPreset(value)}
+                    className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                      datePreset === value
+                        ? 'bg-green-600 border-green-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  max={dateTo || undefined}
+                  onChange={(e) => { setDatePreset('custom'); setDateFrom(e.target.value); }}
+                  aria-label="Dari tanggal"
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <span className="text-sm text-gray-500">s/d</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  onChange={(e) => { setDatePreset('custom'); setDateTo(e.target.value); }}
+                  aria-label="Sampai tanggal"
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              <div className="text-sm text-gray-500 lg:ml-auto">
+                <span className="font-medium text-gray-900">{filteredOrders.length}</span> order · {formatCurrency(filteredTotal)}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
               <div className="md:col-span-2 lg:col-span-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -424,17 +610,6 @@ const OrderManagement: React.FC = () => {
                 </select>
               </div>
               <div>
-                <div className="relative">
-                  <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <div>
                 <select
                   value={tariffFilter}
                   onChange={(e) => setTariffFilter(e.target.value)}
@@ -454,7 +629,7 @@ const OrderManagement: React.FC = () => {
                     setPaymentFilter('all');
                     setVehicleFilter('all');
                     setTariffFilter('all');
-                    setSelectedDate(new Date().toISOString().split('T')[0]);
+                    applyPreset('all');
                   }}
                   className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
                 >
@@ -575,7 +750,7 @@ const OrderManagement: React.FC = () => {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {filteredOrders.length > 0 && (
             <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
@@ -593,17 +768,27 @@ const OrderManagement: React.FC = () => {
                   Selanjutnya
                 </button>
               </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-gray-700 whitespace-nowrap">
                     Menampilkan{' '}
                     <span className="font-medium">{startIndex + 1}</span>
-                    {' '}sampai{' '}
+                    {' '}–{' '}
                     <span className="font-medium">{Math.min(endIndex, filteredOrders.length)}</span>
                     {' '}dari{' '}
                     <span className="font-medium">{filteredOrders.length}</span>
-                    {' '}hasil
+                    {' '}order
                   </p>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    aria-label="Jumlah baris per halaman"
+                    className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {[10, 25, 50, 100].map(n => (
+                      <option key={n} value={n}>{n} / halaman</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
@@ -619,7 +804,14 @@ const OrderManagement: React.FC = () => {
                     </button>
                     
                     {/* Page numbers */}
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    {getPageNumbers(currentPage, totalPages).map((page, idx) => page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm text-gray-400"
+                      >
+                        …
+                      </span>
+                    ) : (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
